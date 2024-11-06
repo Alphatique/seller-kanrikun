@@ -1,5 +1,7 @@
 import type { MetaFunction } from '@remix-run/cloudflare';
-import { useState } from 'react';
+
+import { Button } from '~/components/ui/button';
+import { signIn, useSession } from '~/lib/auth-client';
 
 export const meta: MetaFunction = () => {
 	return [
@@ -9,28 +11,20 @@ export const meta: MetaFunction = () => {
 };
 
 export default function Index() {
-	const [userId, setUserId] = useState<string | null>(null);
+	const { data: session } = useSession();
 
 	const handleLogin = async () => {
-		console.log('login');
-		/*
-    const response = await signIn.oauth2({
-      providerId: "amazon-sp-api",
-      callbackURL: "/",
-    });
-    console.log(response);*/
+		const response = await signIn.oauth2({
+			providerId: 'amazon',
+			callbackURL: '/',
+		});
+		console.log(response);
 	};
 
 	return (
-		<div className='flex h-screen items-center justify-center'>
-			<button
-				onClick={handleLogin}
-				className='rounded bg-blue-500 px-4 py-2 text-white'
-			>
-				ログイン
-			</button>
-
-			{userId && <p>ログイン中: {userId}</p>}
+		<div className='flex h-screen flex-col items-center justify-center'>
+			<Button onClick={handleLogin}>ログイン</Button>
+			<p>{session && JSON.stringify(session.user)}</p>
 		</div>
 	);
 }
