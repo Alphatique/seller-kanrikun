@@ -6,13 +6,6 @@ import { db } from '~/db/index.server';
 
 import { env } from './env';
 
-const originalFetch = fetch;
-
-globalThis.fetch = (...args) => {
-	console.log(args);
-	return originalFetch(...args);
-};
-
 export const auth = betterAuth({
 	baseURL: env.BETTER_AUTH_URL,
 	secret: env.BETTER_AUTH_SECRET,
