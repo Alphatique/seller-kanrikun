@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
+
+import { DateRangeInput } from '~/components/date-range-input';
 import { Button } from '~/components/ui/button';
 import { Label } from '~/components/ui/label';
 import {
@@ -24,7 +26,6 @@ enum Period {
 	Yearly = 'Yearly',
 }
 
-import DateRangeInput from '~/components/ui/self/daterange-input';
 export default function HomePage() {
 	const [date, setDate] = useState<DateRange | undefined>({
 		from: new Date(),
