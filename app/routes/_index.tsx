@@ -15,10 +15,12 @@ export default function Index() {
 	let userName = undefined;
 
 	const handleLogin = async (providerId: string) => {
-		await signIn.oauth2({
+		const response = await signIn.oauth2({
 			providerId: providerId,
 			callbackURL: '/',
 		});
+
+		console.log(response);
 	};
 
 	return (
