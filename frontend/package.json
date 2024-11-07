@@ -50,14 +50,10 @@
 		"@remix-run/react": "^2.13.1",
 		"@t3-oss/env-core": "^0.11.1",
 		"better-auth": "^0.7.3",
-		"class-variance-authority": "^0.7.0",
-		"clsx": "^2.1.1",
 		"cmdk": "1.0.0",
 		"date-fns": "^4.1.0",
-		"drizzle-orm": "^0.36.0",
 		"embla-carousel-react": "^8.3.1",
 		"input-otp": "^1.4.1",
-		"isbot": "^5.1.17",
 		"lucide-react": "^0.454.0",
 		"next-themes": "^0.4.3",
 		"react": "^18.3.1",
@@ -68,26 +64,17 @@
 		"recharts": "^2.13.3",
 		"sonner": "^1.7.0",
 		"tailwind-merge": "^2.5.4",
-		"tailwindcss-animate": "^1.0.7",
-		"vaul": "^1.1.1",
-		"zod": "^3.23.8"
+		"tailwindcss-animate": "^1.0.7"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^1.9.4",
-		"@cloudflare/workers-types": "^4.20241022.0",
 		"@remix-run/dev": "^2.13.1",
 		"@types/react": "^18.3.12",
 		"@types/react-dom": "^18.3.1",
 		"autoprefixer": "^10.4.20",
-		"dotenv": "^16.4.5",
-		"dotenv-cli": "^7.4.2",
-		"drizzle-kit": "^0.27.2",
 		"postcss": "^8.4.47",
 		"tailwindcss": "^3.4.14",
-		"typescript": "^5.6.3",
 		"vite": "^5.4.10",
 		"vite-tsconfig-paths": "^5.1.0",
-		"wrangler": "3.84.1"
 	},
 	"engines": {
 		"node": ">=20.0.0"
