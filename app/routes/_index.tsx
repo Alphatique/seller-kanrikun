@@ -14,11 +14,10 @@ export default function Index() {
 	const { data: session } = useSession();
 
 	const handleLogin = async () => {
-		const response = await signIn.oauth2({
-			providerId: 'seller',
+		await signIn.oauth2({
+			providerId: 'seller-central',
 			callbackURL: '/',
 		});
-		console.log(response);
 	};
 
 	return (

@@ -26,15 +26,16 @@ export const auth = betterAuth({
 					pkce: true,
 				},
 				{
-					providerId: 'seller',
-					clientId: env.SELLER_CLIENT_ID,
-					clientSecret: env.SELLER_CLIENT_SECRET,
-					authorizationUrl: 'https://sellercentral.amazon.com/apps/authorize/consent',
+					providerId: 'seller-central',
+					clientId: env.SP_API_CLIENT_ID,
+					clientSecret: env.SP_API_CLIENT_SECRET,
+					authorizationUrl:
+						'https://sellercentral.amazon.com/apps/authorize/consent',
 					scopes: ['profile'],
 					tokenUrl: 'https://api.amazon.com/auth/o2/token',
 					userInfoUrl: 'https://api.amazon.com/user/profile',
 					pkce: true,
-				}
+				},
 			],
 		}),
 	],
