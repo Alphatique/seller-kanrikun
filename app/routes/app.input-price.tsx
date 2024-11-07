@@ -28,12 +28,6 @@ import {
 	TableRow,
 } from '~/components/ui/table';
 
-enum Period {
-	Monthly = 'Monthly',
-	Quarterly = 'Quarterly',
-	Yearly = 'Yearly',
-}
-
 export default function HomePage() {
 	const [uploadDate, setUploadDate] = useState<DateRange | undefined>({
 		from: new Date(),

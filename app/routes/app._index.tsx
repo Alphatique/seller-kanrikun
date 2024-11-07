@@ -19,8 +19,7 @@ import {
 	TableHeader,
 	TableRow,
 } from '~/components/ui/table';
-
-type Period = 'monthly' | 'quarterly' | 'yearly';
+import type { Period } from '~/types';
 
 export default function HomePage() {
 	const [date, setDate] = useState<DateRange | undefined>({
