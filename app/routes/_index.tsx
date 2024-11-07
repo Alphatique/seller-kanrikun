@@ -12,7 +12,7 @@ export const meta: MetaFunction = () => {
 
 export default function Index() {
 	const { data: session } = useSession();
-	let userName = undefined;
+	const userName = undefined;
 
 	const handleLogin = async (providerId: string) => {
 		const response = await signIn.oauth2({
@@ -28,11 +28,23 @@ export default function Index() {
 			{session ? (
 				<div>
 					<p>welcome{userName}</p>
-					<Button onClick={()=>{handleLogin('seller-central')}}>seller認証</Button>
+					<Button
+						onClick={() => {
+							handleLogin('seller-central');
+						}}
+					>
+						seller認証
+					</Button>
 				</div>
 			) : (
 				<div>
-					<Button onClick={()=>{handleLogin('amazon')}}>ログイン</Button>
+					<Button
+						onClick={() => {
+							handleLogin('amazon');
+						}}
+					>
+						ログイン
+					</Button>
 					<p>ログインしてください</p>
 				</div>
 			)}

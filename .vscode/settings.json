@@ -5,5 +5,8 @@
 	"editor.tabSize": 4,
 	"editor.codeActionsOnSave": {
 		"source.organizeImports": "explicit"
+	},
+	"[typescriptreact]": {
+		"editor.defaultFormatter": "vscode.typescript-language-features"
 	}
 }
