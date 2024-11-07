@@ -1,14 +1,7 @@
-import { format } from 'date-fns';
 import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 import { Button } from '~/components/ui/button';
-import { Calendar } from '~/components/ui/calendar';
 import { Label } from '~/components/ui/label';
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from '~/components/ui/popover';
 import {
 	Select,
 	SelectContent,
@@ -24,7 +17,6 @@ import {
 	TableHeader,
 	TableRow,
 } from '~/components/ui/table';
-import { cn } from '~/lib/utils';
 
 enum Period {
 	Monthly = 'Monthly',
@@ -32,7 +24,7 @@ enum Period {
 	Yearly = 'Yearly',
 }
 
-import { CalendarIcon } from 'lucide-react';
+import DateRangeInput from '~/components/ui/self/daterange-input';
 export default function HomePage() {
 	const [date, setDate] = useState<DateRange | undefined>({
 		from: new Date(),
@@ -54,41 +46,7 @@ export default function HomePage() {
 					</SelectContent>
 				</Select>
 				<div className='flex space-x-4'>
-					<Popover>
-						<PopoverTrigger asChild>
-							<Button
-								id='date'
-								variant={'outline'}
-								className={cn(
-									'w-[300px] justify-start text-left font-normal',
-									!date && 'text-muted-foreground',
-								)}
-							>
-								<CalendarIcon />
-								{date?.from ? (
-									date.to ? (
-										<>
-											{format(date.from, 'LLL dd, y')} -{' '}
-											{format(date.to, 'LLL dd, y')}
-										</>
-									) : (
-										format(date.from, 'LLL dd, y')
-									)
-								) : (
-									<span>Pick a date</span>
-								)}
-							</Button>
-						</PopoverTrigger>
-						<PopoverContent className='w-aut p-0' align='start'>
-							<Calendar
-								mode='range'
-								defaultMonth={date?.from}
-								selected={date}
-								onSelect={setDate}
-								numberOfMonths={1}
-							/>
-						</PopoverContent>
-					</Popover>
+					<DateRangeInput date={date} setDate={setDate} />
 					<Button>Submit</Button>
 					<Button>Download</Button>
 				</div>
