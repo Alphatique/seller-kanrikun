@@ -14,21 +14,11 @@ export default function Index() {
 	const { data: session } = useSession();
 	let userName = undefined;
 
-	const handleLogin = async () => {
-		const response = await signIn.oauth2({
-			providerId: 'amazon',
+	const handleLogin = async (providerId: string) => {
+		await signIn.oauth2({
+			providerId: providerId,
 			callbackURL: '/',
 		});
-
-		userName = session.user.name;
-		console.log(response);
-	};
-	const handleAddSeller = async () => {
-		const response = await signIn.oauth2({
-			providerId: 'seller',
-			callbackURL: '/',
-		});
-		console.log(response);
 	};
 
 	return (
@@ -36,11 +26,11 @@ export default function Index() {
 			{session ? (
 				<div>
 					<p>welcome{userName}</p>
-					<Button onClick={handleAddSeller}>seller認証</Button>
+					<Button onClick={()=>{handleLogin('seller-central')}}>seller認証</Button>
 				</div>
 			) : (
 				<div>
-					<Button onClick={handleLogin}>ログイン</Button>
+					<Button onClick={()=>{handleLogin('amazon')}}>ログイン</Button>
 					<p>ログインしてください</p>
 				</div>
 			)}

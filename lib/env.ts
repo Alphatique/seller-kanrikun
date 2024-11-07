@@ -10,8 +10,8 @@ export const env = createEnv({
 		AMAZON_CLIENT_ID: z.string(),
 		AMAZON_CLIENT_SECRET: z.string(),
 
-		SELLER_CLIENT_ID: z.string(),
-		SELLER_CLIENT_SECRET: z.string(),
+		SP_API_CLIENT_ID: z.string(),
+		SP_API_CLIENT_SECRET: z.string(),
 
 		// Database
 		TURSO_CONNECTION_URL: z.string().url(),
