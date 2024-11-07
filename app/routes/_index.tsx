@@ -29,25 +29,21 @@ export default function Index() {
 			callbackURL: '/',
 		});
 		console.log(response);
-
-
 	};
 
 	return (
 		<div className='flex h-screen flex-col items-center justify-center'>
-			{
-				session ? (
-					<div>
-						<p>welcome{userName}</p>
-						<Button onClick={handleAddSeller}>seller認証</Button>
-					</div>
-				) : (
-					<div>
-						<Button onClick={handleLogin}>ログイン</Button>
-						<p>ログインしてください</p>
-					</div>
-				)
-			}
+			{session ? (
+				<div>
+					<p>welcome{userName}</p>
+					<Button onClick={handleAddSeller}>seller認証</Button>
+				</div>
+			) : (
+				<div>
+					<Button onClick={handleLogin}>ログイン</Button>
+					<p>ログインしてください</p>
+				</div>
+			)}
 
 			<p>{session && JSON.stringify(session)}</p>
 		</div>
