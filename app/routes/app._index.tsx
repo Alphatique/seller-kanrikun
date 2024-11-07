@@ -1,28 +1,28 @@
 import { format } from 'date-fns';
 import { useState } from 'react';
-import { DateRange } from "react-day-picker";
+import type { DateRange } from 'react-day-picker';
 import { Button } from '~/components/ui/button';
 import { Calendar } from '~/components/ui/calendar';
 import { Label } from '~/components/ui/label';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
 } from '~/components/ui/popover';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
 } from '~/components/ui/select';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
 } from '~/components/ui/table';
 import { cn } from '~/lib/utils';
 
@@ -34,10 +34,10 @@ enum Period {
 
 import { CalendarIcon } from 'lucide-react';
 export default function HomePage() {
-  const [date, setDate] = useState<DateRange | undefined>({
-    from: new Date(),
-    to: new Date(),
-  });
+	const [date, setDate] = useState<DateRange | undefined>({
+		from: new Date(),
+		to: new Date(),
+	});
 
 	return (
 		<div>
