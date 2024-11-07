@@ -9,16 +9,16 @@
 	  "packages/*"
 	],
 	"scripts": {
-		"dev": "remix vite:dev",
-		"build": "remix vite:build",
-		"start": "wrangler pages dev",
-		"deploy": "bun run build && wrangler pages deploy",
+		"dev": "cd frontend && bun run dev",
+		"build": "cd frontend && bun run build",
+		"start": "cd frontend && bun run start",
+		"deploy": "cd frontend && bun run deploy",
 		"typecheck": "tsc",
 		"cf-typegen": "wrangler types",
 		"format": "biome check --fix --unsafe",
 		"db:push": "dotenv -e .env.development.local -- drizzle-kit push",
-		"db:studio": "dotenv -e .env.development.local -- drizzle-kit studio",
-	},	
+		"db:studio": "dotenv -e .env.development.local -- drizzle-kit studio"
+	},
 	"dependencies":{
 		"class-variance-authority": "^0.7.0",
 		"isbot": "^5.1.17",

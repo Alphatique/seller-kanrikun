@@ -7,12 +7,7 @@
 		"dev": "remix vite:dev",
 		"build": "remix vite:build",
 		"start": "wrangler pages dev",
-		"deploy": "bun run build && wrangler pages deploy",
-		"typecheck": "tsc",
-		"cf-typegen": "wrangler types",
-		"format": "biome check --fix --unsafe",
-		"db:push": "dotenv -e .env.development.local -- drizzle-kit push",
-		"db:studio": "dotenv -e .env.development.local -- drizzle-kit studio"
+		"deploy": "bun run build && wrangler pages deploy"
 	},
 	"dependencies": {
 		"@hookform/resolvers": "^3.9.1",
