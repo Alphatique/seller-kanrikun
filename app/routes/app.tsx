@@ -1,16 +1,30 @@
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from '@radix-ui/react-dropdown-menu';
 import { Outlet } from '@remix-run/react';
-import { Calendar, Home, Inbox, Search, Settings } from 'lucide-react';
+import {
+	Calendar,
+	ChevronDown,
+	Home,
+	Inbox,
+	Search,
+	Settings,
+} from 'lucide-react';
+
 import {
 	Sidebar,
 	SidebarContent,
 	SidebarGroup,
 	SidebarGroupContent,
 	SidebarGroupLabel,
+	SidebarHeader,
 	SidebarMenu,
 	SidebarMenuButton,
 	SidebarMenuItem,
 	SidebarProvider,
-	SidebarTrigger,
 } from '~/components/ui/sidebar';
 
 const items = [
@@ -44,11 +58,12 @@ const items = [
 export default function AppLayout() {
 	return (
 		<SidebarProvider>
-			<AppSidebar />
-			<main>
-				<SidebarTrigger />
-				<Outlet />
-			</main>
+			<div className='flex h-full w-full bg-background'>
+				<AppSidebar />
+				<main className='min-h-0 grow overflow-y-auto p-4'>
+					<Outlet />
+				</main>
+			</div>
 		</SidebarProvider>
 	);
 }
@@ -56,6 +71,28 @@ export default function AppLayout() {
 function AppSidebar() {
 	return (
 		<Sidebar>
+			<SidebarHeader>
+				<SidebarMenu>
+					<SidebarMenuItem>
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<SidebarMenuButton>
+									Select Workspace
+									<ChevronDown className='ml-auto' />
+								</SidebarMenuButton>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent className='w-[--radix-popper-anchor-width]'>
+								<DropdownMenuItem>
+									<span>Acme Inc</span>
+								</DropdownMenuItem>
+								<DropdownMenuItem>
+									<span>Acme Corp.</span>
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					</SidebarMenuItem>
+				</SidebarMenu>
+			</SidebarHeader>
 			<SidebarContent>
 				<SidebarGroup>
 					<SidebarGroupLabel>Application</SidebarGroupLabel>

@@ -39,13 +39,18 @@ export default function HomePage() {
 	});
 
 	return (
-		<div>
+		<div className='grid gap-4'>
 			<Label>Welcome to the input price!</Label>
-			<div className='flex justify-between'>
+			<div className='flex items-center justify-between'>
 				<div className='grid w-auto max-w-sm items-center gap-1.5'>
-					<Input id='upload' type='file' accept='.xls,.xlsx' />
+					<Input
+						id='upload'
+						type='file'
+						accept='.xls,.xlsx'
+						className='hover:cursor-pointer'
+					/>
 				</div>
-				<div>
+				<div className='flex items-center gap-2'>
 					<DateRangeInput date={uploadDate} setDate={setUploadDate} />
 					<Button>Update</Button>
 				</div>
@@ -69,10 +74,10 @@ export default function HomePage() {
 				</AccordionItem>
 			</Accordion>
 
-			<div className='flex space-x-5'>
-				<div className='flex items-center space-x-2'>
-					<Switch id='airplane-mode' />
-					<Label htmlFor='airplane-mode'>最新</Label>
+			<div className='flex gap-2'>
+				<div className='flex items-center gap-2'>
+					<Switch id='latest' />
+					<Label htmlFor='latest'>最新</Label>
 				</div>
 				<DateRangeInput date={tableDate} setDate={setTableDate} />
 				<div className='flex items-center'>
