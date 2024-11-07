@@ -13,6 +13,7 @@ export function parseEnv(runtimeEnv: Record<string, string | undefined>) {
 
 			SP_API_CLIENT_ID: z.string(),
 			SP_API_CLIENT_SECRET: z.string(),
+			SP_API_APPLICATION_ID: z.string(),
 
 			// Database
 			TURSO_CONNECTION_URL: z.string().url(),
