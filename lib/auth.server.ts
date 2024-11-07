@@ -4,11 +4,9 @@ import { genericOAuth } from 'better-auth/plugins';
 
 import { db } from '~/db/index.server';
 
-import { env } from './env';
-
 export const auth = betterAuth({
-	baseURL: env.BETTER_AUTH_URL,
-	secret: env.BETTER_AUTH_SECRET,
+	baseURL: process.env.BETTER_AUTH_URL,
+	secret: process.env.BETTER_AUTH_SECRET,
 	database: drizzleAdapter(db, {
 		provider: 'sqlite',
 	}),
@@ -17,8 +15,8 @@ export const auth = betterAuth({
 			config: [
 				{
 					providerId: 'amazon',
-					clientId: env.AMAZON_CLIENT_ID,
-					clientSecret: env.AMAZON_CLIENT_SECRET,
+					clientId: process.env.AMAZON_CLIENT_ID!,
+					clientSecret: process.env.AMAZON_CLIENT_SECRET!,
 					authorizationUrl: 'https://apac.account.amazon.com/ap/oa',
 					scopes: ['profile'],
 					tokenUrl: 'https://api.amazon.co.jp/auth/o2/token',
@@ -27,8 +25,8 @@ export const auth = betterAuth({
 				},
 				{
 					providerId: 'seller-central',
-					clientId: env.SP_API_CLIENT_ID,
-					clientSecret: env.SP_API_CLIENT_SECRET,
+					clientId: process.env.SP_API_CLIENT_ID!,
+					clientSecret: process.env.SP_API_CLIENT_SECRET!,
 					authorizationUrl:
 						'https://sellercentral.amazon.com/apps/authorize/consent',
 					scopes: ['profile'],
