@@ -20,30 +20,30 @@ import {
 	TableRow,
 } from '~/components/ui/table';
 
-enum Period {
-	Monthly = 'Monthly',
-	Quarterly = 'Quarterly',
-	Yearly = 'Yearly',
-}
+type Period = 'monthly' | 'quarterly' | 'yearly';
 
 export default function HomePage() {
 	const [date, setDate] = useState<DateRange | undefined>({
 		from: new Date(),
 		to: new Date(),
 	});
+	const [period, setPeriod] = useState<Period>('monthly');
 
 	return (
 		<div>
 			<Label>Welcome to the Home Page!</Label>
 			<div className='flex justify-between'>
-				<Select value={Period.Monthly}>
+				<Select
+					value={period}
+					onValueChange={period => setPeriod(period as Period)}
+				>
 					<SelectTrigger className='w-[180px]'>
 						<SelectValue placeholder='period' />
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value={Period.Monthly}>Monthly</SelectItem>
-						<SelectItem value={Period.Quarterly}>Quarterly</SelectItem>
-						<SelectItem value={Period.Yearly}>Yearly</SelectItem>
+						<SelectItem value={'monthly'}>Monthly</SelectItem>
+						<SelectItem value={'quarterly'}>Quarterly</SelectItem>
+						<SelectItem value={'yearly'}>Yearly</SelectItem>
 					</SelectContent>
 				</Select>
 				<div className='flex space-x-4'>
