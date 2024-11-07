@@ -27,8 +27,7 @@ export const auth = betterAuth({
 					providerId: 'seller-central',
 					clientId: process.env.SP_API_CLIENT_ID!,
 					clientSecret: process.env.SP_API_CLIENT_SECRET!,
-					authorizationUrl:
-						'https://sellercentral.amazon.com/apps/authorize/consent',
+					authorizationUrl: `https://sellercentral.amazon.com/apps/authorize/consent?application_id=${process.env.SP_API_APPLICATION_ID!}&version=beta`,
 					scopes: ['profile'],
 					tokenUrl: 'https://api.amazon.com/auth/o2/token',
 					userInfoUrl: 'https://api.amazon.com/user/profile',
