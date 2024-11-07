@@ -15,7 +15,7 @@ export default function Index() {
 
 	const handleLogin = async () => {
 		const response = await signIn.oauth2({
-			providerId: 'amazon',
+			providerId: 'seller',
 			callbackURL: '/',
 		});
 		console.log(response);
