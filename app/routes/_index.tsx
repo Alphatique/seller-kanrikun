@@ -12,19 +12,44 @@ export const meta: MetaFunction = () => {
 
 export default function Index() {
 	const { data: session } = useSession();
+	let userName = undefined;
 
 	const handleLogin = async () => {
+		const response = await signIn.oauth2({
+			providerId: 'amazon',
+			callbackURL: '/',
+		});
+
+		userName = session.user.name;
+		console.log(response);
+	};
+	const handleAddSeller = async () => {
 		const response = await signIn.oauth2({
 			providerId: 'seller',
 			callbackURL: '/',
 		});
 		console.log(response);
+
+
 	};
 
 	return (
 		<div className='flex h-screen flex-col items-center justify-center'>
-			<Button onClick={handleLogin}>ログイン</Button>
-			<p>{session && JSON.stringify(session.user)}</p>
+			{
+				session ? (
+					<div>
+						<p>welcome{userName}</p>
+						<Button onClick={handleAddSeller}>seller認証</Button>
+					</div>
+				) : (
+					<div>
+						<Button onClick={handleLogin}>ログイン</Button>
+						<p>ログインしてください</p>
+					</div>
+				)
+			}
+
+			<p>{session && JSON.stringify(session)}</p>
 		</div>
 	);
 }
