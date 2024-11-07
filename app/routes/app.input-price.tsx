@@ -16,7 +16,14 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '~/components/ui/accordion';
+import {
+  Select,
+  SelectContent,
+  SelectTrigger,
+  SelectValue
+} from '~/components/ui/select';
 
+import { SearchIcon } from 'lucide-react';
 import DateRangeInput from '~/components/ui/self/daterange-input';
 import { Switch } from '~/components/ui/switch';
 import {
@@ -42,15 +49,18 @@ export default function HomePage() {
   return (
     <main>
       <Label>Welcome to the input price!</Label>
-      <div className='grid w-full max-w-sm items-center gap-1.5'>
-        <Label htmlFor='upload'>Choose file</Label>
-        <Input id='upload' type='file' accept='.xls,.xlsx' />
+      <div className='flex justify-between'>
+        <div className='grid w-auto max-w-sm items-center gap-1.5'>
+          <Input id='upload' type='file' accept='.xls,.xlsx' />
+        </div>
+        <div>
+          <DateRangeInput date={uploadDate} setDate={setUploadDate} />
+          <Button>Update</Button>
+        </div>
       </div>
 
-      <DateRangeInput date={uploadDate} setDate={setUploadDate} />
-      <Button>Update</Button>
 
-      <Accordion type='single' collapsible className='w-full'>
+      <Accordion type='single' collapsible className='w-auto'>
         <AccordionItem value='item-1'>
           <AccordionTrigger>原価入力について</AccordionTrigger>
           <AccordionContent>
@@ -68,11 +78,32 @@ export default function HomePage() {
         </AccordionItem>
       </Accordion>
 
-      <div className='flex items-center space-x-2'>
-        <Switch id="airplane-mode" />
-        <Label htmlFor="airplane-mode">最新</Label>
+      <div className='flex space-x-5'>
+        <div className='flex items-center space-x-2'>
+          <Switch id="airplane-mode" />
+          <Label htmlFor="airplane-mode">最新</Label>
+        </div>
+        <DateRangeInput date={tableDate} setDate={setTableDate} />
+        <div className='flex items-center'>
+          <SearchIcon />
+          <Input type="text" placeholder="ASIN" />
+        </div>
+        <Select>
+          <SelectTrigger className='w-[180px]'>
+            <SelectValue placeholder='category' />
+          </SelectTrigger>
+          <SelectContent>
+          </SelectContent>
+        </Select>
+        <Select>
+          <SelectTrigger className='w-[180px]'>
+            <SelectValue placeholder='sub category' />
+          </SelectTrigger>
+          <SelectContent>
+          </SelectContent>
+        </Select>
+        <Button>Download</Button>
       </div>
-      <DateRangeInput date={tableDate} setDate={setTableDate} />
       <Table>
         <TableHeader>
           <TableRow>
@@ -93,6 +124,7 @@ export default function HomePage() {
           </TableRow>
         </TableBody>
       </Table>
+
     </main>
   );
 }

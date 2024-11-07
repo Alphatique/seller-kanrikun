@@ -17,10 +17,9 @@ export default function DateRangeInput({ date, setDate }: DateRangeInputProps) {
         <Popover>
             <PopoverTrigger asChild>
                 <Button
-                    id='date'
                     variant={'outline'}
                     className={cn(
-                        'w-[300px] justify-start text-left font-normal',
+                        'w-[260px] justify-start text-left font-normal',
                         !date && 'text-muted-foreground',
                     )}
                 >
