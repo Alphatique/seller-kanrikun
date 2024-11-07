@@ -39,7 +39,7 @@ export default function HomePage() {
 	});
 
 	return (
-		<main>
+		<div>
 			<Label>Welcome to the input price!</Label>
 			<div className='flex justify-between'>
 				<div className='grid w-auto max-w-sm items-center gap-1.5'>
@@ -113,6 +113,6 @@ export default function HomePage() {
 					</TableRow>
 				</TableBody>
 			</Table>
-		</main>
+		</div>
 	);
 }
