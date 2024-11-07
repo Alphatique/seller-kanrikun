@@ -5,7 +5,6 @@
 	"type": "module",
 	"workspaces": [
 	  "frontend",
-	  "backend",
 	  "packages/*"
 	],
 	"scripts": {
