@@ -40,7 +40,7 @@ export function DateRangeInput({ date, setDate }: DateRangeInputProps) {
 					)}
 				</Button>
 			</PopoverTrigger>
-			<PopoverContent className='w-aut p-0' align='start'>
+			<PopoverContent className='w-auto p-0' align='start'>
 				<Calendar
 					mode='range'
 					defaultMonth={date?.from}
