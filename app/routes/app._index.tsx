@@ -29,9 +29,9 @@ export default function HomePage() {
 	const [period, setPeriod] = useState<Period>('monthly');
 
 	return (
-		<div>
+		<div className='grid gap-4'>
 			<Label>Welcome to the Home Page!</Label>
-			<div className='flex justify-between'>
+			<div className='flex items-center justify-between'>
 				<Select
 					value={period}
 					onValueChange={period => setPeriod(period as Period)}
@@ -40,12 +40,12 @@ export default function HomePage() {
 						<SelectValue placeholder='period' />
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value={'monthly'}>Monthly</SelectItem>
-						<SelectItem value={'quarterly'}>Quarterly</SelectItem>
-						<SelectItem value={'yearly'}>Yearly</SelectItem>
+						<SelectItem value='monthly'>Monthly</SelectItem>
+						<SelectItem value='quarterly'>Quarterly</SelectItem>
+						<SelectItem value='yearly'>Yearly</SelectItem>
 					</SelectContent>
 				</Select>
-				<div className='flex space-x-4'>
+				<div className='flex items-center gap-2'>
 					<DateRangeInput date={date} setDate={setDate} />
 					<Button>Submit</Button>
 					<Button>Download</Button>
