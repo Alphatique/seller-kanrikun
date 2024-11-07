@@ -56,7 +56,11 @@ export default function HomePage() {
 				</div>
 			</div>
 
-			<Accordion type='single' collapsible className='w-auto'>
+			<Accordion
+				type='single'
+				collapsible
+				className='w-auto rounded-lg px-4 hover:bg-muted'
+			>
 				<AccordionItem value='item-1'>
 					<AccordionTrigger>原価入力について</AccordionTrigger>
 					<AccordionContent>
