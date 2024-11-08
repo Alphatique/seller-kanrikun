@@ -11,11 +11,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Change directory
+        working-directory: ./backend
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
 
       - name: Deploy backend
-        working-directory: ./backend
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
