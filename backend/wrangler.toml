@@ -1,6 +1,7 @@
 #:schema node_modules/wrangler/config-schema.json
 name = "seller-kanrikun-backend"
 main = "src/index.ts"
+manify = true
 compatibility_date = "2024-11-06"
 
 # Workers Logs
