@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: subdir
+        working-directory: backend
     name: Deploy
     steps:
       - uses: actions/checkout@v4
