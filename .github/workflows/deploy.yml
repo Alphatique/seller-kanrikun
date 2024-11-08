@@ -1,9 +1,11 @@
-name: Deploy Backend
+name: Deploy
 
 on:
   push:
     branches:
       - main
+    paths:
+      - 'backend/**'
 
 jobs:
   deploy:
@@ -11,6 +13,7 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    name: Deploy Backend
     steps:
       - uses: actions/checkout@v4
 
