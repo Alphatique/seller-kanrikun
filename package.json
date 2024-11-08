@@ -1,40 +1,12 @@
 {
-	"name": "seller-kanrikun",
-	"private": true,
-	"sideEffects": false,
-	"type": "module",
-	"workspaces": [
-	  "frontend",
-	  "packages/*"
-	],
-	"scripts": {
-		"dev": "cd frontend && bun run dev",
-		"build": "cd frontend && bun run build",
-		"start": "cd frontend && bun run start",
-		"deploy": "cd frontend && bun run deploy",
-		"typecheck": "tsc",
-		"cf-typegen": "wrangler types",
-		"format": "biome check --fix --unsafe",
-		"db:push": "dotenv -e .env.development.local -- drizzle-kit push",
-		"db:studio": "dotenv -e .env.development.local -- drizzle-kit studio"
-	},
-	"dependencies":{
-		"class-variance-authority": "^0.7.0",
-		"isbot": "^5.1.17",
-		"drizzle-orm": "^0.36.0",
-		"clsx": "^2.1.1",
-		"vaul": "^1.1.1",
-		"zod": "^3.23.8"
-	},
-	"devDependencies": {
-		"@cloudflare/workers-types": "^4.20241022.0",
-		"typescript": "^5.6.3",
-		"dotenv": "^16.4.5",
-		"dotenv-cli": "^7.4.2",
-		"drizzle-kit": "^0.27.2",
-		"wrangler": "3.84.1"
-	},
-	"engines": {
-		"node": ">=20.0.0"
-	}
+    "name": "seller-kanrikun",
+    "private": true,
+    "workspaces": [
+        "frontend"
+    ],
+    "scripts": {
+        "dev": "bun run --cwd frontend dev",
+        "build": "bun run --cwd frontend build",
+        "start": "bun run --cwd frontend start"
+    }
 }
