@@ -1,3 +1,4 @@
+import path from 'node:path';
 import {
 	vitePlugin as remix,
 	cloudflareDevProxyVitePlugin as remixCloudflareDevProxy,
@@ -5,7 +6,6 @@ import {
 import { defineConfig, loadEnv } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { parseEnv } from './env';
-import path from 'path';
 
 declare module '@remix-run/cloudflare' {
 	interface Future {
