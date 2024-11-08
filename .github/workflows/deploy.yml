@@ -11,14 +11,16 @@ jobs:
     defaults:
       run:
         working-directory: backend
-    name: Deploy
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
 
+      - name: Bun Install
+        run: bun install
+
       - name: Deploy backend
-        run: bunx run deploy
+        run: bun run deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
