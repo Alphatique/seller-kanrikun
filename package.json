@@ -1,7 +1,7 @@
 {
 	"name": "seller-kanrikun",
 	"private": true,
-	"workspaces": ["frontend"],
+	"workspaces": ["frontend", "backend"],
 	"scripts": {
 		"format": "biome check --fix --unsafe",
 		"prepare": "bunx lefthook install"
