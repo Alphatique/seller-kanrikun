@@ -10,7 +10,6 @@
 		"deploy": "bun run build && wrangler pages deploy",
 		"typecheck": "tsc",
 		"cf-typegen": "wrangler types",
-		"format": "biome check --fix --unsafe",
 		"db:push": "dotenv -e .env.development.local -- drizzle-kit push",
 		"db:studio": "dotenv -e .env.development.local -- drizzle-kit studio"
 	},
@@ -73,7 +72,6 @@
 		"zod": "^3.23.8"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^1.9.4",
 		"@cloudflare/workers-types": "^4.20241022.0",
 		"@remix-run/dev": "^2.13.1",
 		"@types/react": "^18.3.12",

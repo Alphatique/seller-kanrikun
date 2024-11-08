@@ -1,12 +1,13 @@
 {
-    "name": "seller-kanrikun",
-    "private": true,
-    "workspaces": [
-        "frontend"
-    ],
-    "scripts": {
-        "dev": "bun run --cwd frontend dev",
-        "build": "bun run --cwd frontend build",
-        "start": "bun run --cwd frontend start"
-    }
+	"name": "seller-kanrikun",
+	"private": true,
+	"workspaces": ["frontend"],
+	"scripts": {
+		"format": "biome check --fix --unsafe",
+		"prepare": "bunx lefthook install"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.4",
+		"lefthook": "^1.8.2"
+	}
 }
