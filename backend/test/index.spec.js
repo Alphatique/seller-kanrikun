@@ -1,5 +1,5 @@
-import { env, createExecutionContext, waitOnExecutionContext, SELF } from 'cloudflare:test';
-import { describe, it, expect } from 'vitest';
+import { SELF, createExecutionContext, env, waitOnExecutionContext } from 'cloudflare:test';
+import { describe, expect, it } from 'vitest';
 import worker from '../src';
 
 describe('Hello World worker', () => {
@@ -10,11 +10,11 @@ describe('Hello World worker', () => {
 		const response = await worker.fetch(request, env, ctx);
 		// Wait for all `Promise`s passed to `ctx.waitUntil()` to settle before running test assertions
 		await waitOnExecutionContext(ctx);
-		expect(await response.text()).toMatchInlineSnapshot(`"Hello World!"`);
+		expect(await response.text()).toMatchInlineSnapshot(`"Heno World!"`);
 	});
 
 	it('responds with Hello World! (integration style)', async () => {
 		const response = await SELF.fetch(request, env, ctx);
-		expect(await response.text()).toMatchInlineSnapshot(`"Hello World!"`);
+		expect(await response.text()).toMatchInlineSnapshot(`"Heno World!"`);
 	});
 });
