@@ -31,7 +31,7 @@ export const auth = betterAuth({
 					scopes: ['profile'],
 					tokenUrl: 'https://api.amazon.com/auth/o2/token',
 					userInfoUrl: 'https://api.amazon.com/user/profile',
-					redirectURI: 'https://seller-kanrikun.pages.dev/dashboad',
+					responseType: 'spapi_oauth_code',
 					pkce: true,
 				},
 			],
