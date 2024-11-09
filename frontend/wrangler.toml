@@ -1,5 +1,6 @@
 #:schema node_modules/wrangler/config-schema.json
 name = "seller-kanrikun"
+compatibility_date = "2024-11-09"
 main = "./build/worker/index.js"
 assets = { directory = "./build/client" }
 
