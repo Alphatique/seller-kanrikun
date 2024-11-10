@@ -17,11 +17,10 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
 
-      - name: change folder
-        run: cd web && pwd && ls
-
       - name: Install dependencies
+        working-directory: web
         run: bun install
 
       - name: Build with Bun
-        run: bun deploy
+        working-directory: web
+        run: bun run deploy
