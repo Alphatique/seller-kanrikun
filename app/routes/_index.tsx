@@ -23,14 +23,6 @@ export default function Index() {
 		console.log(response);
 	};
 
-	const hello = async () => {
-		const result = await fetch('http://localhost:5173/api/hello');
-		const data = await result.text();
-		console.log(data);
-	};
-
-	hello();
-
 	return (
 		<div className='flex h-screen flex-col items-center justify-center'>
 			<Button
