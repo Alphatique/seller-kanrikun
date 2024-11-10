@@ -1,11 +1,11 @@
-name: Deploy Web
+name: Deploy Backend
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'web/**'
+      - 'backend/**'
 
 jobs:
   build:
@@ -24,7 +24,7 @@ jobs:
         run: bun install
 
       - name: change folder
-        run: cd web
+        run: cd backend
 
       - name: Build with Bun
-        run: bun run build
+        run: bun run deploy
