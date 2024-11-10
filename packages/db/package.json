@@ -1,0 +1,20 @@
+{
+	"name": "@seller-kanrikun/db",
+	"private": true,
+	"type": "module",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"scripts": {
+		"push": "dotenv -e ../../web/.env.development.local -- drizzle-kit push",
+		"studio": "dotenv -e ../../web/.env.development.local -- drizzle-kit studio",
+		"typecheck": "tsc"
+	},
+	"devDependencies": {
+		"dotenv-cli": "^7.4.2",
+		"drizzle-kit": "^0.28.0"
+	},
+	"dependencies": {
+		"drizzle-orm": "^0.36.1"
+	}
+}

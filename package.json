@@ -1,9 +1,10 @@
 {
 	"name": "seller-kanrikun",
 	"private": true,
-	"workspaces": ["frontend", "backend"],
+	"workspaces": ["web", "packages/*"],
 	"scripts": {
 		"format": "biome check --fix --unsafe",
+		"typecheck": "bun run --filter \"*\" typecheck",
 		"prepare": "bunx lefthook install"
 	},
 	"devDependencies": {
