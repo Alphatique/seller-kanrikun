@@ -46,7 +46,7 @@ export default function HomePage() {
 					</SelectContent>
 				</Select>
 				<div className='flex items-center gap-2'>
-					<DateRangeInput date={date} setDate={setDate} />
+					<DateRangeInput value={date} onValueChange={setDate} />
 					<Button>Submit</Button>
 					<Button>Download</Button>
 				</div>

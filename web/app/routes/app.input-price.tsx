@@ -51,7 +51,7 @@ export default function HomePage() {
 					/>
 				</div>
 				<div className='flex items-center gap-2'>
-					<DateRangeInput date={uploadDate} setDate={setUploadDate} />
+					<DateRangeInput value={uploadDate} onValueChange={setUploadDate} />
 					<Button>Update</Button>
 				</div>
 			</div>
@@ -83,7 +83,7 @@ export default function HomePage() {
 					<Switch id='latest' />
 					<Label htmlFor='latest'>最新</Label>
 				</div>
-				<DateRangeInput date={tableDate} setDate={setTableDate} />
+				<DateRangeInput value={tableDate} onValueChange={setTableDate} />
 				<div className='flex items-center'>
 					<SearchIcon />
 					<Input type='text' placeholder='ASIN' />
