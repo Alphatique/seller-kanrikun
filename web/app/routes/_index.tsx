@@ -26,26 +26,27 @@ export default function Index() {
 
 	return (
 		<div className='flex h-screen flex-col items-center justify-center'>
+			<Button
+				onClick={() => {
+					handleLogin('amazon');
+				}}
+			>
+				amazon
+			</Button>
+			<Button
+				onClick={() => {
+					handleLogin('seller-central');
+				}}
+			>
+				seller
+			</Button>
+
 			{session ? (
 				<div>
 					<p>welcome{userName}</p>
-					<Button
-						onClick={() => {
-							handleLogin('seller-central');
-						}}
-					>
-						seller認証
-					</Button>
 				</div>
 			) : (
 				<div>
-					<Button
-						onClick={() => {
-							handleLogin('amazon');
-						}}
-					>
-						ログイン
-					</Button>
 					<p>ログインしてください</p>
 				</div>
 			)}
