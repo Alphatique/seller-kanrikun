@@ -1,24 +1,23 @@
 import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 
-import { DateRangeInput } from '~/components/date-range-input';
-import { Button } from '~/components/ui/button';
-import { Label } from '~/components/ui/label';
 import {
+	Button,
+	DateRangeInput,
+	Label,
 	Select,
 	SelectContent,
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from '~/components/ui/select';
-import {
 	Table,
 	TableBody,
 	TableCell,
 	TableHead,
 	TableHeader,
 	TableRow,
-} from '~/components/ui/table';
+} from '@seller-kanrikun/ui';
+
 import type { Period } from '~/types';
 
 export default function HomePage() {

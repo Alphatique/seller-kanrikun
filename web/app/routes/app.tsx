@@ -25,7 +25,7 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 	SidebarProvider,
-} from '~/components/ui/sidebar';
+} from '@seller-kanrikun/ui';
 
 const items = [
 	{

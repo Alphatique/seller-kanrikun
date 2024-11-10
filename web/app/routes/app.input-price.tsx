@@ -2,31 +2,27 @@ import { SearchIcon } from 'lucide-react';
 import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 
-import { DateRangeInput } from '~/components/date-range-input';
 import {
 	Accordion,
 	AccordionContent,
 	AccordionItem,
 	AccordionTrigger,
-} from '~/components/ui/accordion';
-import { Button } from '~/components/ui/button';
-import { Input } from '~/components/ui/input';
-import { Label } from '~/components/ui/label';
-import {
+	Button,
+	DateRangeInput,
+	Input,
+	Label,
 	Select,
 	SelectContent,
 	SelectTrigger,
 	SelectValue,
-} from '~/components/ui/select';
-import { Switch } from '~/components/ui/switch';
-import {
+	Switch,
 	Table,
 	TableBody,
 	TableCell,
 	TableHead,
 	TableHeader,
 	TableRow,
-} from '~/components/ui/table';
+} from '@seller-kanrikun/ui';
 
 export default function HomePage() {
 	const [uploadDate, setUploadDate] = useState<DateRange | undefined>({
