@@ -32,4 +32,5 @@ jobs:
           SP_API_APPLICATION_ID: ${{ secrets.SP_API_APPLICATION_ID }}
           TURSO_CONNECTION_URL: ${{ secrets.TURSO_CONNECTION_URL }}
           TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: bun run deploy
