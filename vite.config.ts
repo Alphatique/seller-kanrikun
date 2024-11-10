@@ -1,8 +1,10 @@
-import path from 'node:path';
+import adapter from '@hono/vite-dev-server/cloudflare';
 import {
 	vitePlugin as remix,
 	cloudflareDevProxyVitePlugin as remixCloudflareDevProxy,
 } from '@remix-run/dev';
+
+import serverAdapter from 'hono-remix-adapter/vite';
 import { defineConfig, loadEnv } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { parseEnv } from './env';
@@ -30,6 +32,10 @@ export default defineConfig(({ mode }) => {
 				},
 			}),
 			tsconfigPaths(),
+			serverAdapter({
+				adapter,
+				entry: 'server/index.ts',
+			}),
 		],
 		define:
 			mode === 'production'
