@@ -1,4 +1,4 @@
-name: DeployFrontend
+name: Deploy Frontend
 
 on:
   push:
@@ -6,22 +6,23 @@ on:
       - 'web/**'
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
-    name: Deploy Backend
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out the repository
+        uses: actions/checkout@v2
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
+      - name: Install Bun
+        run: |
+          curl -fsSL https://bun.sh/install | bash
+          export PATH="$HOME/.bun/bin:$PATH"
 
-      - name: Bun Install
+      - name: Install dependencies with Bun
         run: bun install
 
-      - name: Deploy backend
-        run: bun run deploy
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      - name: change folder
+        run: cd web
+
+      - name: Build with Bun
+        run: bun run build
