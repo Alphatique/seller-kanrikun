@@ -21,7 +21,7 @@ jobs:
         run: bun install
 
       - name: change folder
-        run: cd web
+        run: cd web && pwd
 
       - name: Build with Bun
         run: bun run deploy
