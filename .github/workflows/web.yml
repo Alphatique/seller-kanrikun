@@ -3,12 +3,12 @@ name: Deploy Web
 on:
   push:
     branches:
-      - main
+      - 'main'
     paths:
       - 'web/**'
   push:
     branches:
-      - front-workflow
+      - 'front-workflow'
 
 
 jobs:
