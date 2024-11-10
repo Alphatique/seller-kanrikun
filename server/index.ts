@@ -1,5 +1,7 @@
 import { Hono } from 'hono';
 
-export const hono = new Hono();
+export const app = new Hono();
 
-export default hono;
+app.get('/api/hello', c => c.text('Hello, world!'));
+
+export default app;
