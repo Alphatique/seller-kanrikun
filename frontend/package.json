@@ -54,7 +54,6 @@
 		"date-fns": "^3.0.0",
 		"drizzle-orm": "^0.36.0",
 		"embla-carousel-react": "^8.3.1",
-		"hono": "^4.6.9",
 		"input-otp": "^1.4.1",
 		"isbot": "^5.1.17",
 		"lucide-react": "^0.454.0",
