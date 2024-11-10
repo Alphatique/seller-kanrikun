@@ -18,7 +18,6 @@ jobs:
         uses: oven-sh/setup-bun@v1
 
       - name: Install dependencies
-        working-directory: web
         run: bun install
 
       - name: Build with Bun
