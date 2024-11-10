@@ -1,6 +1,8 @@
 import { createEnv } from '@t3-oss/env-core';
 import { z } from 'zod';
 
+// This is used in build phase. DON'T import this.
+
 export function parseEnv(runtimeEnv: Record<string, string | undefined>) {
 	return createEnv({
 		server: {

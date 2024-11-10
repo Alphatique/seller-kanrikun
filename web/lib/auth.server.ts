@@ -2,7 +2,7 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { genericOAuth } from 'better-auth/plugins';
 
-import { db } from '~/db/index.server';
+import { db } from '@seller-kanrikun/db';
 
 export const auth = betterAuth({
 	baseURL: process.env.BETTER_AUTH_URL,
