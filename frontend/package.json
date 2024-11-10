@@ -5,9 +5,9 @@
 	"type": "module",
 	"scripts": {
 		"dev": "remix vite:dev",
-		"build": "remix vite:build && wrangler pages functions build --outdir build/worker",
+		"build": "remix vite:build",
 		"start": "wrangler pages dev ./build/client",
-		"deploy": "bun run build && wrangler deploy",
+		"deploy": "bun run build && wrangler pages functions build --outdir build/worker",
 		"typecheck": "tsc",
 		"cf-typegen": "wrangler types",
 		"db:push": "dotenv -e .env.development.local -- drizzle-kit push",
