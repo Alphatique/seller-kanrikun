@@ -2,10 +2,8 @@ name: DeployFrontend
 
 on:
   push:
-    branches:
-      - main
     paths:
-      - 'web/**',
+      - 'web/**'
 
 jobs:
   deploy:
