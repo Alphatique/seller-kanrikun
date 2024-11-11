@@ -4,13 +4,6 @@ import { genericOAuth } from 'better-auth/plugins';
 
 import { db } from '@seller-kanrikun/db';
 
-const originalFetch = fetch;
-globalThis.fetch = (...args) => {
-	console.log(args);
-
-	return originalFetch(...args);
-};
-
 export const auth = betterAuth({
 	baseURL: process.env.BETTER_AUTH_URL,
 	secret: process.env.BETTER_AUTH_SECRET,

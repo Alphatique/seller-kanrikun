@@ -18,6 +18,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		if (requestUrl.searchParams.has('state')) {
 			url.searchParams.set('state', requestUrl.searchParams.get('state')!);
 		}
+		console.log(
+			requestUrl.searchParams.get('spapi_oauth_code'),
+			requestUrl.searchParams.get('state'),
+		);
 
 		return auth.handler(new Request(requestUrl, request));
 	}
