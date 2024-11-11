@@ -1,4 +1,4 @@
-import { createDbClient, user } from '@seller-kanrikun/db';
+import { account, createDbClient } from '@seller-kanrikun/db';
 import { Hono } from 'hono';
 const app = new Hono();
 app.get('/', async c => {
@@ -6,7 +6,7 @@ app.get('/', async c => {
 		c.env.TURSO_CONNECTION_URL,
 		c.env.TURSO_AUTH_TOKEN,
 	);
-	const result = await db.select().from(user).all();
+	const result = await db.select().from(account).all();
 	console.log(result);
 	return c.text('Heno Hono!');
 });

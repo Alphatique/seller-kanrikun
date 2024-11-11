@@ -4,4 +4,8 @@
 type CloudflareBindings = {
 	TURSO_CONNECTION_URL: string;
 	TURSO_AUTH_TOKEN: string;
+	AMAZON_CLIENT_ID: string;
+	AMAZON_CLIENT_SECRET: string;
+	SP_API_CLIENT_ID: string;
+	SP_API_CLIENT_SECRET: string;
 };
