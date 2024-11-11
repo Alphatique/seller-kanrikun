@@ -9,14 +9,18 @@ export function loader({ request }: LoaderFunctionArgs) {
 		request.url,
 	);
 
-	redirectUrl.searchParams.set(
-		'code',
-		requestUrl.searchParams.get('spapi_oauth_code') ?? '',
-	);
-	redirectUrl.searchParams.set(
-		'state',
-		requestUrl.searchParams.get('state') ?? '',
-	);
+	if (requestUrl.searchParams.has('spapi_oauth_code')) {
+		redirectUrl.searchParams.set(
+			'code',
+			requestUrl.searchParams.get('spapi_oauth_code') ?? '',
+		);
+	}
+	if (requestUrl.searchParams.has('state')) {
+		redirectUrl.searchParams.set(
+			'state',
+			requestUrl.searchParams.get('state') ?? '',
+		);
+	}
 
 	return auth.handler(new Request(requestUrl, request));
 }
