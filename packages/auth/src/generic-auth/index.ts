@@ -251,8 +251,7 @@ export const genericOAuth = (options: GenericOAuthOptions) => {
 				async ctx => {
 					if (
 						ctx.query.error ||
-						!ctx.query.code ||
-						!ctx.query.spapi_oauth_code
+						!(ctx.query.code || ctx.query.spapi_oauth_code)
 					) {
 						throw ctx.redirect(
 							`${ctx.context.baseURL}?error=${
@@ -273,7 +272,7 @@ export const genericOAuth = (options: GenericOAuthOptions) => {
 					const parsedState = await parseState(ctx);
 
 					const { callbackURL, codeVerifier, errorURL } = parsedState;
-					const code = ctx.query.code || ctx.query.spapi_oauth_code;
+					const code = (ctx.query.code || ctx.query.spapi_oauth_code) as string;
 
 					let finalTokenUrl = provider.tokenUrl;
 					let finalUserInfoUrl = provider.userInfoUrl;
