@@ -46,6 +46,7 @@
 		"@remix-run/cloudflare": "^2.14.0",
 		"@remix-run/cloudflare-pages": "^2.14.0",
 		"@remix-run/react": "^2.14.0",
+		"@seller-kanrikun/auth": "workspace:*",
 		"@seller-kanrikun/db": "workspace:*",
 		"@seller-kanrikun/ui": "workspace:*",
 		"@t3-oss/env-core": "^0.11.1",

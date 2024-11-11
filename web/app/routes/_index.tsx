@@ -1,8 +1,7 @@
 import type { MetaFunction } from '@remix-run/cloudflare';
 
+import { signIn, useSession } from '@seller-kanrikun/auth/client';
 import { Button } from '@seller-kanrikun/ui';
-
-import { signIn, useSession } from '~/lib/auth-client';
 
 export const meta: MetaFunction = () => {
 	return [
