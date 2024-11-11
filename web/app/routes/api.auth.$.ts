@@ -7,7 +7,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		new URL(request.url).pathname === '/api/auth/oauth2/callback/seller-central'
 	) {
 		const requestUrl = new URL(request.url);
-		const url = new URL(requestUrl.pathname);
+		const url = new URL(request.url.split('?')[0]);
 
 		if (requestUrl.searchParams.has('spapi_oauth_code')) {
 			url.searchParams.set(
