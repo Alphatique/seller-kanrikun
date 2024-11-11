@@ -32,7 +32,7 @@ export const auth = betterAuth({
 					scopes: ['profile'],
 					tokenUrl: 'https://api.amazon.co.jp/auth/o2/token',
 					userInfoUrl: 'https://api.amazon.co.jp/user/profile',
-					pkce: true,
+					pkce: false,
 				},
 			],
 		}),
