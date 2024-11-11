@@ -3,9 +3,11 @@
 	"scripts": {
 		"dev": "wrangler dev",
 		"deploy": "wrangler deploy --minify",
-		"cf-typegen": "wrangler types --env-interface CloudflareBindings"
+		"cf-typegen": "wrangler types --env-interface CloudflareBindings",
+		"typecheck": "tsc"
 	},
 	"dependencies": {
+		"@libsql/client": "^0.14.0",
 		"hono": "^4.6.9"
 	},
 	"devDependencies": {

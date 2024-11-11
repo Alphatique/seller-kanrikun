@@ -1,9 +1,14 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 
-import { db } from '@seller-kanrikun/db';
+import { createDbClient } from '@seller-kanrikun/db';
 
 import { genericOAuth } from './generic-auth';
+
+const { db } = createDbClient(
+	process.env.TURSO_CONNECTION_URL!,
+	process.env.TURSO_AUTH_TOKEN!,
+);
 
 export const auth = betterAuth({
 	baseURL: process.env.BETTER_AUTH_URL,
