@@ -2,7 +2,7 @@ import type { MetaFunction } from '@remix-run/cloudflare';
 
 import { Button } from '@seller-kanrikun/ui';
 
-import { signIn, useSession } from '../../lib/auth-client';
+import { signIn, useSession } from '~/lib/auth-client';
 
 export const meta: MetaFunction = () => {
 	return [

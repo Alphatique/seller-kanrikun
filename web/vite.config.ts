@@ -3,7 +3,6 @@ import {
 	cloudflareDevProxyVitePlugin as remixCloudflareDevProxy,
 } from '@remix-run/dev';
 import { defineConfig, loadEnv } from 'vite';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 import { parseEnv } from './env';
 
@@ -29,8 +28,12 @@ export default defineConfig(({ mode }) => {
 					v3_lazyRouteDiscovery: true,
 				},
 			}),
-			tsconfigPaths(),
 		],
+		resolve: {
+			alias: {
+				'~/': `${__dirname}/`,
+			},
+		},
 		define:
 			mode === 'production'
 				? Object.fromEntries(

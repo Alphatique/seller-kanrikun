@@ -1,5 +1,5 @@
 {
-	"name": "@seller-kanrikun/backend",
+	"name": "backend",
 	"scripts": {
 		"dev": "wrangler dev",
 		"deploy": "wrangler deploy --minify",

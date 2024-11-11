@@ -1,7 +1,7 @@
 {
 	"name": "seller-kanrikun",
 	"private": true,
-	"workspaces": ["web", "packages/*", "backend"],
+	"workspaces": ["web", "packages/*"],
 	"scripts": {
 		"format": "biome check --fix --unsafe",
 		"typecheck": "bun run --filter \"*\" typecheck",
