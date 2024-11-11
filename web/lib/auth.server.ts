@@ -6,7 +6,7 @@ import { db } from '@seller-kanrikun/db';
 
 const originalFetch = fetch;
 globalThis.fetch = (...args) => {
-	console.log(args[0]);
+	console.log(args);
 
 	return originalFetch(...args);
 };
