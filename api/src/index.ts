@@ -1,10 +1,14 @@
 import type { createClient } from '@libsql/client';
 import type { Account } from '@seller-kanrikun/db';
 import { account, createDbClient } from '@seller-kanrikun/db';
-import { eq } from 'drizzle-orm';
+import { and, eq, isNotNull, lt } from 'drizzle-orm';
 import type { drizzle } from 'drizzle-orm/libsql';
 import { Hono } from 'hono';
-import type { AuthTokenResponse } from '../types/amazon';
+import type {
+	AuthTokenResponse,
+	SettlementReportDocumentResponse,
+	SettlementReportsResponse,
+} from '~/types';
 
 const app = new Hono<{ Bindings: CloudflareBindings }>();
 let dbClient: {
@@ -19,37 +23,113 @@ function initDb(env: CloudflareBindings) {
 	return dbClient.db;
 }
 
-app.get('/report', async c => {});
+app.get('/reports/all', async c => {
+	const db = initDb(c.env);
+
+	const accounts = await db
+		.select()
+		.from(account)
+		.where(eq(account.providerId, 'seller-central'))
+		.all();
+
+	for (const eachAccount of accounts) {
+		const reports = await fetch(
+			'https://sellingpartnerapi-fe.amazon.com/reports/2021-06-30/reports?reportTypes=GET_V2_SETTLEMENT_REPORT_DATA_FLAT_FILE',
+			{
+				method: 'GET',
+				headers: {
+					'x-amz-access-token': eachAccount.accessToken!,
+				},
+			},
+		);
+		const reportsData: SettlementReportsResponse = await reports.json();
+
+		const reportData = reportsData.reports[0];
+
+		const reportDocument = await fetch(
+			`https://sellingpartnerapi-fe.amazon.com/reports/2021-06-30/documents/${reportData.reportDocumentId}`,
+			{
+				method: 'GET',
+				headers: {
+					'x-amz-access-token': eachAccount.accessToken!,
+				},
+			},
+		);
+
+		const reportDocumentData: SettlementReportDocumentResponse =
+			await reportDocument.json();
+
+		const reportDocumentText = await fetch(reportDocumentData.url, {
+			method: 'GET',
+		});
+
+		const reportDocumentTextData = await reportDocumentText.text();
+
+		console.log(reportDocumentTextData);
+
+		/*
+		let nextToken = reportsData.nextToken;
+		while (nextToken) {
+			const nextReports = await getReportsByNextToken(
+				nextToken,
+				eachAccount.accessToken!,
+			);
+			nextToken = nextReports.nextToken;
+
+			console.log(nextReports);
+		}
+*/
+	}
+});
+
+async function getReportsByNextToken(nextToken: string, accessToken: string) {
+	const reponse = await fetch(
+		`https://sellingpartnerapi-fe.amazon.com/reports/2021-06-30/reports?nextToken=${encodeURIComponent(nextToken)}`,
+		{
+			method: 'GET',
+			headers: {
+				'x-amz-access-token': accessToken,
+			},
+		},
+	);
+
+	const responseData: SettlementReportsResponse = await reponse.json();
+	return responseData;
+}
 
 app.get('/account/refresh_tokens', async c => {
 	const db = initDb(c.env);
 
-	const accounts = await db.select().from(account).all();
+	const accounts = await db
+		.select()
+		.from(account)
+		.where(
+			and(
+				isNotNull(account.refreshToken),
+				isNotNull(account.expiresAt),
+				lt(account.expiresAt, new Date()),
+			),
+		)
+		.all();
 
 	for (const eachAccount of accounts) {
-		if (
-			eachAccount.refreshToken !== null &&
-			eachAccount.expiresAt !== null &&
-			eachAccount.expiresAt.getTime() < Date.now()
-		) {
-			switch (eachAccount.providerId) {
-				case 'amazon':
-					await updateAccessToken(
-						c.env,
-						eachAccount,
-						c.env.AMAZON_CLIENT_ID,
-						c.env.AMAZON_CLIENT_SECRET,
-					);
-					break;
-				case 'seller-central':
-					await updateAccessToken(
-						c.env,
-						eachAccount,
-						c.env.SP_API_CLIENT_ID,
-						c.env.SP_API_CLIENT_SECRET,
-					);
-					break;
-			}
+		switch (eachAccount.providerId) {
+			case 'amazon':
+				updateAccessToken(
+					c.env,
+					eachAccount,
+					c.env.AMAZON_CLIENT_ID,
+					c.env.AMAZON_CLIENT_SECRET,
+				);
+				break;
+			case 'seller-central':
+				updateAccessToken(
+					c.env,
+					eachAccount,
+					c.env.SP_API_CLIENT_ID,
+					c.env.SP_API_CLIENT_SECRET,
+				);
+				break;
 		}
 	}
 });
@@ -85,12 +165,17 @@ async function updateAccessToken(
 		const accessTokenJson: AuthTokenResponse = await getAccessToken.json();
 		const expiresAt = new Date(Date.now() + accessTokenJson.expires_in * 1000);
 
+		console.log(accessTokenJson, accountData);
+
 		db.update(account)
 			.set({ accessToken: accessTokenJson.access_token, expiresAt: expiresAt })
 			.where(
-				eq(account.id, accountData.id) &&
+				and(
+					eq(account.id, accountData.id),
 					eq(account.providerId, accountData.providerId),
-			);
+				),
+			)
+			.run();
 	}
 }
 
