@@ -8,6 +8,7 @@ import { cors } from 'hono/cors';
 
 import type {
 	AuthTokenResponse,
+	InventorySummariesResponse,
 	SettlementReportDocumentResponse,
 	SettlementReportsResponse,
 } from '~/types';
@@ -36,6 +37,33 @@ app.use('*', async (c, next) => {
 
 	c.set('DB', dbClient.db);
 	return corsMiddleware(c, next);
+});
+
+app.get('/inventory', async c => {
+	const db = c.get('DB');
+
+	const accounts = await db
+		.select()
+		.from(account)
+		.where(eq(account.providerId, 'seller-central'))
+		.all();
+
+	const eachAccount = accounts[0];
+
+	const inventory = await fetch(
+		'https://sellingpartnerapi-fe.amazon.com/fba/inventory/v1/summaries?marketplaceIds=A1VC38T7YXB528&granularityType=Marketplace&granularityId=A1VC38T7YXB528',
+		{
+			method: 'GET',
+			headers: {
+				'x-amz-access-token': eachAccount.accessToken!,
+			},
+		},
+	);
+	const inventoryData: InventorySummariesResponse = await inventory.json();
+	console.log(inventoryData);
+	const summaries = inventoryData.payload.inventorySummaries;
+
+	return new Response('ok');
 });
 
 app.get('/reports/all', async c => {
@@ -98,6 +126,7 @@ app.get('/reports/all', async c => {
 */
 	}
 });
+
 async function getReportsByNextToken(nextToken: string, accessToken: string) {
 	const reponse = await fetch(
 		`https://sellingpartnerapi-fe.amazon.com/reports/2021-06-30/reports?nextToken=${encodeURIComponent(nextToken)}`,
@@ -193,6 +222,30 @@ async function updateAccessToken(
 
 app.get('/hello', async c => {
 	return new Response('Heno, world!');
+});
+
+app.get('/catalog', async c => {
+	const itemList = [];
+
+	const db = c.get('DB');
+
+	const accounts = await db
+		.select()
+		.from(account)
+		.where(eq(account.providerId, 'seller-central'))
+		.all();
+
+	const eachAccount = accounts[0];
+
+	const response = await fetch(
+		'https://sellingpartnerapi-fe.amazon.com/catalog/2022-04-01/items?identifiersType=ASIN&identifiers=B06ZXXQGZ8&marketplaceIds=A1VC38T7YXB528',
+		{
+			method: 'GET',
+			headers: {
+				'x-amz-access-token': eachAccount.accessToken!,
+			},
+		},
+	);
 });
 
 export default app;
