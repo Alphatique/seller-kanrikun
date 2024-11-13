@@ -24,8 +24,9 @@ const app = new Hono<{
 app.use(cors());
 app.use('*', async (c, next) => {
 	const corsMiddleware = cors({
-		origin: c.env.MY_API_ORIGIN,
+		origin: c.env.MY_WEB_ORIGIN,
 		allowMethods: ['POST', 'GET', 'OPTIONS'],
+		credentials: true,
 	});
 
 	const dbClient: {
@@ -189,5 +190,9 @@ async function updateAccessToken(
 			.run();
 	}
 }
+
+app.get('/hello', async c => {
+	return new Response('Heno, world!');
+});
 
 export default app;
