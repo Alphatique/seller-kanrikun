@@ -8,4 +8,6 @@ type CloudflareBindings = {
 	AMAZON_CLIENT_SECRET: string;
 	SP_API_CLIENT_ID: string;
 	SP_API_CLIENT_SECRET: string;
+	MY_API_ORIGIN: string;
+	MY_WEB_ORIGIN: string;
 };

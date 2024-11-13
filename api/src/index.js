@@ -41,7 +41,7 @@ app.get('/reports/all', async c => {
 		const reportDocumentText = await fetch(reportDocumentData.url, {
 			method: 'GET',
 		});
-		const reportDocumentTextData = await reportDocumentText.text();
+		const reportDocumentTextData = await reportDocumentText.csv();
 		console.log(reportDocumentTextData);
 		/*
         let nextToken = reportsData.nextToken;
