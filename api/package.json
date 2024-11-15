@@ -8,9 +8,11 @@
 	},
 	"dependencies": {
 		"@libsql/client": "^0.14.0",
+		"@types/parquetjs": "^0.10.6",
 		"drizzle-orm": "^0.36.1",
 		"hono": "^4.6.9",
-		"hyparquet": "^1.5.0"
+		"hyparquet": "^1.5.0",
+		"parquetjs": "^0.11.2"
 	},
 	"devDependencies": {
 		"@cloudflare/workers-types": "^4.20241106.0",
