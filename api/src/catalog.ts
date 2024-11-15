@@ -1,7 +1,7 @@
 import { account } from '@seller-kanrikun/db';
 import { eq } from 'drizzle-orm';
 import { Hono } from 'hono';
-import type { CustomVariables } from '~/types';
+import type { CatalogItemsResponse, CustomVariables } from '~/types';
 import { updateAccessToken } from './account';
 
 const app = new Hono<{
@@ -39,9 +39,12 @@ app.get('/', async c => {
 		},
 	);
 
-	const responseData = await response.json();
+	const responseData: CatalogItemsResponse = await response.json();
 
 	console.log(responseData);
+	console.log(responseData.items[0]);
+	console.log(responseData.items[0].summaries);
+	console.log(responseData.items[0].summaries[0].browseClassification);
 
 	return new Response('ok');
 });

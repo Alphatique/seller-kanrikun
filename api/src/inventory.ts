@@ -31,6 +31,7 @@ app.get('/all', async c => {
 	const inventoryData: InventorySummariesResponse = await inventory.json();
 	console.log(inventoryData);
 	const summaries = inventoryData.payload.inventorySummaries;
+	console.log(summaries);
 
 	return new Response('ok');
 });
