@@ -1,14 +1,14 @@
-import type { Account } from '@seller-kanrikun/db';
-import { account } from '@seller-kanrikun/db';
+import type { ClientType } from '@seller-kanrikun/db';
+import type { Account } from '@seller-kanrikun/db/schema';
+import { account } from '@seller-kanrikun/db/schema';
 import { and, eq, isNotNull, lt } from 'drizzle-orm';
-import type { drizzle } from 'drizzle-orm/libsql';
 import { Hono } from 'hono';
 import type { AuthTokenResponse, MyHonoInitializer } from '~/types';
 
 const app = new Hono<MyHonoInitializer>();
 
 export async function updateAccessToken(
-	db: ReturnType<typeof drizzle>,
+	db: ClientType,
 	accountData: Account,
 	clientId: string,
 	clientSecret: string,

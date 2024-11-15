@@ -1,4 +1,4 @@
-import type { drizzle } from 'drizzle-orm/libsql';
+import type { ClientType } from '@seller-kanrikun/db';
 
 export type AuthTokenResponse = {
 	access_token: string;
@@ -8,7 +8,7 @@ export type AuthTokenResponse = {
 };
 
 export type CustomVariables = {
-	DB: ReturnType<typeof drizzle>;
+	DB: ClientType;
 };
 
 export type MyHonoInitializer = {
