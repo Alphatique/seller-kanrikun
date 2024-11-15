@@ -1,4 +1,4 @@
-import { account } from '@seller-kanrikun/db';
+import { account } from '@seller-kanrikun/db/schema';
 import { eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import type { InventorySummariesResponse, MyHonoInitializer } from '~/types';

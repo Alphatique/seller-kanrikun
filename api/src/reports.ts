@@ -1,4 +1,4 @@
-import { account } from '@seller-kanrikun/db';
+import { account } from '@seller-kanrikun/db/schema';
 import { eq } from 'drizzle-orm';
 import type { drizzle } from 'drizzle-orm/libsql';
 import { Hono } from 'hono';
