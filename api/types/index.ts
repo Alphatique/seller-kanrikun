@@ -10,5 +10,11 @@ export type AuthTokenResponse = {
 export type CustomVariables = {
 	DB: ReturnType<typeof drizzle>;
 };
+
+export type MyHonoInitializer = {
+	Bindings: CloudflareBindings;
+	Variables: CustomVariables;
+};
+
 // export * from './amazon';
 export * from './seller';

@@ -1,13 +1,10 @@
 import { account } from '@seller-kanrikun/db';
 import { eq } from 'drizzle-orm';
 import { Hono } from 'hono';
-import type { CatalogItemsResponse, CustomVariables } from '~/types';
+import type { CatalogItemsResponse, MyHonoInitializer } from '~/types';
 import { updateAccessToken } from './account';
 
-const app = new Hono<{
-	Bindings: CloudflareBindings;
-	Variables: CustomVariables;
-}>();
+const app = new Hono<MyHonoInitializer>();
 
 app.get('/', async c => {
 	const itemList = [];

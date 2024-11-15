@@ -3,15 +3,12 @@ import { eq } from 'drizzle-orm';
 import type { drizzle } from 'drizzle-orm/libsql';
 import { Hono } from 'hono';
 import type {
-	CustomVariables,
+	MyHonoInitializer,
 	SettlementReportDocumentResponse,
 	SettlementReportsResponse,
 } from '~/types';
 
-const app = new Hono<{
-	Bindings: CloudflareBindings;
-	Variables: CustomVariables;
-}>();
+const app = new Hono<MyHonoInitializer>();
 
 app.get('/all', async c => {
 	const db: ReturnType<typeof drizzle> = c.get('DB');

@@ -1,12 +1,9 @@
 import { account } from '@seller-kanrikun/db';
 import { eq } from 'drizzle-orm';
 import { Hono } from 'hono';
-import type { CustomVariables, InventorySummariesResponse } from '~/types';
+import type { InventorySummariesResponse, MyHonoInitializer } from '~/types';
 
-const app = new Hono<{
-	Bindings: CloudflareBindings;
-	Variables: CustomVariables;
-}>();
+const app = new Hono<MyHonoInitializer>();
 
 app.get('/all', async c => {
 	const db = c.get('DB');

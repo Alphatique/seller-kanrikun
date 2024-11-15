@@ -3,12 +3,9 @@ import { account } from '@seller-kanrikun/db';
 import { and, eq, isNotNull, lt } from 'drizzle-orm';
 import type { drizzle } from 'drizzle-orm/libsql';
 import { Hono } from 'hono';
-import type { AuthTokenResponse, CustomVariables } from '~/types';
+import type { AuthTokenResponse, MyHonoInitializer } from '~/types';
 
-const app = new Hono<{
-	Bindings: CloudflareBindings;
-	Variables: CustomVariables;
-}>();
+const app = new Hono<MyHonoInitializer>();
 
 export async function updateAccessToken(
 	db: ReturnType<typeof drizzle>,

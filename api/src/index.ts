@@ -3,16 +3,13 @@ import { createDbClient } from '@seller-kanrikun/db';
 import type { drizzle } from 'drizzle-orm/libsql';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import type { CustomVariables } from '~/types';
+import type { MyHonoInitializer } from '~/types';
 
 import catalog from './catalog';
 import inventory from './inventory';
 import reports from './reports';
 
-const app = new Hono<{
-	Bindings: CloudflareBindings;
-	Variables: CustomVariables;
-}>();
+const app = new Hono<MyHonoInitializer>();
 
 app.use('*', async (c, next) => {
 	const corsMiddleware = cors({
