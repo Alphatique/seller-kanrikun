@@ -2,10 +2,7 @@ import type { ClientType } from '@seller-kanrikun/db';
 import type { Account } from '@seller-kanrikun/db/schema';
 import { account } from '@seller-kanrikun/db/schema';
 import { and, eq, isNotNull, lt } from 'drizzle-orm';
-import { Hono } from 'hono';
-import type { AuthTokenResponse, MyHonoInitializer } from '~/types';
-
-const app = new Hono<MyHonoInitializer>();
+import type { AuthTokenResponse } from '~/types';
 
 export async function updateAccessToken(
 	db: ClientType,
@@ -46,8 +43,13 @@ export async function updateAccessToken(
 	}
 }
 
-app.get('/account/refresh_tokens', async c => {
-	const db = c.get('DB');
+export async function refreshAccountsTokens(
+	db: ClientType,
+	amazonClientId: string,
+	amazonClientSecret: string,
+	spApiClientId: string,
+	spApiClientSecret: string,
+) {
 	const accounts = await db
 		.select()
 		.from(account)
@@ -67,22 +69,20 @@ app.get('/account/refresh_tokens', async c => {
 				await updateAccessToken(
 					db,
 					eachAccount,
-					c.env.AMAZON_CLIENT_ID,
-					c.env.AMAZON_CLIENT_SECRET,
+					amazonClientId,
+					amazonClientSecret,
 				);
 				break;
 			case 'seller-central':
 				await updateAccessToken(
 					db,
 					eachAccount,
-					c.env.SP_API_CLIENT_ID,
-					c.env.SP_API_CLIENT_SECRET,
+					spApiClientId,
+					spApiClientSecret,
 				);
 				break;
 		}
 	}
 
 	return new Response('ok');
-});
-
-export default app;
+}

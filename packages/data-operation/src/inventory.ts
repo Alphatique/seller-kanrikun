@@ -1,13 +1,9 @@
+import type { ClientType } from '@seller-kanrikun/db';
 import { account } from '@seller-kanrikun/db/schema';
 import { eq } from 'drizzle-orm';
-import { Hono } from 'hono';
-import type { InventorySummariesResponse, MyHonoInitializer } from '~/types';
+import type { InventorySummariesResponse } from '~/types';
 
-const app = new Hono<MyHonoInitializer>();
-
-app.get('/all', async c => {
-	const db = c.get('DB');
-
+export async function getInventoryData(db: ClientType) {
 	const accounts = await db
 		.select()
 		.from(account)
@@ -31,6 +27,4 @@ app.get('/all', async c => {
 	console.log(summaries);
 
 	return new Response('ok');
-});
-
-export default app;
+}

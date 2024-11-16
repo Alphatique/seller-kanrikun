@@ -1,17 +1,12 @@
+import type { ClientType } from '@seller-kanrikun/db';
 import { account } from '@seller-kanrikun/db/schema';
 import { eq } from 'drizzle-orm';
-import type { drizzle } from 'drizzle-orm/libsql';
-import { Hono } from 'hono';
 import type {
-	MyHonoInitializer,
 	SettlementReportDocumentResponse,
 	SettlementReportsResponse,
 } from '~/types';
 
-const app = new Hono<MyHonoInitializer>();
-
-app.get('/all', async c => {
-	const db: ReturnType<typeof drizzle> = c.get('DB');
+export async function getReports(db: ClientType) {
 	const accounts = await db
 		.select()
 		.from(account)
@@ -65,7 +60,7 @@ app.get('/all', async c => {
 			console.log(nextReports);
 		}
 	}
-});
+}
 
 async function getReportsByNextToken(nextToken: string, accessToken: string) {
 	const reponse = await fetch(
@@ -81,5 +76,3 @@ async function getReportsByNextToken(nextToken: string, accessToken: string) {
 	const responseData: SettlementReportsResponse = await reponse.json();
 	return responseData;
 }
-
-export default app;
