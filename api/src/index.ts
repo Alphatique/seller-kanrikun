@@ -15,4 +15,5 @@ export default {
 	async fetch(request, env, ctx): Promise<Response> {
 		return new Response('Hello World!');
 	},
+	async scheduled(event, env, ctx): Promise<void> {},
 } satisfies ExportedHandler<Env>;

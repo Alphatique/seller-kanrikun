@@ -1,25 +1,12 @@
-import type { ClientType } from '@seller-kanrikun/db';
-import { account } from '@seller-kanrikun/db/schema';
-import { eq } from 'drizzle-orm';
 import type { CatalogItemsResponse } from '~/types';
 
-export async function getCatalogData(db: ClientType) {
-	const itemList = [];
-
-	const accounts = await db
-		.select()
-		.from(account)
-		.where(eq(account.providerId, 'seller-central'))
-		.all();
-
-	const eachAccount = accounts[0];
-
+export async function getCatalogData(accessToken: string) {
 	const response = await fetch(
 		'https://sellingpartnerapi-fe.amazon.com/catalog/2022-04-01/items?identifiersType=ASIN&identifiers=B06ZXXQGZ8&marketplaceIds=A1VC38T7YXB528',
 		{
 			method: 'GET',
 			headers: {
-				'x-amz-access-token': eachAccount.accessToken!,
+				'x-amz-access-token': accessToken,
 			},
 		},
 	);
