@@ -11,9 +11,20 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
+import { getAccountsByProviderId } from '@seller-kanrikun/data-operation';
+import { createClient } from '@seller-kanrikun/db';
+
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
 		return new Response('Hello World!');
 	},
-	async scheduled(event, env, ctx): Promise<void> {},
+	async scheduled(event, env, ctx): Promise<void> {
+		const db = await createClient({
+			url: env.TURSO_CONNECTION_URL,
+			authToken: env.TURSO_AUTH_TOKEN,
+		});
+		const accounts = await getAccountsByProviderId(db, 'amazon');
+
+		console.log(accounts);
+	},
 } satisfies ExportedHandler<Env>;

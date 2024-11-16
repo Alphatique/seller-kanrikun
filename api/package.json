@@ -4,11 +4,15 @@
 	"private": true,
 	"scripts": {
 		"deploy": "wrangler deploy",
-		"dev": "wrangler dev",
+		"dev": "wrangler dev --test-scheduled",
 		"start": "wrangler dev",
 		"test": "vitest",
 		"cf-typegen": "wrangler types",
 		"typecheck": "tsc"
+	},
+	"dependencies": {
+		"@seller-kanrikun/db": "workspace:*",
+		"@seller-kanrikun/data-operation": "workspace:*"
 	},
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.5.2",

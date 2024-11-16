@@ -9,9 +9,6 @@
 		"types": ["@cloudflare/workers-types/2023-07-01"],
 		"jsx": "react-jsx",
 		"jsxImportSource": "hono/jsx",
-		"paths": {
-			"~/*": ["./*"]
-		},
 		"noEmit": true
 	},
 	"include": ["./src"]

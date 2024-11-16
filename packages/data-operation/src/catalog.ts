@@ -1,4 +1,4 @@
-import type { CatalogItemsResponse } from '~/types';
+import type { CatalogItemsResponse } from '../types';
 
 export async function getCatalogData(accessToken: string) {
 	const response = await fetch(

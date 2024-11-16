@@ -2,7 +2,18 @@ import type { ClientType } from '@seller-kanrikun/db';
 import type { Account } from '@seller-kanrikun/db/schema';
 import { account } from '@seller-kanrikun/db/schema';
 import { and, eq, isNotNull, lt } from 'drizzle-orm';
-import type { AuthTokenResponse } from '~/types';
+import type { AuthTokenResponse } from '../types';
+
+export async function getAccountsByProviderId(
+	db: ClientType,
+	providerId: string,
+) {
+	return await db
+		.select()
+		.from(account)
+		.where(eq(account.providerId, providerId))
+		.all();
+}
 
 export async function updateAccessToken(
 	db: ClientType,

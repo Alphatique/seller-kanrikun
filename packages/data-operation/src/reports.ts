@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 import type {
 	SettlementReportDocumentResponse,
 	SettlementReportsResponse,
-} from '~/types';
+} from '../types';
 
 export async function getReports(db: ClientType) {
 	const accounts = await db
