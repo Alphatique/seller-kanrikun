@@ -11,8 +11,16 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
-import { getAccountsByProviderId } from '@seller-kanrikun/data-operation';
+import {
+	getAccountsByProviderId,
+	getReportDocument,
+	getSettlementReports,
+	updateAccessToken,
+} from '@seller-kanrikun/data-operation';
+import type { SettlementReportsResponse } from '@seller-kanrikun/data-operation/types';
 import { createClient } from '@seller-kanrikun/db';
+
+import { parquet } from '@seller-kanrikun/data-operation';
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
@@ -23,7 +31,25 @@ export default {
 			url: env.TURSO_CONNECTION_URL,
 			authToken: env.TURSO_AUTH_TOKEN,
 		});
-		const accounts = await getAccountsByProviderId(db, 'amazon');
+		const accounts = await getAccountsByProviderId(db, 'seller-central');
+
+		for (const account of accounts) {
+			await updateAccessToken(
+				db,
+				account,
+				env.SP_API_CLIENT_ID,
+				env.SP_API_CLIENT_SECRET,
+			);
+			const reports: SettlementReportsResponse = await getSettlementReports(
+				account.accessToken!,
+			);
+			const document: string = await getReportDocument(
+				reports.reports[0].reportDocumentId,
+				account.accessToken!,
+			);
+			//console.log(document);
+			await parquet(document);
+		}
 
 		console.log(accounts);
 	},

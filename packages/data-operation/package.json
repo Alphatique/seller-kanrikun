@@ -4,9 +4,15 @@
 	"type": "module",
 	"exports": {
 		".": "./src/index.ts",
-		"./type": "./types/index.ts"
+		"./types": "./types/index.ts"
 	},
 	"scripts": {
 		"typecheck": "tsc"
+	},
+	"dependencies": {
+		"csv-parser": "^3.0.0",
+		"parquetjs": "^0.11.2",
+		"stream": "^0.0.3",
+		"stream-buffers": "^3.0.3"
 	}
 }
