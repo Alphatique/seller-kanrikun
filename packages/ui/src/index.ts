@@ -40,6 +40,7 @@ export * from './components/slider';
 export * from './components/sonner';
 export * from './components/switch';
 export * from './components/table';
+export * from './components/table-pl-bs';
 export * from './components/textarea';
 export * from './components/toast';
 // export * from './components/toaster';
