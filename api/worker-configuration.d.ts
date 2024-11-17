@@ -7,4 +7,5 @@ type Env = {
 	AMAZON_CLIENT_SECRET: string;
 	TURSO_CONNECTION_URL: string;
 	TURSO_AUTH_TOKEN: string;
+	MY_BUCKET: R2Bucket;
 };
