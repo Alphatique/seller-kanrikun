@@ -4,7 +4,11 @@ import type { DateRange } from 'react-day-picker';
 import {
 	Button,
 	DateRangeInput,
+	DateTableRow,
+	HeadTableRow,
+	IndentableTableCell,
 	Label,
+	PLBSTableRow,
 	Select,
 	SelectContent,
 	SelectItem,
@@ -13,9 +17,6 @@ import {
 	Table,
 	TableBody,
 	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
 } from '@seller-kanrikun/ui';
 
 import type { Period } from '~/types';
@@ -52,18 +53,30 @@ export default function HomePage() {
 			</div>
 
 			<Table>
-				<TableHeader>
-					<TableRow>
-						<TableHead>項目</TableHead>
-					</TableRow>
-				</TableHeader>
 				<TableBody>
-					<TableRow>
-						<TableCell>項目1</TableCell>
-					</TableRow>
-					<TableRow>
-						<TableCell>項目2</TableCell>
-					</TableRow>
+					<HeadTableRow>
+						<IndentableTableCell>PL</IndentableTableCell>
+					</HeadTableRow>
+					<DateTableRow>
+						<IndentableTableCell />
+						<TableCell>2024/02</TableCell>
+						<TableCell>2024/03</TableCell>
+					</DateTableRow>
+					<PLBSTableRow>
+						<IndentableTableCell indent={1}>売上</IndentableTableCell>
+						<TableCell>¥100,000</TableCell>
+						<TableCell>¥100,000</TableCell>
+					</PLBSTableRow>
+					<PLBSTableRow>
+						<IndentableTableCell indent={2}>商品代金</IndentableTableCell>
+						<TableCell>¥100,000</TableCell>
+						<TableCell>¥100,000</TableCell>
+					</PLBSTableRow>
+					<PLBSTableRow>
+						<IndentableTableCell indent={2}>配送料</IndentableTableCell>
+						<TableCell>¥100,000</TableCell>
+						<TableCell>¥100,000</TableCell>
+					</PLBSTableRow>
 				</TableBody>
 			</Table>
 		</div>
