@@ -17,6 +17,9 @@ import {
 	Table,
 	TableBody,
 	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
 } from '@seller-kanrikun/ui';
 
 import type { Period } from '~/types';
@@ -53,9 +56,14 @@ export default function HomePage() {
 			</div>
 
 			<Table>
+				<TableHeader>
+					<TableRow>
+						<TableHead>項目</TableHead>
+					</TableRow>
+				</TableHeader>
 				<TableBody>
 					<HeadTableRow>
-						<IndentableTableCell>PL</IndentableTableCell>
+						<TableCell>PL</TableCell>
 					</HeadTableRow>
 					<DateTableRow>
 						<IndentableTableCell />
@@ -73,7 +81,129 @@ export default function HomePage() {
 						<TableCell>¥100,000</TableCell>
 					</PLBSTableRow>
 					<PLBSTableRow>
+						<IndentableTableCell indent={2}>
+							商品代金に対する税金
+						</IndentableTableCell>
+						<TableCell>¥100,000</TableCell>
+						<TableCell>¥100,000</TableCell>
+					</PLBSTableRow>
+					<PLBSTableRow>
 						<IndentableTableCell indent={2}>配送料</IndentableTableCell>
+						<TableCell>¥100,000</TableCell>
+						<TableCell>¥100,000</TableCell>
+					</PLBSTableRow>
+					<PLBSTableRow>
+						<IndentableTableCell indent={2}>
+							配送料に対する税金
+						</IndentableTableCell>
+						<TableCell>¥100,000</TableCell>
+						<TableCell>¥100,000</TableCell>
+					</PLBSTableRow>
+					<PLBSTableRow>
+						<IndentableTableCell indent={2}>その他税金</IndentableTableCell>
+						<TableCell>¥100,000</TableCell>
+						<TableCell>¥100,000</TableCell>
+					</PLBSTableRow>
+					<PLBSTableRow>
+						<IndentableTableCell indent={1}>返品額</IndentableTableCell>
+						<TableCell>¥100,000</TableCell>
+						<TableCell>¥100,000</TableCell>
+					</PLBSTableRow>
+					<PLBSTableRow>
+						<IndentableTableCell indent={1}>純売上</IndentableTableCell>
+						<TableCell>¥100,000</TableCell>
+						<TableCell>¥100,000</TableCell>
+					</PLBSTableRow>
+					<PLBSTableRow>
+						<IndentableTableCell indent={1}>原価</IndentableTableCell>
+						<TableCell>¥100,000</TableCell>
+						<TableCell>¥100,000</TableCell>
+					</PLBSTableRow>
+					<PLBSTableRow>
+						<IndentableTableCell indent={1}>粗利益</IndentableTableCell>
+						<TableCell>¥100,000</TableCell>
+						<TableCell>¥100,000</TableCell>
+					</PLBSTableRow>
+					<PLBSTableRow>
+						<IndentableTableCell indent={1}>
+							販売費および一般管理費
+						</IndentableTableCell>
+						<TableCell>¥100,000</TableCell>
+						<TableCell>¥100,000</TableCell>
+					</PLBSTableRow>
+					<PLBSTableRow>
+						<IndentableTableCell indent={2}>
+							広告宣伝費（Amazon広告）
+						</IndentableTableCell>
+						<TableCell>¥100,000</TableCell>
+						<TableCell>¥100,000</TableCell>
+					</PLBSTableRow>
+					<PLBSTableRow>
+						<IndentableTableCell indent={2}>
+							プロモーション費用
+						</IndentableTableCell>
+						<TableCell>¥100,000</TableCell>
+						<TableCell>¥100,000</TableCell>
+					</PLBSTableRow>
+					<PLBSTableRow>
+						<IndentableTableCell indent={2}>販売手数料</IndentableTableCell>
+						<TableCell>¥100,000</TableCell>
+						<TableCell>¥100,000</TableCell>
+					</PLBSTableRow>
+					<PLBSTableRow>
+						<IndentableTableCell indent={2}>FBA出荷手数料</IndentableTableCell>
+						<TableCell>¥100,000</TableCell>
+						<TableCell>¥100,000</TableCell>
+					</PLBSTableRow>
+					<PLBSTableRow>
+						<IndentableTableCell indent={2}>在庫保管料</IndentableTableCell>
+						<TableCell>¥100,000</TableCell>
+						<TableCell>¥100,000</TableCell>
+					</PLBSTableRow>
+					<PLBSTableRow>
+						<IndentableTableCell indent={2}>在庫更新費用</IndentableTableCell>
+						<TableCell>¥100,000</TableCell>
+						<TableCell>¥100,000</TableCell>
+					</PLBSTableRow>
+					<PLBSTableRow>
+						<IndentableTableCell indent={2}>配送返戻金</IndentableTableCell>
+						<TableCell>¥100,000</TableCell>
+						<TableCell>¥100,000</TableCell>
+					</PLBSTableRow>
+					<PLBSTableRow>
+						<IndentableTableCell indent={2}>
+							アカウント月額登録料
+						</IndentableTableCell>
+						<TableCell>¥100,000</TableCell>
+						<TableCell>¥100,000</TableCell>
+					</PLBSTableRow>
+					<PLBSTableRow>
+						<IndentableTableCell indent={1}>amazonその他</IndentableTableCell>
+						<TableCell>¥100,000</TableCell>
+						<TableCell>¥100,000</TableCell>
+					</PLBSTableRow>
+					<PLBSTableRow>
+						<IndentableTableCell indent={1}>永劫利益</IndentableTableCell>
+						<TableCell>¥100,000</TableCell>
+						<TableCell>¥100,000</TableCell>
+					</PLBSTableRow>
+					<HeadTableRow>
+						<TableCell>BS</TableCell>
+					</HeadTableRow>
+					<DateTableRow>
+						<IndentableTableCell />
+						<TableCell>2024/02</TableCell>
+						<TableCell>2024/03</TableCell>
+					</DateTableRow>
+					<PLBSTableRow>
+						<IndentableTableCell indent={1}>
+							売掛金（未入金額）
+						</IndentableTableCell>
+						<TableCell>¥100,000</TableCell>
+						<TableCell>¥100,000</TableCell>
+					</PLBSTableRow>
+					<PLBSTableRow>
+						<IndentableTableCell indent={1}>棚卸資産</IndentableTableCell>
 						<TableCell>¥100,000</TableCell>
 						<TableCell>¥100,000</TableCell>
 					</PLBSTableRow>
