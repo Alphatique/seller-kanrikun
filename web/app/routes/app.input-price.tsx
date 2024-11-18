@@ -2,6 +2,19 @@ import { SearchIcon } from 'lucide-react';
 import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 
+import { tableFromIPC } from 'apache-arrow';
+import * as initWasm from 'parquet-wasm';
+
+async function read() {
+	const resp = await fetch('http://localhost:5173/duckdb2557.parquet');
+	const parquetUint8Array = new Uint8Array(await resp.arrayBuffer());
+	const arrowWasmTable = initWasm.readParquet(parquetUint8Array);
+	console.log(arrowWasmTable);
+	const arrowTable = tableFromIPC(arrowWasmTable.intoIPCStream());
+	console.log(arrowTable);
+	console.log(arrowTable.toArray());
+}
+
 import * as XLSX from 'xlsx';
 
 import {
@@ -32,6 +45,7 @@ import type { CostPrice } from '~/types';
 export async function action({ request, context }: ActionFunctionArgs) {
 	const body = await request.json();
 	console.log(body);
+	read();
 	return 'ok';
 }
 
@@ -49,7 +63,6 @@ export default function HomePage() {
 
 	const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.item(0);
-		console.log(file);
 
 		if (file) {
 			const reader = new FileReader();
