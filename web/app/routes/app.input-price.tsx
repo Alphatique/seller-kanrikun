@@ -2,6 +2,8 @@ import { SearchIcon } from 'lucide-react';
 import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 
+import * as XLSX from 'xlsx';
+
 import {
 	Accordion,
 	AccordionContent,
@@ -24,6 +26,99 @@ import {
 	TableRow,
 } from '@seller-kanrikun/ui';
 
+import type { ActionFunctionArgs } from '@remix-run/cloudflare';
+import type { CostPrice, UpdateCostPriceRequest } from '~/types';
+
+import * as arrow from 'apache-arrow';
+import * as parquetWasm from 'parquet-wasm';
+
+async function read() {
+	const resp = await fetch('http://localhost:5173/duckdb2557.parquet');
+	const parquetUint8Array = new Uint8Array(await resp.arrayBuffer());
+	const arrowWasmTable = parquetWasm.readParquet(parquetUint8Array);
+	console.log(arrowWasmTable);
+	const arrowTable = arrow.tableFromIPC(arrowWasmTable.intoIPCStream());
+	console.log(arrowTable);
+	const getedArray = arrowTable.toArray();
+
+	const myData = {
+		stringArray: ['heno', 'mohe'],
+		intArray: [],
+		doubleArray: [],
+	};
+
+	getedArray.push(myData);
+
+	console.log(getedArray);
+}
+
+async function write(request: UpdateCostPriceRequest) {
+	console.log(request);
+	const ASINArray = [];
+	const priceArray = [];
+	const dateArray = [];
+
+	console.log(request.date.from, request.date.to);
+	const zeroFromDate = new Date(request.date.from);
+	zeroFromDate.setUTCHours(0, 0, 0, 0);
+	const zeroToDate = new Date(request.date.to);
+	zeroToDate.setUTCHours(0, 0, 0, 0);
+
+	for (
+		let date = zeroFromDate;
+		date <= zeroToDate;
+		date.setDate(date.getDate() + 1)
+	) {
+		for (const { ASIN, Price } of request.data) {
+			ASINArray.push(ASIN);
+			priceArray.push(Price);
+			dateArray.push(date);
+		}
+	}
+
+	const table = arrow.tableFromArrays({
+		ASIN: ASINArray,
+		price: priceArray,
+		date: dateArray,
+	});
+
+	console.log(table.toString(), table.schema);
+
+	const parquetTable = parquetWasm.Table.fromIPCStream(
+		arrow.tableToIPC(table, 'stream'),
+	);
+	const writerProperties = new parquetWasm.WriterPropertiesBuilder()
+		.setCompression(parquetWasm.Compression.SNAPPY)
+		.build();
+	const parquetUint8Array = parquetWasm.writeParquet(
+		parquetTable,
+		writerProperties,
+	);
+
+	console.log(parquetTable);
+	console.log(parquetUint8Array);
+
+	/*
+
+	const table1: ArrowTable = makeTable({
+		date: vector,
+		ASIN: strVector,
+		price: 
+	});
+	console.log(typeof table1.toString());
+	*/
+	//const mergedTable = table1.concat(table2);
+	//console.log(mergedTable.toString());
+}
+
+export async function action({ request, context }: ActionFunctionArgs) {
+	const body: UpdateCostPriceRequest = await request.json();
+	//console.log(body);
+	//read();
+	write(body);
+	return 'ok';
+}
+
 export default function HomePage() {
 	const [uploadDate, setUploadDate] = useState<DateRange | undefined>({
 		from: new Date(),
@@ -33,6 +128,59 @@ export default function HomePage() {
 		from: new Date(),
 		to: new Date(),
 	});
+
+	const [xlsxData, setlsxData] = useState<CostPrice[] | undefined>();
+
+	const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.item(0);
+
+		if (file) {
+			const reader = new FileReader();
+			reader.onload = event => {
+				console.log(event);
+				const binaryStr = event.target?.result;
+				const workbook = XLSX.read(binaryStr, { type: 'binary' });
+				const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+				const jsonData = XLSX.utils.sheet_to_json(worksheet);
+				console.log(jsonData);
+
+				const data: CostPrice[] = [];
+				for (const { ASIN, '原価(円)': Price } of jsonData.filter(
+					(item): item is { ASIN: string; '原価(円)': number } =>
+						typeof item === 'object' &&
+						item !== null &&
+						'ASIN' in item &&
+						'原価(円)' in item &&
+						typeof item.ASIN === 'string' &&
+						typeof item['原価(円)'] === 'number',
+				)) {
+					data.push({ ASIN, Price });
+				}
+
+				if (jsonData.length !== 0) {
+					setlsxData(data);
+				}
+				console.log(data);
+			};
+			reader.readAsBinaryString(file);
+		}
+	};
+
+	const handleUpdate = () => {
+		fetch('/app/input-price', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				date: uploadDate,
+				data: xlsxData,
+			}),
+		})
+			.then(response => response.json())
+			.then(result => console.log(result))
+			.catch(error => console.error('Error:', error));
+	};
 
 	return (
 		<div className='grid gap-4'>
@@ -44,14 +192,33 @@ export default function HomePage() {
 						type='file'
 						accept='.xls,.xlsx'
 						className='hover:cursor-pointer'
+						onChange={handleFileUpload}
 					/>
 				</div>
 				<div className='flex items-center gap-2'>
 					<DateRangeInput value={uploadDate} onValueChange={setUploadDate} />
-					<Button>Update</Button>
+					<Button onClick={handleUpdate}>Update</Button>
 				</div>
 			</div>
 
+			{xlsxData ? (
+				<Table>
+					<TableHeader>
+						<TableRow>
+							<TableHead>ASIN</TableHead>
+							<TableHead>原価(円)</TableHead>
+						</TableRow>
+					</TableHeader>
+					<TableBody>
+						{xlsxData.map(({ ASIN, Price }) => (
+							<TableRow key={ASIN}>
+								<TableCell>{ASIN}</TableCell>
+								<TableCell>{Price}</TableCell>
+							</TableRow>
+						))}
+					</TableBody>
+				</Table>
+			) : null}
 			<Accordion
 				type='single'
 				collapsible
@@ -60,16 +227,34 @@ export default function HomePage() {
 				<AccordionItem value='item-1'>
 					<AccordionTrigger>原価入力について</AccordionTrigger>
 					<AccordionContent>
-						原価入力テンプレートのダウンロード
-						まずは、指定された商品の原価を入力するためのテンプレートをダウンロードしてください。
-						このテンプレートには、あらかじめ商品名や商品番号が入力されていますので、ユーザーが入力するのは原価情報のみです。
-						原価の入力
-						ダウンロードしたテンプレートを開き、「原価(円)」の欄に各商品の原価を入力してください。
-						原価の入力
-						入力された原価情報が適用される反映期間（開始日と終了日）を設定し、「反映」ボタンをクリックしてください。
-						原価入力後のアップロード
-						保存したテンプレートをアップロードしてください。入力された情報はPL
-						BS画面等に反映されます。
+						<ul className='list-disc space-y-2 pl-5'>
+							<li>
+								<p>
+									<a
+										href='/template.xlsx'
+										download='Seller管理くん-原価入力テンプレート.xlsx'
+										className='text-blue-500 underline'
+									>
+										原価入力テンプレートのダウンロード
+									</a>
+								</p>
+								<p>
+									まずは、指定された商品の原価を入力するためのテンプレートをダウンロードしてください。このテンプレートには、あらかじめ商品名や商品番号が入力されていますので、ユーザーが入力するのは原価情報のみです。
+								</p>
+							</li>
+							<li>
+								<p>原価の入力</p>
+								<p>
+									ダウンロードしたテンプレートを開き、「原価(円)」の欄に各商品の原価を入力してください。
+								</p>
+							</li>
+							<li>
+								<p>原価入力後のアップロード</p>
+								<p>
+									保存したテンプレートをアップロードしてください。入力された原価情報が適用される反映期間（開始日と終了日）を設定し、「反映」ボタンをクリックしてください。入力された情報はPLBS画面等に反映されます。
+								</p>
+							</li>
+						</ul>
 					</AccordionContent>
 				</AccordionItem>
 			</Accordion>

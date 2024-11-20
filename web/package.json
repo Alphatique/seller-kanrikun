@@ -50,6 +50,7 @@
 		"@seller-kanrikun/db": "workspace:*",
 		"@seller-kanrikun/ui": "workspace:*",
 		"@t3-oss/env-core": "^0.11.1",
+		"apache-arrow": "^18.0.0",
 		"better-auth": "^0.8.1",
 		"class-variance-authority": "^0.7.0",
 		"clsx": "^2.1.1",
@@ -60,6 +61,7 @@
 		"isbot": "^5.1.17",
 		"lucide-react": "^0.456.0",
 		"next-themes": "^0.4.3",
+		"parquet-wasm": "^0.6.1",
 		"react": "^18.3.1",
 		"react-day-picker": "8.10.1",
 		"react-dom": "^18.3.1",
@@ -70,6 +72,7 @@
 		"tailwind-merge": "^2.5.4",
 		"tailwindcss-animate": "^1.0.7",
 		"vaul": "^1.1.1",
+		"xlsx": "^0.18.5",
 		"zod": "^3.23.8"
 	},
 	"devDependencies": {
