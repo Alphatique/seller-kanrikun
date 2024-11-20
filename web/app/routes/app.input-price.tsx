@@ -27,11 +27,95 @@ import {
 } from '@seller-kanrikun/ui';
 
 import type { ActionFunctionArgs } from '@remix-run/cloudflare';
-import type { CostPrice } from '~/types';
+import type { CostPrice, UpdateCostPriceRequest } from '~/types';
+
+import * as arrow from 'apache-arrow';
+import * as parquetWasm from 'parquet-wasm';
+
+async function read() {
+	const resp = await fetch('http://localhost:5173/duckdb2557.parquet');
+	const parquetUint8Array = new Uint8Array(await resp.arrayBuffer());
+	const arrowWasmTable = parquetWasm.readParquet(parquetUint8Array);
+	console.log(arrowWasmTable);
+	const arrowTable = arrow.tableFromIPC(arrowWasmTable.intoIPCStream());
+	console.log(arrowTable);
+	const getedArray = arrowTable.toArray();
+
+	const myData = {
+		stringArray: ['heno', 'mohe'],
+		intArray: [],
+		doubleArray: [],
+	};
+
+	getedArray.push(myData);
+
+	console.log(getedArray);
+}
+
+async function write(request: UpdateCostPriceRequest) {
+	console.log(request);
+	const ASINArray = [];
+	const priceArray = [];
+	const dateArray = [];
+
+	console.log(request.date.from, request.date.to);
+	const zeroFromDate = new Date(request.date.from);
+	zeroFromDate.setUTCHours(0, 0, 0, 0);
+	const zeroToDate = new Date(request.date.to);
+	zeroToDate.setUTCHours(0, 0, 0, 0);
+
+	for (
+		let date = zeroFromDate;
+		date <= zeroToDate;
+		date.setDate(date.getDate() + 1)
+	) {
+		for (const { ASIN, Price } of request.data) {
+			ASINArray.push(ASIN);
+			priceArray.push(Price);
+			dateArray.push(date);
+		}
+	}
+
+	const table = arrow.tableFromArrays({
+		ASIN: ASINArray,
+		price: priceArray,
+		date: dateArray,
+	});
+
+	console.log(table.toString(), table.schema);
+
+	const parquetTable = parquetWasm.Table.fromIPCStream(
+		arrow.tableToIPC(table, 'stream'),
+	);
+	const writerProperties = new parquetWasm.WriterPropertiesBuilder()
+		.setCompression(parquetWasm.Compression.SNAPPY)
+		.build();
+	const parquetUint8Array = parquetWasm.writeParquet(
+		parquetTable,
+		writerProperties,
+	);
+
+	console.log(parquetTable);
+	console.log(parquetUint8Array);
+
+	/*
+
+	const table1: ArrowTable = makeTable({
+		date: vector,
+		ASIN: strVector,
+		price: 
+	});
+	console.log(typeof table1.toString());
+	*/
+	//const mergedTable = table1.concat(table2);
+	//console.log(mergedTable.toString());
+}
 
 export async function action({ request, context }: ActionFunctionArgs) {
-	const body = await request.json();
-	console.log(body);
+	const body: UpdateCostPriceRequest = await request.json();
+	//console.log(body);
+	//read();
+	write(body);
 	return 'ok';
 }
 
@@ -49,7 +133,6 @@ export default function HomePage() {
 
 	const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.item(0);
-		console.log(file);
 
 		if (file) {
 			const reader = new FileReader();
