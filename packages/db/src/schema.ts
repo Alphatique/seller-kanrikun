@@ -1,4 +1,4 @@
-import type { InferSelectModel } from 'drizzle-orm';
+import type { InferInsertModel, InferSelectModel } from 'drizzle-orm';
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
 export const user = sqliteTable('user', {
@@ -81,4 +81,12 @@ export const plbsData = sqliteTable('plbsData', {
 	}).notNull(),
 });
 
+export type User = InferSelectModel<typeof user>;
+export type InsertUser = InferInsertModel<typeof user>;
+export type Session = InferSelectModel<typeof session>;
+export type InsertSession = InferInsertModel<typeof session>;
+export type Account = InferSelectModel<typeof account>;
+export type InsertAccount = InferInsertModel<typeof account>;
+export type Verification = InferSelectModel<typeof verification>;
+export type InsertVerification = InferInsertModel<typeof verification>;
 export type PlbsData = InferSelectModel<typeof plbsData>;

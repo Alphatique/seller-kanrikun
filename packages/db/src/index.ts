@@ -1,15 +1,18 @@
-import { createClient } from '@libsql/client';
+import { createClient as createLibsqlClient } from '@libsql/client';
 import { drizzle } from 'drizzle-orm/libsql';
 
 import * as schema from './schema';
 
-const client = createClient({
-	url: process.env.TURSO_CONNECTION_URL!,
-	authToken: process.env.TURSO_AUTH_TOKEN!,
-});
+export function createClient(config: {
+	url: string;
+	authToken: string;
+}) {
+	const client = createLibsqlClient(config);
+	const db = drizzle(client, {
+		schema,
+	});
 
-export const db = drizzle(client, {
-	schema,
-});
+	return db;
+}
 
-export * from './schema';
+export type ClientType = ReturnType<typeof createClient>;
