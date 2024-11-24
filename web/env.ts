@@ -20,6 +20,11 @@ export function parseEnv(runtimeEnv: Record<string, string | undefined>) {
 			// Database
 			TURSO_CONNECTION_URL: z.string().url(),
 			TURSO_AUTH_TOKEN: z.string(),
+
+			// R2
+			CLOUDFLARE_R2_ENDPOINT: z.string().url(),
+			CLOUDFLARE_R2_ACCESS_KEY: z.string(),
+			CLOUDFLARE_R2_SECRET_KEY: z.string(),
 		},
 
 		runtimeEnv,
