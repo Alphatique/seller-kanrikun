@@ -71,13 +71,15 @@ export default function AppLayout() {
 }
 
 function AppSidebar() {
-	const { data: session } = useSession();
+	const { data: session, error } = useSession();
 	const handleSignOut = async () => {
 		const response = await signOut();
 		console.log(response);
 	};
 
-	console.log(session);
+	if (error) {
+		// TODO: loginにリダイレクトしたい人生だった
+	}
 
 	return (
 		<Sidebar>
@@ -121,7 +123,11 @@ function AppSidebar() {
 								</DropdownMenuContent>
 							</DropdownMenu>
 						) : (
-							<a href='/login'>Login</a>
+							<SidebarMenuButton asChild>
+								<a href='/login'>
+									<span>Login</span>
+								</a>
+							</SidebarMenuButton>
 						)}
 					</SidebarMenuItem>
 				</SidebarMenu>
