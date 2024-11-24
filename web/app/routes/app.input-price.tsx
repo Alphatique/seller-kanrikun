@@ -34,24 +34,6 @@ import * as arrow from 'apache-arrow';
 import * as parquetWasm from 'parquet-wasm';
 import { getPriceWriteOnlySignedUrl } from '../r2.server';
 
-async function read() {
-	/*
-	const parquetUint8Array = new Uint8Array(await resp.arrayBuffer());
-	const arrowWasmTable = parquetWasm.readParquet(parquetUint8Array);
-	const arrowTable = arrow.tableFromIPC(arrowWasmTable.intoIPCStream());
-	const getedArray = arrowTable.toArray();
-
-	const myData = {
-		stringArray: ['heno', 'mohe'],
-		intArray: [],
-		doubleArray: [],
-	};
-
-	getedArray.push(myData);
-
-	console.log(getedArray);*/
-}
-
 export async function action({ request, context }: ActionFunctionArgs) {
 	const body: UpdateCostPriceRequest = await request.json();
 	console.log(body);

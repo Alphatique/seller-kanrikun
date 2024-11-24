@@ -55,12 +55,29 @@ const data = [
 	[1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000],
 ];
 
+import { useSession } from '@seller-kanrikun/auth/client';
+
 export default function HomePage() {
 	const [date, setDate] = useState<DateRange | undefined>({
 		from: new Date(),
 		to: new Date(),
 	});
 	const [period, setPeriod] = useState<Period>('monthly');
+
+	const { data: session } = useSession();
+
+	if (session) {
+		fetch('/app/read-data', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'text/plain', // Textデータの指定
+			},
+			body: session.user.id,
+		})
+			.then(response => response.json())
+			.then(result => console.log(result))
+			.catch(error => console.error('Error:', error));
+	}
 
 	return (
 		<div className='grid gap-4'>
