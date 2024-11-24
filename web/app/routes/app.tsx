@@ -71,13 +71,13 @@ export default function AppLayout() {
 }
 
 function AppSidebar() {
-	const { data: session, error } = useSession();
+	const { data: session, error: sessionError } = useSession();
 	const handleSignOut = async () => {
 		const response = await signOut();
 		console.log(response);
 	};
 
-	if (error) {
+	if (sessionError) {
 		// TODO: loginにリダイレクトしたい人生だった
 	}
 

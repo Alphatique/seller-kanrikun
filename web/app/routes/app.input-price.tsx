@@ -29,16 +29,16 @@ import {
 import type { ActionFunctionArgs } from '@remix-run/cloudflare';
 import type { CostPrice, UpdateCostPriceRequest } from '~/types';
 
+import { useSession } from '@seller-kanrikun/auth/client';
 import * as arrow from 'apache-arrow';
 import * as parquetWasm from 'parquet-wasm';
+import { getPriceWriteOnlySignedUrl } from '../r2.server';
 
 async function read() {
-	const resp = await fetch('http://localhost:5173/duckdb2557.parquet');
+	/*
 	const parquetUint8Array = new Uint8Array(await resp.arrayBuffer());
 	const arrowWasmTable = parquetWasm.readParquet(parquetUint8Array);
-	console.log(arrowWasmTable);
 	const arrowTable = arrow.tableFromIPC(arrowWasmTable.intoIPCStream());
-	console.log(arrowTable);
 	const getedArray = arrowTable.toArray();
 
 	const myData = {
@@ -49,19 +49,20 @@ async function read() {
 
 	getedArray.push(myData);
 
-	console.log(getedArray);
+	console.log(getedArray);*/
 }
 
-async function write(request: UpdateCostPriceRequest) {
-	console.log(request);
+export async function action({ request, context }: ActionFunctionArgs) {
+	const body: UpdateCostPriceRequest = await request.json();
+	console.log(body);
+
 	const ASINArray = [];
 	const priceArray = [];
 	const dateArray = [];
 
-	console.log(request.date.from, request.date.to);
-	const zeroFromDate = new Date(request.date.from);
+	const zeroFromDate = new Date(body.date.from);
 	zeroFromDate.setUTCHours(0, 0, 0, 0);
-	const zeroToDate = new Date(request.date.to);
+	const zeroToDate = new Date(body.date.to);
 	zeroToDate.setUTCHours(0, 0, 0, 0);
 
 	for (
@@ -69,7 +70,7 @@ async function write(request: UpdateCostPriceRequest) {
 		date <= zeroToDate;
 		date.setDate(date.getDate() + 1)
 	) {
-		for (const { ASIN, Price } of request.data) {
+		for (const { ASIN, Price } of body.data) {
 			ASINArray.push(ASIN);
 			priceArray.push(Price);
 			dateArray.push(date);
@@ -82,8 +83,6 @@ async function write(request: UpdateCostPriceRequest) {
 		date: dateArray,
 	});
 
-	console.log(table.toString(), table.schema);
-
 	const parquetTable = parquetWasm.Table.fromIPCStream(
 		arrow.tableToIPC(table, 'stream'),
 	);
@@ -94,32 +93,26 @@ async function write(request: UpdateCostPriceRequest) {
 		parquetTable,
 		writerProperties,
 	);
-
-	console.log(parquetTable);
 	console.log(parquetUint8Array);
 
-	/*
+	const writeUrl = await getPriceWriteOnlySignedUrl(body.userId);
 
-	const table1: ArrowTable = makeTable({
-		date: vector,
-		ASIN: strVector,
-		price: 
+	const writeResponse = await fetch(writeUrl, {
+		method: 'PUT',
+		headers: {
+			'Content-Type': 'application/octet-stream',
+		},
+		body: parquetUint8Array,
 	});
-	console.log(typeof table1.toString());
-	*/
-	//const mergedTable = table1.concat(table2);
-	//console.log(mergedTable.toString());
-}
 
-export async function action({ request, context }: ActionFunctionArgs) {
-	const body: UpdateCostPriceRequest = await request.json();
-	//console.log(body);
-	//read();
-	write(body);
+	console.log(writeResponse);
+
 	return 'ok';
 }
 
 export default function HomePage() {
+	const { data: session } = useSession();
+
 	const [uploadDate, setUploadDate] = useState<DateRange | undefined>({
 		from: new Date(),
 		to: new Date(),
@@ -137,12 +130,10 @@ export default function HomePage() {
 		if (file) {
 			const reader = new FileReader();
 			reader.onload = event => {
-				console.log(event);
 				const binaryStr = event.target?.result;
 				const workbook = XLSX.read(binaryStr, { type: 'binary' });
 				const worksheet = workbook.Sheets[workbook.SheetNames[0]];
 				const jsonData = XLSX.utils.sheet_to_json(worksheet);
-				console.log(jsonData);
 
 				const data: CostPrice[] = [];
 				for (const { ASIN, '原価(円)': Price } of jsonData.filter(
@@ -173,6 +164,7 @@ export default function HomePage() {
 				'Content-Type': 'application/json',
 			},
 			body: JSON.stringify({
+				userId: session.user.id,
 				date: uploadDate,
 				data: xlsxData,
 			}),
