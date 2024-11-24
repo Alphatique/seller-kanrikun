@@ -43,6 +43,7 @@ export default function Index() {
 			{session ? (
 				<div>
 					<p>welcome{userName}</p>
+					<a href='./app'>アプリへ</a>
 				</div>
 			) : (
 				<div>
