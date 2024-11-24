@@ -4,6 +4,7 @@ export type CostPrice = {
 };
 
 export type UpdateCostPriceRequest = {
+	userId: string;
 	date: {
 		from: Date;
 		to: Date;

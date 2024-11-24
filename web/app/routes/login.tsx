@@ -17,7 +17,7 @@ export default function Index() {
 	const handleLogin = async (providerId: string) => {
 		const response = await signIn.oauth2({
 			providerId: providerId,
-			callbackURL: '/',
+			callbackURL: '/app',
 		});
 
 		console.log(response);
@@ -43,6 +43,7 @@ export default function Index() {
 			{session ? (
 				<div>
 					<p>welcome{userName}</p>
+					<a href='./app'>アプリへ</a>
 				</div>
 			) : (
 				<div>

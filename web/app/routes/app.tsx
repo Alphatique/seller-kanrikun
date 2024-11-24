@@ -5,27 +5,27 @@ import {
 	DropdownMenuTrigger,
 } from '@radix-ui/react-dropdown-menu';
 import { Outlet } from '@remix-run/react';
-import {
-	Calendar,
-	ChevronDown,
-	Home,
-	Inbox,
-	Search,
-	Settings,
-} from 'lucide-react';
-
+import { useSession } from '@seller-kanrikun/auth/client';
 import {
 	Sidebar,
 	SidebarContent,
+	SidebarFooter,
 	SidebarGroup,
 	SidebarGroupContent,
 	SidebarGroupLabel,
-	SidebarHeader,
 	SidebarMenu,
 	SidebarMenuButton,
 	SidebarMenuItem,
 	SidebarProvider,
 } from '@seller-kanrikun/ui';
+import {
+	Calendar,
+	ChevronUp,
+	Home,
+	Inbox,
+	Search,
+	Settings,
+} from 'lucide-react';
 
 const items = [
 	{
@@ -55,6 +55,8 @@ const items = [
 	},
 ];
 
+import { signOut } from '@seller-kanrikun/auth/client';
+
 export default function AppLayout() {
 	return (
 		<SidebarProvider>
@@ -69,33 +71,21 @@ export default function AppLayout() {
 }
 
 function AppSidebar() {
+	const { data: session, error: sessionError } = useSession();
+	const handleSignOut = async () => {
+		const response = await signOut();
+		console.log(response);
+	};
+
+	if (sessionError) {
+		// TODO: loginにリダイレクトしたい人生だった
+	}
+
 	return (
 		<Sidebar>
-			<SidebarHeader>
-				<SidebarMenu>
-					<SidebarMenuItem>
-						<DropdownMenu>
-							<DropdownMenuTrigger asChild>
-								<SidebarMenuButton>
-									Select Workspace
-									<ChevronDown className='ml-auto' />
-								</SidebarMenuButton>
-							</DropdownMenuTrigger>
-							<DropdownMenuContent className='w-[--radix-popper-anchor-width]'>
-								<DropdownMenuItem>
-									<span>Acme Inc</span>
-								</DropdownMenuItem>
-								<DropdownMenuItem>
-									<span>Acme Corp.</span>
-								</DropdownMenuItem>
-							</DropdownMenuContent>
-						</DropdownMenu>
-					</SidebarMenuItem>
-				</SidebarMenu>
-			</SidebarHeader>
 			<SidebarContent>
 				<SidebarGroup>
-					<SidebarGroupLabel>Application</SidebarGroupLabel>
+					<SidebarGroupLabel>Seller-kanrikun</SidebarGroupLabel>
 					<SidebarGroupContent>
 						<SidebarMenu>
 							{items.map(item => (
@@ -112,6 +102,36 @@ function AppSidebar() {
 					</SidebarGroupContent>
 				</SidebarGroup>
 			</SidebarContent>
+			<SidebarFooter>
+				<SidebarMenu>
+					<SidebarMenuItem>
+						{session ? (
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<SidebarMenuButton>
+										{session.user.email}
+										<ChevronUp className='ml-auto' />
+									</SidebarMenuButton>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent
+									side='top'
+									className='w-[--radix-popper-anchor-width]'
+								>
+									<DropdownMenuItem onClick={handleSignOut}>
+										<span>Sign out</span>
+									</DropdownMenuItem>
+								</DropdownMenuContent>
+							</DropdownMenu>
+						) : (
+							<SidebarMenuButton asChild>
+								<a href='/login'>
+									<span>Login</span>
+								</a>
+							</SidebarMenuButton>
+						)}
+					</SidebarMenuItem>
+				</SidebarMenu>
+			</SidebarFooter>
 		</Sidebar>
 	);
 }
