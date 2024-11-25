@@ -12,6 +12,7 @@
  */
 
 import {
+	generateR2Hash,
 	getAccountsByProviderId,
 	getReportDocument,
 	getSettlementReports,
@@ -92,6 +93,8 @@ export default {
 			const jsonString = JSON.stringify(json);
 			const compressed = gzipSync(new TextEncoder().encode(jsonString));
 			console.log(json);
+
+			const hashKey = generateR2Hash(account.userId, 'report.gzip');
 
 			await env.MY_BUCKET.put('key', compressed, {
 				httpMetadata: {

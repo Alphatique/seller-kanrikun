@@ -14,6 +14,8 @@ export const R2 = new S3Client({
 	},
 });
 
+import { generateR2Hash } from '@seller-kanrikun/data-operation';
+
 // 読み込み専用ダウンロード用url取得関数
 export async function getReadOnlySignedUrl(
 	userId: string,
@@ -21,7 +23,7 @@ export async function getReadOnlySignedUrl(
 	bucket = 'seller-kanrikun',
 	expiresIn = 60 * 60,
 ) {
-	const key = await generateHash(userId, dataName);
+	const key = await generateR2Hash(userId, dataName);
 
 	return await getSignedUrl(
 		R2,
@@ -38,7 +40,7 @@ export async function getPriceWriteOnlySignedUrl(
 	userId: string,
 	expiresIn = 60,
 ) {
-	const key = await generateHash(userId, 'price.parquet');
+	const key = await generateR2Hash(userId, 'price.parquet');
 
 	return await getSignedUrl(
 		R2,
@@ -48,16 +50,4 @@ export async function getPriceWriteOnlySignedUrl(
 		}),
 		{ expiresIn },
 	);
-}
-
-async function generateHash(userId: string, dataName: string) {
-	const rawString = `${userId}/${dataName}`;
-	const encoder = new TextEncoder();
-	const data = encoder.encode(rawString);
-	// SHA-256 でハッシュ化
-	const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-	// 16進文字列に変換
-	const hashArray = Array.from(new Uint8Array(hashBuffer));
-	const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-	return hashHex;
 }
