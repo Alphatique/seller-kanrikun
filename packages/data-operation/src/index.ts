@@ -1,4 +1,4 @@
 export * from './account';
-export * from './seller-central-api/catalog';
-export * from './seller-central-api/inventory';
-export * from './seller-central-api/reports';
+export * from './seller/catalog';
+export * from './seller/inventory';
+export * from './seller/reports';
