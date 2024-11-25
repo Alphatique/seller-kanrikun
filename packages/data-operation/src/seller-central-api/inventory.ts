@@ -1,4 +1,4 @@
-import type { InventorySummariesResponse } from '../types';
+import type { InventorySummariesResponse } from '../../types';
 
 export async function getInventoryData(accessToken: string) {
 	const inventory = await fetch(

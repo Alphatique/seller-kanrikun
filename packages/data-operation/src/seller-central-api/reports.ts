@@ -1,7 +1,7 @@
 import type {
 	SettlementReportDocumentResponse,
 	SettlementReportsResponse,
-} from '../types';
+} from '../../types';
 
 export async function getSettlementReports(accessToken: string) {
 	const reports = await fetch(
