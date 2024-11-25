@@ -1,7 +1,9 @@
 import type {
+	ReportDocumentRowJson,
 	SettlementReportDocumentResponse,
 	SettlementReportsResponse,
 } from '../../types';
+import { ReportDocumentRowSchema } from '../../types';
 
 export async function getSettlementReports(accessToken: string) {
 	const reports = await fetch(
@@ -69,3 +71,26 @@ export async function getReportDocument(
 
 	return reportDocumentTextData;
 }
+
+export const reportDocumentTextToJson = (
+	csv: string,
+): ReportDocumentRowJson[] => {
+	// 改行で分割
+	const lines = csv.split('\n');
+	const headers = lines[0].split('\t');
+
+	// ヘッダーをキーにしてオブジェクトに変換
+	return lines.slice(1).map(line => {
+		// タブで分割
+		const values = line.split('\t');
+		const row: Record<string, string> = {};
+
+		// ヘッダーと値をセット
+		headers.forEach((header, index) => {
+			row[header] = values[index] || '';
+		});
+
+		// zodでパース
+		return ReportDocumentRowSchema.parse(row);
+	});
+};
