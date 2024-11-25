@@ -94,9 +94,9 @@ export default {
 			const compressed = gzipSync(new TextEncoder().encode(jsonString));
 			console.log(json);
 
-			const hashKey = generateR2Hash(account.userId, 'report.gzip');
+			const hashKey = await generateR2Hash(account.userId, 'report.gzip');
 
-			await env.MY_BUCKET.put('key', compressed, {
+			await env.MY_BUCKET.put(hashKey, compressed, {
 				httpMetadata: {
 					contentType: 'application/json',
 					contentEncoding: 'gzip',

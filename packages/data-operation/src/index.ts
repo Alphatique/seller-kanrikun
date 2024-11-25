@@ -3,7 +3,10 @@ export * from './seller/catalog';
 export * from './seller/inventory';
 export * from './seller/reports';
 
-export async function generateR2Hash(userId: string, dataName: string) {
+export async function generateR2Hash(
+	userId: string,
+	dataName: string,
+): Promise<string> {
 	const rawString = `${userId}/${dataName}`;
 	const encoder = new TextEncoder();
 	const data = encoder.encode(rawString);
