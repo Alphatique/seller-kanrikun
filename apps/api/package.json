@@ -11,8 +11,9 @@
 		"typecheck": "tsc"
 	},
 	"dependencies": {
+		"@seller-kanrikun/data-operation": "workspace:*",
 		"@seller-kanrikun/db": "workspace:*",
-		"@seller-kanrikun/data-operation": "workspace:*"
+		"fflate": "^0.8.2"
 	},
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.5.2",

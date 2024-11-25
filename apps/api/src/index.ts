@@ -19,6 +19,7 @@ import {
 } from '@seller-kanrikun/data-operation';
 import type { SettlementReportsResponse } from '@seller-kanrikun/data-operation/types';
 import { createClient } from '@seller-kanrikun/db';
+import { gzipSync } from 'fflate';
 import { z } from 'zod';
 
 export default {
@@ -88,9 +89,16 @@ export default {
 				account.accessToken!,
 			);
 			const json = csvToJson(document);
+			const jsonString = JSON.stringify(json);
+			const compressed = gzipSync(new TextEncoder().encode(jsonString));
 			console.log(json);
 
-			//await env.MY_BUCKET.put('', json.toString());
+			await env.MY_BUCKET.put('key', compressed, {
+				httpMetadata: {
+					contentType: 'application/json',
+					contentEncoding: 'gzip',
+				},
+			});
 		}
 
 		console.log(accounts);
