@@ -99,6 +99,7 @@ enabled = true
 # Docs: https://developers.cloudflare.com/workers/wrangler/configuration/#r2-buckets
 [[r2_buckets]]
 binding = 'MY_BUCKET'
+bucket_name = 'seller-kanrikun'
 preview_bucket_name = 'seller-kanrikun'
 
 # Bind another Worker service. Use this binding to call another Worker without network overhead.
