@@ -146,7 +146,7 @@ export default function HomePage() {
 				'Content-Type': 'application/json',
 			},
 			body: JSON.stringify({
-				userId: session.user.id,
+				userId: session?.user.id,
 				date: uploadDate,
 				data: xlsxData,
 			}),
