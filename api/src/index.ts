@@ -93,6 +93,7 @@ export default {
 
 			const reportDocumentsArray: ReportDocumentRowJson[] = [];
 			const reportMetaDataArray: SettlementReportType[] = [];
+			let updated = false;
 
 			// ハッシュキーの生成
 			const hashKey = await generateR2Hash(account.userId, 'report.gzip');
@@ -149,7 +150,7 @@ export default {
 				if (document === 'error') break;
 
 				// TODO: データの範囲が被ってるときの処理
-
+				updated = true;
 				// メタデータの追加
 				reportMetaDataArray.push(report);
 
@@ -165,6 +166,7 @@ export default {
 				'settlement-id',
 			);
 
+			if (!updated) continue;
 			const gzipData = JsonToGzip(removedArray);
 			const gzipMetaData = JsonToGzip(reportMetaDataArray);
 

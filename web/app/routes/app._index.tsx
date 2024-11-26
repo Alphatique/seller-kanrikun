@@ -56,6 +56,7 @@ const data = [
 ];
 
 import { useSession } from '@seller-kanrikun/auth/client';
+import type { ReportDocumentRowJson } from '@seller-kanrikun/data-operation/types';
 
 export default function HomePage() {
 	const [date, setDate] = useState<DateRange | undefined>({
@@ -74,8 +75,11 @@ export default function HomePage() {
 			},
 			body: session.user.id,
 		})
-			.then(response => response.json())
-			.then(result => console.log(result))
+			.then(async response => {
+				console.log(response);
+				const json: ReportDocumentRowJson[] = await response.json();
+				console.log(json);
+			})
 			.catch(error => console.error('Error:', error));
 	}
 

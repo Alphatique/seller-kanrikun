@@ -181,7 +181,7 @@ export const genericOAuth = (options: GenericOAuthOptions) => {
 							token_endpoint: string;
 						}>(discoveryUrl, {
 							onError(context) {
-								logger.error(context.error, {
+								logger.error(context.error.toString(), {
 									discoveryUrl,
 								});
 							},
@@ -305,7 +305,7 @@ export const genericOAuth = (options: GenericOAuthOptions) => {
 							tokenEndpoint: finalTokenUrl,
 						});
 					} catch (e) {
-						ctx.context.logger.error(e);
+						ctx.context.logger.error(e as string);
 						throw ctx.redirect(
 							`${errorURL}?error=oauth_code_verification_failed`,
 						);
