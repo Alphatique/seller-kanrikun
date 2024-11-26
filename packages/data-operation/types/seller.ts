@@ -65,7 +65,7 @@ export type CatalogItemSummary = {
 export const ReportDocumentRowSchema = z.object({
 	'settlement-id': z.string().default(''),
 	'settlement-start-date': z.string().optional().transform(transformDate),
-	'settlement-end-date': z.string().optional().transform(transformDate),
+	'settlement-end-date': z.string().optional().transform(transformDate), // reportdocumentから取得する時、ここら辺のデータは一番上以外空だったりする。ここに置くか諸説。
 	'deposit-date': z.string().optional().transform(transformDate),
 	'total-amount': z.string().default(''),
 	currency: z.string().default(''),
