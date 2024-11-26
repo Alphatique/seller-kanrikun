@@ -12,8 +12,7 @@
 	},
 	"dependencies": {
 		"@seller-kanrikun/data-operation": "workspace:*",
-		"@seller-kanrikun/db": "workspace:*",
-		"fflate": "^0.8.2"
+		"@seller-kanrikun/db": "workspace:*"
 	},
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.5.2",

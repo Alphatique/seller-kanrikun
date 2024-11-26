@@ -1,11 +1,16 @@
 import type {
 	ReportDocumentRowJson,
 	SettlementReportDocumentResponse,
+	SettlementReportType,
 	SettlementReportsResponse,
 } from '../../types';
 import { ReportDocumentRowSchema } from '../../types';
 
-export async function getSettlementReports(accessToken: string) {
+export async function getSettlementReports(
+	accessToken: string,
+): Promise<SettlementReportType[]> {
+	const result: SettlementReportType[] = [];
+
 	const reports = await fetch(
 		'https://sellingpartnerapi-fe.amazon.com/reports/2021-06-30/reports?reportTypes=GET_V2_SETTLEMENT_REPORT_DATA_FLAT_FILE',
 		{
@@ -17,16 +22,24 @@ export async function getSettlementReports(accessToken: string) {
 	);
 	const reportsData: SettlementReportsResponse = await reports.json();
 
-	return reportsData;
-
-	/*
-	let nextToken = reportsData.nextToken;
-	while (nextToken) {
-		const nextReports = await getReportsByNextToken(nextToken, accessToken);
-		nextToken = nextReports.nextToken;
-
-		console.log(nextReports);
-	}*/
+	if ('errors' in reportsData) {
+		console.error('Error, please try again: ', reportsData);
+	} else {
+		// nextTokenがある場合は再帰的に取得
+		let nextToken = reportsData.nextToken;
+		while (nextToken) {
+			const nextReports: SettlementReportsResponse =
+				await getReportsByNextToken(nextToken, accessToken);
+			if ('errors' in nextReports) {
+				console.error('Error, please try again: ', nextReports);
+				break;
+			} else {
+				nextToken = nextReports.nextToken;
+				result.push(...nextReports.reports);
+			}
+		}
+	}
+	return result;
 }
 async function getReportsByNextToken(nextToken: string, accessToken: string) {
 	const reponse = await fetch(
@@ -47,7 +60,7 @@ export async function getReportDocument(
 	reportDocumentId: string,
 	accessToken: string,
 ) {
-	const reportDocument = await fetch(
+	const response = await fetch(
 		`https://sellingpartnerapi-fe.amazon.com/reports/2021-06-30/documents/${reportDocumentId}`,
 		{
 			method: 'GET',
@@ -58,23 +71,23 @@ export async function getReportDocument(
 	);
 
 	const reportDocumentData: SettlementReportDocumentResponse =
-		await reportDocument.json();
+		await response.json();
 
-	console.log(reportDocumentData);
-	const reportDocumentText = await fetch(reportDocumentData.url, {
-		method: 'GET',
-	});
+	if ('errors' in reportDocumentData) {
+		console.error('Error, please try again: ', reportDocumentData);
+	} else {
+		const reportDocumentText = await fetch(reportDocumentData.url, {
+			method: 'GET',
+		});
 
-	const reportDocumentTextData = await reportDocumentText.text();
+		const reportDocumentTextData = await reportDocumentText.text();
+		return reportDocumentTextData;
+	}
 
-	console.log(reportDocumentTextData);
-
-	return reportDocumentTextData;
+	return 'error';
 }
 
-export const reportDocumentTextToJson = (
-	csv: string,
-): ReportDocumentRowJson[] => {
+export function reportDocumentTextToJson(csv: string): ReportDocumentRowJson[] {
 	// 改行で分割
 	const lines = csv.split('\n');
 	const headers = lines[0].split('\t');
@@ -88,9 +101,13 @@ export const reportDocumentTextToJson = (
 		// ヘッダーと値をセット
 		headers.forEach((header, index) => {
 			row[header] = values[index] || '';
+
+			if (header === 'settlement-start-date' && row[header] !== '') {
+				console.log('header!', row[header]);
+			}
 		});
 
 		// zodでパース
 		return ReportDocumentRowSchema.parse(row);
 	});
-};
+}

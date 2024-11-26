@@ -1,21 +1,8 @@
 import { z } from 'zod';
 
 export type SettlementReportsResponse = {
-	reports: SettlementReport[];
+	reports: SettlementReportType[];
 	nextToken?: string;
-};
-
-export type SettlementReport = {
-	reportType: 'GET_V2_SETTLEMENT_REPORT_DATA_FLAT_FILE';
-	processingEndTime: string;
-	processingStatus: 'DONE' | string; // TODO: Add more statuses
-	marketplaceIds: string[];
-	reportDocumentId: string;
-	reportId: string;
-	dataEndTime: string; // Date
-	createdTime: string; // Date
-	processingStartTime: string; // Date
-	dataStartTime: string; // Date
 };
 
 export type SettlementReportDocumentResponse = {
@@ -77,18 +64,9 @@ export type CatalogItemSummary = {
 
 export const ReportDocumentRowSchema = z.object({
 	'settlement-id': z.string().default(''),
-	'settlement-start-date': z
-		.string()
-		.optional()
-		.transform(val => (val ? new Date(val) : '')),
-	'settlement-end-date': z
-		.string()
-		.optional()
-		.transform(val => (val ? new Date(val) : '')),
-	'deposit-date': z
-		.string()
-		.optional()
-		.transform(val => (val ? new Date(val) : '')),
+	'settlement-start-date': z.string().optional().transform(transformDate),
+	'settlement-end-date': z.string().optional().transform(transformDate),
+	'deposit-date': z.string().optional().transform(transformDate),
 	'total-amount': z.string().default(''),
 	currency: z.string().default(''),
 	'transaction-type': z.string().default(''),
@@ -102,10 +80,7 @@ export const ReportDocumentRowSchema = z.object({
 	'order-fee-type': z.string().default(''),
 	'order-fee-amount': z.string().default(''),
 	'fulfillment-id': z.string().default(''),
-	'posted-date': z
-		.string()
-		.optional()
-		.transform(val => (val ? new Date(val) : '')),
+	'posted-date': z.string().optional().transform(transformDate),
 	'order-item-code': z.string().default(''),
 	'merchant-order-item-id': z.string().default(''),
 	'merchant-adjustment-item-id': z.string().default(''),
@@ -135,4 +110,29 @@ export const ReportDocumentRowSchema = z.object({
 	'other-amount': z.string().default(''),
 });
 
+function transformDate(val: string | undefined): Date | string {
+	if (val) {
+		const date = new Date(val);
+		if (date.toString() === 'Invalid Date') {
+			return val;
+		}
+		return date;
+	}
+	return '';
+}
+
 export type ReportDocumentRowJson = z.infer<typeof ReportDocumentRowSchema>;
+
+const SettlementReportSchema = z.object({
+	reportType: z.literal('GET_V2_SETTLEMENT_REPORT_DATA_FLAT_FILE'),
+	processingEndTime: z.string().optional().transform(transformDate),
+	processingStatus: z.literal('DONE'),
+	marketplaceIds: z.array(z.string()),
+	reportDocumentId: z.string(),
+	reportId: z.string(),
+	dataEndTime: z.string().optional().transform(transformDate),
+	createdTime: z.string().optional().transform(transformDate),
+	processingStartTime: z.string().optional().transform(transformDate),
+	dataStartTime: z.string().optional().transform(transformDate),
+});
+export type SettlementReportType = z.infer<typeof SettlementReportSchema>;

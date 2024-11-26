@@ -12,16 +12,21 @@
  */
 
 import {
+	GzipToJson,
+	JsonToGzip,
 	generateR2Hash,
 	getAccountsByProviderId,
 	getReportDocument,
 	getSettlementReports,
+	removeEmpty,
 	reportDocumentTextToJson,
 	updateAccessToken,
 } from '@seller-kanrikun/data-operation';
-import type { SettlementReportsResponse } from '@seller-kanrikun/data-operation/types';
+import type {
+	ReportDocumentRowJson,
+	SettlementReportType,
+} from '@seller-kanrikun/data-operation/types';
 import { createClient } from '@seller-kanrikun/db';
-import { gzipSync } from 'fflate';
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
@@ -80,30 +85,103 @@ export default {
 				env.SP_API_CLIENT_ID,
 				env.SP_API_CLIENT_SECRET,
 			);
+			// TODO: トークン更新が反映される前に↓が実行されちゃうみたいで、更新時一回目はデータが取れない
 			// レポート一覧の取得
-			const reports: SettlementReportsResponse = await getSettlementReports(
+			const reports: SettlementReportType[] = await getSettlementReports(
 				account.accessToken!,
 			);
-			// レポートドキュメントの取得
-			const document: string = await getReportDocument(
-				reports.reports[0].reportDocumentId,
-				account.accessToken!,
-			);
-			const json = reportDocumentTextToJson(document);
-			const jsonString = JSON.stringify(json);
-			const compressed = gzipSync(new TextEncoder().encode(jsonString));
-			console.log(json);
 
+			const reportDocumentsArray: ReportDocumentRowJson[] = [];
+			const reportMetaDataArray: SettlementReportType[] = [];
+
+			// ハッシュキーの生成
 			const hashKey = await generateR2Hash(account.userId, 'report.gzip');
+			// ハッシュキーの生成
+			const metaHashKey = await generateR2Hash(
+				account.userId,
+				'report-meta.gzip',
+			);
 
-			await env.MY_BUCKET.put(hashKey, compressed, {
+			// バケットからデータの取得
+			const existData = await env.MY_BUCKET.get(hashKey);
+			const existMetaData = await env.MY_BUCKET.get(metaHashKey);
+			// 既存のデータが存在する場合
+			if (existData !== null && existData.body !== null) {
+				// データを復元
+				const arrayBuffer = await existData.arrayBuffer();
+
+				const restoredArray: ReportDocumentRowJson[] = GzipToJson(
+					new Uint8Array(arrayBuffer),
+				);
+
+				// 既存のデータを追加
+				reportDocumentsArray.push(...restoredArray);
+			}
+
+			if (existMetaData !== null && existMetaData.body !== null) {
+				// メタデータを復元
+				const metaArrayBuffer = await existMetaData.arrayBuffer();
+
+				const metaDecompressed: SettlementReportType[] = GzipToJson(
+					new Uint8Array(metaArrayBuffer),
+				);
+
+				// 既存のメタデータを追加
+				reportMetaDataArray.push(...metaDecompressed);
+			}
+
+			for (const report of reports) {
+				// メタデータの重複チェック
+				const metaExist = reportMetaDataArray.find(
+					meta => meta.reportId === report.reportId,
+				);
+
+				if (metaExist) {
+					continue;
+				}
+
+				// レポートドキュメントの取得
+				const document: string = await getReportDocument(
+					report.reportDocumentId,
+					account.accessToken!,
+				);
+
+				if (document === 'error') break;
+
+				// TODO: データの範囲が被ってるときの処理
+
+				// メタデータの追加
+				reportMetaDataArray.push(report);
+
+				// レポートドキュメントのJSONオブジェクト化
+				const json = reportDocumentTextToJson(document);
+
+				reportDocumentsArray.push(...json);
+			}
+
+			// 重複と空の行を削除
+			const removedArray: ReportDocumentRowJson[] = removeEmpty(
+				reportDocumentsArray,
+				'settlement-id',
+			);
+
+			const gzipData = JsonToGzip(removedArray);
+			const gzipMetaData = JsonToGzip(reportMetaDataArray);
+
+			// バケットに保存
+			await env.MY_BUCKET.put(hashKey, gzipData, {
+				httpMetadata: {
+					contentType: 'application/json',
+					contentEncoding: 'gzip',
+				},
+			});
+
+			await env.MY_BUCKET.put(metaHashKey, gzipMetaData, {
 				httpMetadata: {
 					contentType: 'application/json',
 					contentEncoding: 'gzip',
 				},
 			});
 		}
-
-		console.log(accounts);
 	},
 } satisfies ExportedHandler<Env>;
