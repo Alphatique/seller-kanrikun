@@ -112,11 +112,11 @@ export async function handleOAuthUserInfo(
 					user.email,
 				);
 				const url = `${c.context.baseURL}/verify-email?token=${token}&callbackURL=${callbackURL}`;
-				await c.context.options.emailVerification?.sendVerificationEmail?.({
+				await c.context.options.emailVerification?.sendVerificationEmail?.(
 					user,
 					url,
 					token,
-				});
+				);
 			}
 		} catch (e) {
 			logger.error('Unable to create user', e);
