@@ -146,6 +146,7 @@ export default function HomePage() {
 
 	const { data: session } = useSession();
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies:
 	useEffect(() => {
 		if (!session) return;
 		const fetchData = async () => {
@@ -157,7 +158,7 @@ export default function HomePage() {
 				body: session.user.id,
 			});
 			calcedData = await response.json();
-			recreateViewData(period, date); // ここで初期化しちゃってるので、session以外入れると無限ループする。layout的なのにsessionとこれを写すべき説はある
+			recreateViewData(period, date); // ここで初期化しちゃってるので、session以外入れると無限ループする。分離しろということかもしれない
 		};
 		fetchData();
 	}, [session]); // sessionが変わったときだけ実行
