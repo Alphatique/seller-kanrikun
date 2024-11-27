@@ -1,6 +1,7 @@
 import * as React from 'react';
 
 import { cn } from '../lib/utils';
+import { Table, TableBody, TableCell } from './table';
 
 const HeadTableRow = React.forwardRef<
 	HTMLTableRowElement,
@@ -30,7 +31,7 @@ const DateTableRow = React.forwardRef<
 ));
 DateTableRow.displayName = 'DateTableRow';
 
-const PLBSTableRow = React.forwardRef<
+const PlbsTableRow = React.forwardRef<
 	HTMLTableRowElement,
 	React.HTMLAttributes<HTMLTableRowElement>
 >(({ className, ...props }, ref) => (
@@ -45,7 +46,7 @@ const PLBSTableRow = React.forwardRef<
 		{...props}
 	/>
 ));
-PLBSTableRow.displayName = 'PLBSTableRow';
+PlbsTableRow.displayName = 'PlbsTableRow';
 
 interface IndentableTableCellProps
 	extends React.TdHTMLAttributes<HTMLTableCellElement> {
@@ -64,4 +65,43 @@ const IndentableTableCell = React.forwardRef<
 	/>
 ));
 
-export { DateTableRow, HeadTableRow, IndentableTableCell, PLBSTableRow };
+interface PlbsTableInputProps extends React.HTMLAttributes<HTMLElement> {
+	title: string;
+	data: {
+		[key: string]: {
+			leftHead: string;
+			indent: number;
+			values: (number | string)[];
+		};
+	};
+}
+
+const PlbsTable = ({ title, data }: PlbsTableInputProps) => {
+	return (
+		<Table>
+			<TableBody>
+				<HeadTableRow>
+					<TableCell>{title}</TableCell>
+				</HeadTableRow>
+				{Object.entries(data).map(([key, value]) => (
+					<PlbsTableRow key={`${key}+Row`}>
+						<IndentableTableCell indent={value.indent}>
+							{value.leftHead}
+						</IndentableTableCell>
+						{value.values.map((row, i) => (
+							<TableCell key={`${key}${i.toString()}`}>{row}</TableCell>
+						))}
+					</PlbsTableRow>
+				))}
+			</TableBody>
+		</Table>
+	);
+};
+
+export {
+	DateTableRow,
+	HeadTableRow,
+	IndentableTableCell,
+	PlbsTable,
+	PlbsTableRow,
+};

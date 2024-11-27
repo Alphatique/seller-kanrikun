@@ -11,3 +11,8 @@ export type UpdateCostPriceRequest = {
 	};
 	data: CostPrice[];
 };
+
+export type SkuOrder = {
+	sku: string;
+	'quantity-purchased': number;
+};
