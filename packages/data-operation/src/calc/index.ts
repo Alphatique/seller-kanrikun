@@ -1,5 +1,17 @@
 import type { CostPrice, ReportDocumentRowJson } from '../../types';
 
+export function getRangedData(
+	start: Date,
+	end: Date,
+	data: ReportDocumentRowJson[],
+	key: keyof ReportDocumentRowJson = 'posted-date',
+) {
+	return data.filter(row => {
+		const date = row[key] as Date;
+		return date >= start && date <= end;
+	});
+}
+
 // 売上（Sales）
 export function getSales(
 	principal: number,
@@ -17,7 +29,7 @@ export function getNetSales(sales: number, refund: number) {
 }
 
 // 原価（Cost）
-export function getCost(
+export function getCostPrice(
 	reportData: ReportDocumentRowJson[],
 	costData: CostPrice[],
 ) {
@@ -41,29 +53,29 @@ export function getCost(
 }
 
 // 粗利益（Gross Profit）
-export function getGrossProfit(netSales: number, cost: number) {
-	return netSales - cost;
+export function getGrossProfit(netSales: number, costPrice: number) {
+	return netSales - costPrice;
 }
 
 // 販売費及び一般管理費（SG&A）
 export function getSGA(
-	advancedExpenses: number,
-	promotionCost: number,
+	amazonAds: number,
+	promotion: number,
 	salesCommission: number,
 	fbaShippingFee: number,
 	inventoryStorageFee: number,
 	inventoryUpdateFee: number,
-	refund: number,
+	shippingReturnFee: number,
 	subscriptionFee: number,
 ) {
 	return (
-		advancedExpenses +
-		promotionCost +
+		amazonAds +
+		promotion +
 		salesCommission +
 		fbaShippingFee +
 		inventoryStorageFee +
 		inventoryUpdateFee +
-		refund +
+		shippingReturnFee +
 		subscriptionFee
 	);
 }
@@ -73,9 +85,9 @@ export function getAmazonOther(
 	unpaidBalance: number,
 	sales: number,
 	SGA: number,
-	advancedExpenses: number,
+	amazonAds: number,
 ) {
-	return unpaidBalance - (sales + (SGA - advancedExpenses));
+	return unpaidBalance - (sales + (SGA - amazonAds));
 }
 
 // 営業利益
