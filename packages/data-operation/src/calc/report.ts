@@ -1,5 +1,18 @@
 import type { ReportDocumentRowJson } from '../../types';
 
+export function getRangedData(
+	start: Date,
+	end: Date,
+	data: ReportDocumentRowJson[],
+	key: keyof ReportDocumentRowJson = 'posted-date',
+): ReportDocumentRowJson[] {
+	return data.filter(row => {
+		const date = new Date(row[key]);
+		if (date.toString() === 'Invalid Date') return false;
+		return date >= start && date <= end;
+	});
+}
+
 function getFilteredRowSum(
 	data: ReportDocumentRowJson[],
 	filters: [keyof ReportDocumentRowJson, string][],

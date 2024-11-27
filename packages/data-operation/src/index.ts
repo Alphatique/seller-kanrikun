@@ -4,7 +4,7 @@ export * from './seller/catalog';
 export * from './seller/inventory';
 export * from './seller/reports';
 
-export * from './calc';
+export * from './calc/pl-bs';
 export * from './calc/report';
 
 import { gunzipSync, gzipSync } from 'fflate';
