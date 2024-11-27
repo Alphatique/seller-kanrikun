@@ -27,7 +27,10 @@ import {
 } from '@seller-kanrikun/ui';
 
 import type { ActionFunctionArgs } from '@remix-run/cloudflare';
-import type { CostPrice, UpdateCostPriceRequest } from '~/types';
+import type {
+	CostPrice,
+	UpdateCostPriceRequest,
+} from '@seller-kanrikun/data-operation/types';
 
 import { useSession } from '@seller-kanrikun/auth/client';
 import * as arrow from 'apache-arrow';
