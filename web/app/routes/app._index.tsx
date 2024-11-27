@@ -17,6 +17,7 @@ import {
 	TableRow,
 } from '@seller-kanrikun/ui';
 import {
+	addDays,
 	addMonths,
 	addQuarters,
 	addYears,
@@ -62,6 +63,7 @@ function calcDatas(data: ReportDocumentRowJson[]): DateCalcedPlbsData[] {
 	while (current < lastDate) {
 		// データをフィルター
 		const eachData = getRangedData(current, endOfMonth(current), data);
+
 		// PLBSデータを計算
 		const calc = getPlbsData(eachData);
 		// 日にちごとにデータを格納
@@ -106,7 +108,9 @@ export default function HomePage() {
 				while (current <= range.to) {
 					const next = addMonths(current, 1);
 					newDateList.push(format(current, 'yyyy/MM'));
-					newDataList.push(getRangedSumData(current, next, calcedData)); // 一個しかない気もするけど、一応
+					newDataList.push(
+						getRangedSumData(current, addDays(next, -1), calcedData),
+					); // 一個しかない気もするけど、一応
 					current = next;
 				}
 				break;
@@ -115,7 +119,9 @@ export default function HomePage() {
 				while (current <= range.to) {
 					const next = addQuarters(current, 1);
 					newDateList.push(`${format(current, 'yyyy q')}Q`);
-					newDataList.push(getRangedSumData(current, next, calcedData));
+					newDataList.push(
+						getRangedSumData(current, addDays(next, -1), calcedData),
+					);
 					current = next;
 				}
 				break;
@@ -124,17 +130,20 @@ export default function HomePage() {
 				while (current <= range.to) {
 					const next = addYears(current, 1);
 					newDateList.push(format(current, 'yyyy'));
-					newDataList.push(getRangedSumData(current, next, calcedData));
+					newDataList.push(
+						getRangedSumData(current, addDays(next, -1), calcedData),
+					);
 					current = next;
 				}
 				break;
 		}
+		console.log(calcedData, newDateList, newDataList);
 		// 日付のリストをセット
 		setTableDates(newDateList);
 		// データのリストをセット
 		setTableData(newDataList);
 	}
-	let calcedData: { date: Date; data: PlbsData }[] = [];
+	const [calcedData, setCalcedData] = useState<DateCalcedPlbsData[]>([]);
 
 	const [date, setDate] = useState<DateRange>({
 		from: new Date(),
@@ -157,7 +166,10 @@ export default function HomePage() {
 				},
 				body: session.user.id,
 			});
-			calcedData = await response.json();
+			const json: ReportDocumentRowJson[] = await response.json();
+			const data = calcDatas(json);
+			await setCalcedData(data);
+			console.log(data);
 			recreateViewData(period, date); // ここで初期化しちゃってるので、session以外入れると無限ループする。分離しろということかもしれない
 		};
 		fetchData();
@@ -174,6 +186,8 @@ export default function HomePage() {
 		const newValue = value as DateRange;
 		setDate(newValue);
 		recreateViewData(period, newValue);
+		console.log('date', newValue);
+		console.log(calcedData);
 	};
 
 	return (

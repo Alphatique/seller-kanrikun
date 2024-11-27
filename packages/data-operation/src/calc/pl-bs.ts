@@ -1,56 +1,78 @@
 import type { CostPrice, PlbsData, ReportDocumentRowJson } from '../../types';
+import {
+	getFbaShippingFee,
+	getPrincipal,
+	getPrincipalTaxes,
+	getPromotion,
+	getRefund,
+	getSalesCommissionFee,
+	getShipping,
+	getShippingReturnFee,
+	getShippingTaxes,
+	getSubscriptionFee,
+} from './report';
 
 export function getPlbsData(rangedData: ReportDocumentRowJson[]): PlbsData {
-	/*
-	const principal = rangedData['principal'];
-	const principalTax = rangedData['principal-tax'];
-	const shipping = rangedData['shipping'];
-	const shippingTax = rangedData['shipping-tax'];
-	const refund = rangedData['refund'];
-	const sales = getSales(principal, principalTax, shipping, shippingTax, refund);
-	const netSales = getNetSales(sales, refund);
-	const costPrice = getCostPrice(rangedData, []);
-	const grossProfit = getGrossProfit(netSales, costPrice);
-	const sga = getSGA(
-		rangedData['amazon-ads'],
-		rangedData['promotion'],
-		rangedData['sales-commission'],
-		rangedData['fba-shipping-fee'],
-		rangedData['inventory-storage-fee'],
-		rangedData['inventory-update-fee'],
-		rangedData['shipping-return-fee'],
-		rangedData['subscription-fee'],
+	const principal = getPrincipal(rangedData);
+	const principalTax = getPrincipalTaxes(rangedData);
+	const shipping = getShipping(rangedData);
+	const shippingTax = getShippingTaxes(rangedData);
+	const refund = getRefund(rangedData);
+	const sales = getSales(
+		principal,
+		principalTax,
+		shipping,
+		shippingTax,
+		refund,
 	);
-	const amazonOther = getAmazonOther(
-		rangedData['unpaid-balance'],
-		sales,
-		sga,
-		rangedData['amazon-ads'],
+	const netSales = getNetSales(sales, refund);
+	const costPrice = 0;
+	const grossProfit = getGrossProfit(netSales, costPrice);
+	const amazonAds = 0;
+	const promotion = getPromotion(rangedData);
+	const salesCommission = getSalesCommissionFee(rangedData);
+	const fbaShippingFee = getFbaShippingFee(rangedData);
+	const inventoryStorageFee = 0;
+	const inventoryUpdateFee = 0;
+	const shippingReturnFee = getShippingReturnFee(rangedData);
+	const subscriptionFee = getSubscriptionFee(rangedData);
+	const sga = getSGA(
+		amazonAds,
+		promotion,
+		salesCommission,
+		fbaShippingFee,
+		inventoryStorageFee,
+		inventoryUpdateFee,
+		shippingReturnFee,
+		subscriptionFee,
 	);
 	const operatingProfit = getOperatingProfit(grossProfit, sga);
-*/
+	const unpaidBalance = 0;
+	const amazonOther = getAmazonOther(unpaidBalance, sales, sga, amazonAds);
+
+	console.log(principal, principalTax);
 	return {
-		sales: 0,
-		principal: 0,
-		principalTax: 0,
-		shipping: 0,
+		sales,
+		principal,
+		principalTax,
+		shipping,
 		otherTax: 0,
-		refund: 0,
-		netSales: 0,
-		costPrice: 0,
-		grossProfit: 0,
-		sga: 0,
-		amazonAds: 0,
-		promotion: 0,
-		salesCommission: 0,
-		fbaShippingFee: 0,
-		inventoryStorageFee: 0,
-		inventoryUpdateFee: 0,
-		shippingReturnFee: 0,
-		subscriptionFee: 0,
-		amazonOther: 0,
-		operatingProfit: 0,
-		unpaidBalance: 0,
+		refund,
+		netSales,
+		costPrice,
+		grossProfit,
+		sga,
+		amazonAds,
+		promotion,
+		salesCommission,
+		fbaShippingFee,
+		inventoryStorageFee,
+		inventoryUpdateFee,
+		shippingReturnFee,
+		subscriptionFee,
+		amazonOther,
+		operatingProfit,
+		unpaidBalance,
 		inventoryAssets: 0,
 	} as PlbsData;
 }

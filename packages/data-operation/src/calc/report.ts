@@ -21,26 +21,33 @@ function getFilteredRowSum(
 	return data
 		.filter(row => filters.every(([key, value]) => row[key] === value))
 		.reduce((sum, row) => {
-			const amount = row[sumKey];
-			return typeof amount === 'number' ? sum + amount : sum;
+			const input = row[sumKey];
+			if (typeof input === 'number') {
+				return sum + input;
+			} else if (typeof input === 'string') {
+				const parsed: number = Number.parseFloat(input);
+				return sum + (Number.isNaN(parsed) ? 0 : parsed);
+			}
+			return sum;
 		}, 0);
 }
 
 // 商品代金 (Principal)
-export function getProductPrice(data: ReportDocumentRowJson[]) {
-	const productPrice = getFilteredRowSum(data, [
+export function getPrincipal(data: ReportDocumentRowJson[]) {
+	const principal = getFilteredRowSum(data, [
 		['transaction-type', 'Order'],
 		['price-type', 'Principal'],
 	]);
-	return productPrice;
+	return principal;
 }
 
 // 商品代金に対する税金 (Principal Taxes)
 export function getPrincipalTaxes(data: ReportDocumentRowJson[]) {
 	const PrincipalTax = getFilteredRowSum(data, [
 		['transaction-type', 'Order'],
-		['price-type', 'PrincipalTax'],
+		['price-type', 'Tax'],
 	]);
+
 	return PrincipalTax;
 }
 
@@ -114,8 +121,8 @@ export function getPromotion(data: ReportDocumentRowJson[]) {
 }
 
 // 販売手数料 (Sales Fee)
-export function getSalesFee(data: ReportDocumentRowJson[]) {
-	const salesFee = getFilteredRowSum(
+export function getSalesCommissionFee(data: ReportDocumentRowJson[]) {
+	const salesCommissionFee = getFilteredRowSum(
 		data,
 		[
 			['transaction-type', 'Order'],
@@ -123,7 +130,7 @@ export function getSalesFee(data: ReportDocumentRowJson[]) {
 		],
 		'item-related-fee-amount',
 	);
-	return salesFee;
+	return salesCommissionFee;
 }
 
 // FBA出荷手数料 (FBA Shipping Fee)
