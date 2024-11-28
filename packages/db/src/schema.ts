@@ -19,30 +19,46 @@ export const user = sqliteTable('user', {
 
 export const session = sqliteTable('session', {
 	id: text('id').primaryKey(),
+	userId: text('userId')
+		.notNull()
+		.references(() => user.id),
+	token: text('token').notNull(),
 	expiresAt: integer('expiresAt', {
 		mode: 'timestamp',
 	}).notNull(),
 	ipAddress: text('ipAddress'),
 	userAgent: text('userAgent'),
-	userId: text('userId')
-		.notNull()
-		.references(() => user.id),
+	createdAt: integer('expiresAt', {
+		mode: 'timestamp',
+	}).notNull(),
+	updatedAt: integer('expiresAt', {
+		mode: 'timestamp',
+	}).notNull(),
 });
 
 export const account = sqliteTable('account', {
 	id: text('id').primaryKey(),
-	accountId: text('accountId').notNull(),
-	providerId: text('providerId').notNull(),
 	userId: text('userId')
 		.notNull()
 		.references(() => user.id),
+	accountId: text('accountId').notNull(),
+	providerId: text('providerId').notNull(),
 	accessToken: text('accessToken'),
 	refreshToken: text('refreshToken'),
-	idToken: text('idToken'),
-	expiresAt: integer('expiresAt', {
+	accessTokenExpiresAt: integer('expiresAt', {
 		mode: 'timestamp',
 	}),
+	refreshTokenExpiresAt: integer('expiresAt', {
+		mode: 'timestamp',
+	}),
+	scope: text('scope'),
 	password: text('password'),
+	createdAt: integer('expiresAt', {
+		mode: 'timestamp',
+	}).notNull(),
+	updatedAt: integer('expiresAt', {
+		mode: 'timestamp',
+	}).notNull(),
 });
 
 export const verification = sqliteTable('verification', {
@@ -50,6 +66,12 @@ export const verification = sqliteTable('verification', {
 	identifier: text('identifier').notNull(),
 	value: text('value').notNull(),
 	expiresAt: integer('expiresAt', {
+		mode: 'timestamp',
+	}).notNull(),
+	createdAt: integer('expiresAt', {
+		mode: 'timestamp',
+	}).notNull(),
+	updatedAt: integer('expiresAt', {
 		mode: 'timestamp',
 	}).notNull(),
 });
