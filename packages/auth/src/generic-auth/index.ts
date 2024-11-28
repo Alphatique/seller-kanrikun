@@ -2,9 +2,7 @@ import { betterFetch } from '@better-fetch/fetch';
 import {
 	type BetterAuthPlugin,
 	type User,
-	generateId,
 	generateState,
-	logger,
 	parseState,
 	setSessionCookie,
 } from 'better-auth';
@@ -19,7 +17,6 @@ import { parseJWT } from 'oslo/jwt';
 import { z } from 'zod';
 
 import { handleOAuthUserInfo } from './link-account';
-import { userSchema } from './schema';
 
 /**
  * Configuration interface for generic OAuth providers.
@@ -108,9 +105,19 @@ async function getUserInfo(
 	finalUserInfoUrl: string | undefined,
 ) {
 	if (type === 'oidc' && tokens.idToken) {
-		const decoded = parseJWT(tokens.idToken);
+		const decoded = parseJWT(tokens.idToken) as {
+			payload: {
+				sub: string;
+				email_verified: boolean;
+				email: string;
+			};
+		};
 		if (decoded?.payload) {
-			return decoded.payload;
+			return {
+				id: decoded.payload.sub,
+				emailVerified: decoded.payload.email_verified,
+				...decoded.payload,
+			};
 		}
 	}
 
@@ -118,13 +125,23 @@ async function getUserInfo(
 		return null;
 	}
 
-	const userInfo = await betterFetch<User>(finalUserInfoUrl, {
+	const userInfo = await betterFetch<{
+		email: string;
+		sub?: string;
+		name: string;
+		email_verified: boolean;
+	}>(finalUserInfoUrl, {
 		method: 'GET',
 		headers: {
 			Authorization: `Bearer ${tokens.accessToken}`,
 		},
 	});
-	return userInfo.data;
+	return {
+		id: userInfo.data?.sub,
+		emailVerified: userInfo.data?.email_verified,
+		email: userInfo.data?.email,
+		...userInfo.data,
+	};
 }
 
 /**
@@ -144,13 +161,53 @@ export const genericOAuth = (options: GenericOAuthOptions) => {
 							 * Redirect to the current URL after the
 							 * user has signed in.
 							 */
-							currentURL: z.string().optional(),
+							currentURL: z
+								.string({
+									description: 'Redirect to the current URL after sign in',
+								})
+								.optional(),
 						})
 						.optional(),
 					body: z.object({
-						providerId: z.string(),
-						callbackURL: z.string().optional(),
+						providerId: z.string({
+							description: 'The provider ID for the OAuth provider',
+						}),
+						callbackURL: z
+							.string({
+								description: 'The URL to redirect to after sign in',
+							})
+							.optional(),
+						errorCallbackURL: z
+							.string({
+								description: 'The URL to redirect to if an error occurs',
+							})
+							.optional(),
 					}),
+					metadata: {
+						openapi: {
+							description: 'Sign in with OAuth2',
+							responses: {
+								200: {
+									description: 'Sign in with OAuth2',
+									content: {
+										'application/json': {
+											schema: {
+												type: 'object',
+												properties: {
+													url: {
+														type: 'string',
+													},
+													redirect: {
+														type: 'boolean',
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
 				},
 				async ctx => {
 					const { providerId } = ctx.body;
@@ -181,7 +238,7 @@ export const genericOAuth = (options: GenericOAuthOptions) => {
 							token_endpoint: string;
 						}>(discoveryUrl, {
 							onError(context) {
-								logger.error(context.error.toString(), {
+								ctx.context.logger.error(context.error.message, context.error, {
 									discoveryUrl,
 								});
 							},
@@ -196,15 +253,7 @@ export const genericOAuth = (options: GenericOAuthOptions) => {
 							message: 'Invalid OAuth configuration.',
 						});
 					}
-
-					const currentURL = ctx.query?.currentURL
-						? new URL(ctx.query?.currentURL)
-						: null;
-					const callbackURL = ctx.body.callbackURL?.startsWith('http')
-						? ctx.body.callbackURL
-						: `${currentURL?.origin}${ctx.body.callbackURL || ''}`;
 					const { state, codeVerifier } = await generateState(ctx);
-
 					const authUrl = await createAuthorizationURL({
 						id: providerId,
 						options: {
@@ -242,11 +291,47 @@ export const genericOAuth = (options: GenericOAuthOptions) => {
 				{
 					method: 'GET',
 					query: z.object({
-						code: z.string().optional(),
-						spapi_oauth_code: z.string().optional(),
-						error: z.string().optional(),
-						state: z.string(),
+						code: z
+							.string({
+								description: 'The OAuth2 code',
+							})
+							.optional(),
+						spapi_oauth_code: z
+							.string({
+								description: 'The OAuth2 code',
+							})
+							.optional(),
+						error: z
+							.string({
+								description: 'The error message, if any',
+							})
+							.optional(),
+						state: z.string({
+							description: 'The state parameter from the OAuth2 request',
+						}),
 					}),
+					metadata: {
+						openapi: {
+							description: 'OAuth2 callback',
+							responses: {
+								200: {
+									description: 'OAuth2 callback',
+									content: {
+										'application/json': {
+											schema: {
+												type: 'object',
+												properties: {
+													url: {
+														type: 'string',
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
 				},
 				async ctx => {
 					if (
@@ -272,7 +357,7 @@ export const genericOAuth = (options: GenericOAuthOptions) => {
 					const parsedState = await parseState(ctx);
 
 					const { callbackURL, codeVerifier, errorURL } = parsedState;
-					const code = (ctx.query.code || ctx.query.spapi_oauth_code) as string;
+					const code = (ctx.query.code || ctx.query.spapi_oauth_code)!;
 
 					let finalTokenUrl = provider.tokenUrl;
 					let finalUserInfoUrl = provider.userInfoUrl;
@@ -305,7 +390,12 @@ export const genericOAuth = (options: GenericOAuthOptions) => {
 							tokenEndpoint: finalTokenUrl,
 						});
 					} catch (e) {
-						ctx.context.logger.error(e as string);
+						ctx.context.logger.error(
+							e && typeof e === 'object' && 'name' in e
+								? (e.name as string)
+								: '',
+							e,
+						);
 						throw ctx.redirect(
 							`${errorURL}?error=oauth_code_verification_failed`,
 						);
@@ -324,23 +414,17 @@ export const genericOAuth = (options: GenericOAuthOptions) => {
 									provider.type || 'oauth2',
 									finalUserInfoUrl,
 								)
-					) as {
-						id: string;
-					};
-					const id = generateId();
-					const data = userSchema.safeParse({
-						...userInfo,
-						id,
-					});
+					) as User | null;
 
-					if (!userInfo || data.success === false) {
-						logger.error('Unable to get user info', data.error);
+					if (!userInfo?.email) {
+						ctx.context.logger.error('Unable to get user info', userInfo);
 						throw ctx.redirect(
-							`${ctx.context.baseURL}/error?error=please_restart_the_process`,
+							`${ctx.context.baseURL}/error?error=email_is_missing`,
 						);
 					}
+
 					const result = await handleOAuthUserInfo(ctx, {
-						userInfo: data.data,
+						userInfo: userInfo,
 						account: {
 							providerId: provider.providerId,
 							accountId: userInfo.id,

@@ -1,5 +1,6 @@
-import type { BetterAuthOptions } from 'better-auth';
+import type { BetterAuthOptions, PluginSchema } from 'better-auth';
 import type { FieldAttribute } from 'better-auth/db';
+import { APIError } from 'better-call';
 import { z } from 'zod';
 
 export const accountSchema = z.object({
@@ -7,17 +8,27 @@ export const accountSchema = z.object({
 	providerId: z.string(),
 	accountId: z.string(),
 	userId: z.string(),
-	accessToken: z.string().nullable().optional(),
-	refreshToken: z.string().nullable().optional(),
-	idToken: z.string().nullable().optional(),
+	accessToken: z.string().nullish(),
+	refreshToken: z.string().nullish(),
+	idToken: z.string().nullish(),
 	/**
 	 * Access token expires at
 	 */
-	expiresAt: z.date().nullable().optional(),
+	accessTokenExpiresAt: z.date().nullish(),
+	/**
+	 * Refresh token expires at
+	 */
+	refreshTokenExpiresAt: z.date().nullish(),
+	/**
+	 * The scopes that the user has authorized
+	 */
+	scope: z.string().nullish(),
 	/**
 	 * Password is only stored in the credential provider
 	 */
-	password: z.string().optional().nullable(),
+	password: z.string().nullish(),
+	createdAt: z.date().default(() => new Date()),
+	updatedAt: z.date().default(() => new Date()),
 });
 
 export const userSchema = z.object({
@@ -25,22 +36,27 @@ export const userSchema = z.object({
 	email: z.string().transform(val => val.toLowerCase()),
 	emailVerified: z.boolean().default(false),
 	name: z.string(),
-	image: z.string().optional(),
-	createdAt: z.date().default(new Date()),
-	updatedAt: z.date().default(new Date()),
+	image: z.string().nullish(),
+	createdAt: z.date().default(() => new Date()),
+	updatedAt: z.date().default(() => new Date()),
 });
 
 export const sessionSchema = z.object({
 	id: z.string(),
 	userId: z.string(),
 	expiresAt: z.date(),
-	ipAddress: z.string().optional(),
-	userAgent: z.string().optional(),
+	createdAt: z.date().default(() => new Date()),
+	updatedAt: z.date().default(() => new Date()),
+	token: z.string(),
+	ipAddress: z.string().nullish(),
+	userAgent: z.string().nullish(),
 });
 
 export const verificationSchema = z.object({
 	id: z.string(),
 	value: z.string(),
+	createdAt: z.date().default(() => new Date()),
+	updatedAt: z.date().default(() => new Date()),
 	expiresAt: z.date(),
 	identifier: z.string(),
 });
@@ -132,11 +148,23 @@ export function parseInputData<T extends Record<string, any>>(
 				}
 				continue;
 			}
+			if (fields[key].validator?.input && data[key] !== undefined) {
+				parsedData[key] = fields[key].validator.input.parse(data[key]);
+				continue;
+			}
 			parsedData[key] = data[key];
 			continue;
 		}
+
 		if (fields[key].defaultValue && action === 'create') {
 			parsedData[key] = fields[key].defaultValue;
+			continue;
+		}
+
+		if (fields[key].required && action === 'create') {
+			throw new APIError('BAD_REQUEST', {
+				message: `${key} is required`,
+			});
 		}
 	}
 	return parsedData as Partial<T>;
@@ -175,4 +203,34 @@ export function parseSessionInput(
 ) {
 	const schema = getAllFields(options, 'session');
 	return parseInputData(session, { fields: schema });
+}
+
+export function mergeSchema<S extends PluginSchema>(
+	schema: S,
+	newSchema?: {
+		[K in keyof S]?: {
+			modelName?: string;
+			fields?: {
+				[P: string]: string;
+			};
+		};
+	},
+) {
+	if (!newSchema) {
+		return schema;
+	}
+	for (const table in newSchema) {
+		const newModelName = newSchema[table]?.modelName;
+		if (newModelName) {
+			schema[table].modelName = newModelName;
+		}
+		for (const field in schema[table].fields) {
+			const newField = newSchema[table]?.fields?.[field];
+			if (!newField) {
+				continue;
+			}
+			schema[table].fields[field].fieldName = newField;
+		}
+	}
+	return schema;
 }
