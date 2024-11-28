@@ -16,6 +16,7 @@
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.699.0",
 		"@aws-sdk/s3-request-presigner": "^3.699.0",
+		"@baselime/edge-logger": "^0.4.2",
 		"@hookform/resolvers": "^3.9.1",
 		"@radix-ui/react-accordion": "^1.2.1",
 		"@radix-ui/react-alert-dialog": "^1.1.2",
@@ -49,9 +50,9 @@
 		"@remix-run/cloudflare-pages": "^2.14.0",
 		"@remix-run/react": "^2.14.0",
 		"@seller-kanrikun/auth": "workspace:*",
+		"@seller-kanrikun/calc": "workspace:*",
 		"@seller-kanrikun/db": "workspace:*",
 		"@seller-kanrikun/ui": "workspace:*",
-		"@seller-kanrikun/calc": "workspace:*",
 		"@t3-oss/env-core": "^0.11.1",
 		"apache-arrow": "^18.0.0",
 		"better-auth": "^0.8.1",
