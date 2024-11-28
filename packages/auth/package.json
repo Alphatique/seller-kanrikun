@@ -11,6 +11,6 @@
 	},
 	"dependencies": {
 		"@seller-kanrikun/db": "workspace:*",
-		"better-auth": "^1.0.6"
+		"better-auth": "^1.0.7"
 	}
 }
