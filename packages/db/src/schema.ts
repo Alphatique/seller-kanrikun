@@ -45,18 +45,18 @@ export const account = sqliteTable('account', {
 	providerId: text('providerId').notNull(),
 	accessToken: text('accessToken'),
 	refreshToken: text('refreshToken'),
-	accessTokenExpiresAt: integer('expiresAt', {
+	accessTokenExpiresAt: integer('accessTokenExpiresAt', {
 		mode: 'timestamp',
 	}),
-	refreshTokenExpiresAt: integer('expiresAt', {
+	refreshTokenExpiresAt: integer('refreshTokenExpiresAt', {
 		mode: 'timestamp',
 	}),
 	scope: text('scope'),
 	password: text('password'),
-	createdAt: integer('expiresAt', {
+	createdAt: integer('createdAt', {
 		mode: 'timestamp',
 	}).notNull(),
-	updatedAt: integer('expiresAt', {
+	updatedAt: integer('updatedAt', {
 		mode: 'timestamp',
 	}).notNull(),
 });
@@ -68,10 +68,10 @@ export const verification = sqliteTable('verification', {
 	expiresAt: integer('expiresAt', {
 		mode: 'timestamp',
 	}).notNull(),
-	createdAt: integer('expiresAt', {
+	createdAt: integer('createdAt', {
 		mode: 'timestamp',
 	}).notNull(),
-	updatedAt: integer('expiresAt', {
+	updatedAt: integer('updatedAt', {
 		mode: 'timestamp',
 	}).notNull(),
 });

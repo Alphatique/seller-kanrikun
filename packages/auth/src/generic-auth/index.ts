@@ -128,6 +128,7 @@ async function getUserInfo(
 	const userInfo = await betterFetch<{
 		email: string;
 		sub?: string;
+		user_id?: string;
 		name: string;
 		email_verified: boolean;
 	}>(finalUserInfoUrl, {
@@ -137,7 +138,7 @@ async function getUserInfo(
 		},
 	});
 	return {
-		id: userInfo.data?.sub,
+		id: userInfo.data?.sub ?? userInfo.data?.user_id,
 		emailVerified: userInfo.data?.email_verified,
 		email: userInfo.data?.email,
 		...userInfo.data,
