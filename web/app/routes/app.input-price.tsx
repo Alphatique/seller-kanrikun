@@ -30,7 +30,7 @@ import type { ActionFunctionArgs } from '@remix-run/cloudflare';
 import type {
 	CostPrice,
 	UpdateCostPriceRequest,
-} from '@seller-kanrikun/data-operation/types';
+} from '@seller-kanrikun/calc/types';
 
 import { useSession } from '@seller-kanrikun/auth/client';
 import * as arrow from 'apache-arrow';

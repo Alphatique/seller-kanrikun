@@ -14,7 +14,7 @@ export const R2 = new S3Client({
 	},
 });
 
-import { generateR2Hash } from '@seller-kanrikun/data-operation';
+import { generateR2Hash } from '@seller-kanrikun/calc';
 
 // 読み込み専用ダウンロード用url取得関数
 export async function getReadOnlySignedUrl(

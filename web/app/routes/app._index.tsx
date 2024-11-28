@@ -33,11 +33,11 @@ import {
 	getPlbsData,
 	getRangedData,
 	getSumPlbsData,
-} from '@seller-kanrikun/data-operation';
+} from '@seller-kanrikun/calc';
 import type {
 	PlbsData,
 	ReportDocumentRowJson,
-} from '@seller-kanrikun/data-operation/types';
+} from '@seller-kanrikun/calc/types';
 
 function calcDatas(data: ReportDocumentRowJson[]): DateCalcedPlbsData[] {
 	const result: DateCalcedPlbsData[] = [];

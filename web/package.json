@@ -51,6 +51,7 @@
 		"@seller-kanrikun/auth": "workspace:*",
 		"@seller-kanrikun/db": "workspace:*",
 		"@seller-kanrikun/ui": "workspace:*",
+		"@seller-kanrikun/calc": "workspace:*",
 		"@t3-oss/env-core": "^0.11.1",
 		"apache-arrow": "^18.0.0",
 		"better-auth": "^0.8.1",

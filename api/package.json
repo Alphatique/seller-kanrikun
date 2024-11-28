@@ -1,5 +1,5 @@
 {
-	"name": "@seller-kanrikun/backend",
+	"name": "@seller-kanrikun/api",
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
@@ -11,7 +11,7 @@
 		"typecheck": "tsc"
 	},
 	"dependencies": {
-		"@seller-kanrikun/data-operation": "workspace:*",
+		"@seller-kanrikun/api-fetch": "workspace:*",
 		"@seller-kanrikun/db": "workspace:*"
 	},
 	"devDependencies": {

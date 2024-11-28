@@ -15,20 +15,26 @@ import {
 	GzipToJson,
 	JsonToGzip,
 	generateR2Hash,
-	getAccountsByProviderId,
-	getReportDocument,
-	getSettlementReports,
 	removeEmpty,
 	reportDocumentTextToJson,
+} from '@seller-kanrikun/calc';
+
+import {
+	getReportDocument,
+	getSettlementReports,
+} from '@seller-kanrikun/api-fetch';
+import {
+	getAccountsByProviderId,
 	updateAccessToken,
-} from '@seller-kanrikun/data-operation';
-import type {
-	ReportDocumentRowJson,
-	SettlementReportType,
-} from '@seller-kanrikun/data-operation/types';
+} from '@seller-kanrikun/db';
+
+import type { SettlementReportType } from '@seller-kanrikun/api-fetch/types';
+import type { ReportDocumentRowJson } from '@seller-kanrikun/calc/types';
+
 import { createClient } from '@seller-kanrikun/db';
 
 export default {
+	// 通常fetch。オブジェクトストレージにcurlでput, get, deleteできるやつ
 	async fetch(request, env, ctx): Promise<Response> {
 		const url = new URL(request.url);
 		const key = url.pathname.slice(1);
@@ -38,6 +44,7 @@ export default {
 				await env.MY_BUCKET.put(key, request.body);
 				return new Response(`Put ${key} successfully!`);
 			}
+			// getはブラウザでも見えるよ
 			case 'GET': {
 				const object = await env.MY_BUCKET.get(key);
 
@@ -67,6 +74,7 @@ export default {
 			}
 		}
 	},
+	// スケジュールされた関数。/__scheduledにアクセスすると実行される(--test-scheduledオプション)
 	async scheduled(event, env, ctx): Promise<void> {
 		// dbの接続
 		const db = await createClient({
@@ -77,20 +85,21 @@ export default {
 		// セラーのアカウントの全取得
 		const accounts = await getAccountsByProviderId(db, 'seller-central');
 
-		for (const account of accounts) {
+		for (let account of accounts) {
 			// アクセストークンの更新
-			await updateAccessToken(
+			account = await updateAccessToken(
 				db,
+				'https://api.amazon.co.jp/auth/o2/token',
 				account,
 				env.SP_API_CLIENT_ID,
 				env.SP_API_CLIENT_SECRET,
 			);
-			// TODO: トークン更新が反映される前に↓が実行されちゃうみたいで、更新時一回目はデータが取れない
 			// レポート一覧の取得
 			const reports: SettlementReportType[] = await getSettlementReports(
 				account.accessToken!,
 			);
 
+			// 一時データ変数
 			const reportDocumentsArray: ReportDocumentRowJson[] = [];
 			const reportMetaDataArray: SettlementReportType[] = [];
 			let updated = false;

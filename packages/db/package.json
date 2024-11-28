@@ -13,7 +13,8 @@
 	},
 	"devDependencies": {
 		"dotenv-cli": "^7.4.2",
-		"drizzle-kit": "^0.28.0"
+		"drizzle-kit": "^0.28.0",
+		"@seller-kanrikun/api-fetch": "workspace:*"
 	},
 	"dependencies": {
 		"@libsql/client": "^0.14.0",
