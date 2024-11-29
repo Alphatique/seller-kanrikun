@@ -429,12 +429,8 @@ export const genericOAuth = (options: GenericOAuthOptions) => {
 						account: {
 							providerId: provider.providerId,
 							accountId: userInfo.id,
-							accessToken: tokens.accessToken,
-							refreshToken: tokens.refreshToken,
-							accessTokenExpiresAt: tokens.accessTokenExpiresAt,
-							refreshTokenExpiresAt: tokens.refreshTokenExpiresAt,
-							idToken: tokens.idToken,
-							scope: tokens.scopes?.join(' '),
+							...tokens,
+							scope: tokens.scopes?.join(','),
 						},
 					});
 					function redirectOnError(error: string) {
