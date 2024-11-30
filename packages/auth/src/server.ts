@@ -25,7 +25,7 @@ export const auth = betterAuth({
 					clientId: process.env.AMAZON_CLIENT_ID!,
 					clientSecret: process.env.AMAZON_CLIENT_SECRET!,
 					authorizationUrl: 'https://apac.account.amazon.com/ap/oa',
-					scopes: ['profile'],
+					scopes: ['profile', 'advertising::campaign_management'],
 					tokenUrl: 'https://api.amazon.co.jp/auth/o2/token',
 					userInfoUrl: 'https://api.amazon.co.jp/user/profile',
 					pkce: true,
