@@ -21,4 +21,6 @@ export type PlbsData = {
 	operatingProfit: number;
 	unpaidBalance: number;
 	inventoryAssets: number;
+	accruedConsumptionTax: number;
+	outputConsumptionTax: number;
 };

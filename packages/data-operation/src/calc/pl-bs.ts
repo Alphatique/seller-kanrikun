@@ -50,7 +50,8 @@ export function getPlbsData(rangedData: ReportDocumentRowJson[]): PlbsData {
 	const unpaidBalance = 0;
 	const amazonOther = getAmazonOther(unpaidBalance, sales, sga, amazonAds);
 
-	console.log(principal, principalTax);
+	const accruedConsumptionTax = principalTax + shippingTax;
+
 	return {
 		sales,
 		principal,
@@ -74,6 +75,8 @@ export function getPlbsData(rangedData: ReportDocumentRowJson[]): PlbsData {
 		operatingProfit,
 		unpaidBalance,
 		inventoryAssets: 0,
+		accruedConsumptionTax,
+		outputConsumptionTax: accruedConsumptionTax,
 	} as PlbsData;
 }
 
@@ -127,6 +130,8 @@ export function getSumPlbsData(data: PlbsData[]): PlbsData {
 			operatingProfit: 0,
 			unpaidBalance: 0,
 			inventoryAssets: 0,
+			accruedConsumptionTax: 0,
+			outputConsumptionTax: 0,
 		},
 	);
 }

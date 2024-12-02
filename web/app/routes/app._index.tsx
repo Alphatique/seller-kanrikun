@@ -492,18 +492,38 @@ export default function HomePage() {
 			/>
 			<PlbsTable
 				title={'BS'}
-				data={{
-					unpaidBalance: {
-						leftHead: '売掛金(未入金額)',
-						indent: 1,
-						values: tableData.map(data => data.unpaidBalance),
-					},
-					inventoryAssets: {
-						leftHead: '棚卸資産',
-						indent: 1,
-						values: tableData.map(data => data.inventoryAssets),
-					},
-				}}
+				data={
+					withTax
+						? {
+								unpaidBalance: {
+									leftHead: '売掛金(未入金額)',
+									indent: 1,
+									values: tableData.map(data => data.unpaidBalance),
+								},
+								inventoryAssets: {
+									leftHead: '棚卸資産',
+									indent: 1,
+									values: tableData.map(data => data.inventoryAssets),
+								},
+							}
+						: {
+								inventoryAssets: {
+									leftHead: '棚卸資産',
+									indent: 1,
+									values: tableData.map(data => data.inventoryAssets),
+								},
+								accruedConsumptionTax: {
+									leftHead: '未収消費税',
+									indent: 1,
+									values: tableData.map(data => data.accruedConsumptionTax),
+								},
+								outputConsumptionTax: {
+									leftHead: '仮受消費税',
+									indent: 1,
+									values: tableData.map(data => data.outputConsumptionTax),
+								},
+							}
+				}
 			/>
 		</div>
 	);
