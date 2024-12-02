@@ -25,6 +25,8 @@ export async function getReadOnlySignedUrl(
 ) {
 	const key = await generateR2Hash(userId, dataName);
 
+	console.log(userId, key);
+
 	return await getSignedUrl(
 		R2,
 		new GetObjectCommand({

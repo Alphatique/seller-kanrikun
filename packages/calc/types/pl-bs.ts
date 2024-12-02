@@ -1,13 +1,17 @@
 export type PlbsData = {
-	sales: number;
+	salesWithTax: number;
+	salesWithoutTax: number;
 	principal: number;
 	principalTax: number;
 	shipping: number;
+	shippingTax: number;
 	otherTax: number;
 	refund: number;
-	netSales: number;
+	netSalesWithTax: number;
+	netSalesWithoutTax: number;
 	costPrice: number;
-	grossProfit: number;
+	grossProfitWithTax: number;
+	grossProfitWithoutTax: number;
 	sga: number;
 	amazonAds: number;
 	promotion: number;
@@ -17,8 +21,12 @@ export type PlbsData = {
 	inventoryUpdateFee: number;
 	shippingReturnFee: number;
 	subscriptionFee: number;
-	amazonOther: number;
-	operatingProfit: number;
+	amazonOtherWithTax: number;
+	amazonOtherWithoutTax: number;
+	operatingProfitWithTax: number;
+	operatingProfitWithoutTax: number;
 	unpaidBalance: number;
 	inventoryAssets: number;
-};
+	accruedConsumptionTax: number;
+	outputConsumptionTax: number;
+}; // withTaxとかネストさせた方がいいかも

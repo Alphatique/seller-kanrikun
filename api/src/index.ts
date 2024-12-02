@@ -102,10 +102,13 @@ export default {
 			// 一時データ変数
 			const reportDocumentsArray: ReportDocumentRowJson[] = [];
 			const reportMetaDataArray: SettlementReportType[] = [];
-			let updated = false;
+			let updateIndex = 0;
 
 			// ハッシュキーの生成
 			const hashKey = await generateR2Hash(account.userId, 'report.gzip');
+
+			console.log(account.userId, hashKey);
+
 			// ハッシュキーの生成
 			const metaHashKey = await generateR2Hash(
 				account.userId,
@@ -159,7 +162,8 @@ export default {
 				if (document === 'error') break;
 
 				// TODO: データの範囲が被ってるときの処理
-				updated = true;
+				updateIndex++;
+				if (updateIndex >= 3) continue;
 				// メタデータの追加
 				reportMetaDataArray.push(report);
 
@@ -175,7 +179,7 @@ export default {
 				'settlement-id',
 			);
 
-			if (!updated) continue;
+			if (updateIndex === 0) continue;
 			const gzipData = JsonToGzip(removedArray);
 			const gzipMetaData = JsonToGzip(reportMetaDataArray);
 

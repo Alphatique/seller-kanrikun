@@ -18,16 +18,19 @@ export function getPlbsData(rangedData: ReportDocumentRowJson[]): PlbsData {
 	const shipping = getShipping(rangedData);
 	const shippingTax = getShippingTaxes(rangedData);
 	const refund = getRefund(rangedData);
-	const sales = getSales(
+	const salesWithTax = getSalesWithTax(
 		principal,
 		principalTax,
 		shipping,
 		shippingTax,
 		refund,
 	);
-	const netSales = getNetSales(sales, refund);
+	const salesWithoutTax = getSalesWithoutTax(principal, shipping, refund);
+	const netSalesWithTax = getNetSales(salesWithTax, refund);
+	const netSalesWithoutTax = getNetSales(salesWithoutTax, refund);
 	const costPrice = 0;
-	const grossProfit = getGrossProfit(netSales, costPrice);
+	const grossProfitWithTax = getGrossProfit(netSalesWithTax, costPrice);
+	const grossProfitWithoutTax = getGrossProfit(netSalesWithoutTax, costPrice);
 	const amazonAds = 0;
 	const promotion = getPromotion(rangedData);
 	const salesCommission = getSalesCommissionFee(rangedData);
@@ -46,21 +49,43 @@ export function getPlbsData(rangedData: ReportDocumentRowJson[]): PlbsData {
 		shippingReturnFee,
 		subscriptionFee,
 	);
-	const operatingProfit = getOperatingProfit(grossProfit, sga);
+	const operatingProfitWithTax = getOperatingProfit(grossProfitWithTax, sga);
+	const operatingProfitWithoutTax = getOperatingProfit(
+		grossProfitWithoutTax,
+		sga,
+	);
 	const unpaidBalance = 0;
-	const amazonOther = getAmazonOther(unpaidBalance, sales, sga, amazonAds);
+	const amazonOtherWithTax = getAmazonOther(
+		unpaidBalance,
+		salesWithTax,
+		sga,
+		amazonAds,
+	);
+	const amazonOtherWithoutTax = getAmazonOther(
+		unpaidBalance,
+		salesWithoutTax,
+		sga,
+		amazonAds,
+	);
+
+	const accruedConsumptionTax = principalTax + shippingTax;
+	const outputConsumptionTax = accruedConsumptionTax;
 
 	console.log(principal, principalTax);
 	return {
-		sales,
+		salesWithTax,
+		salesWithoutTax,
 		principal,
 		principalTax,
 		shipping,
+		shippingTax,
 		otherTax: 0,
 		refund,
-		netSales,
+		netSalesWithTax,
+		netSalesWithoutTax,
 		costPrice,
-		grossProfit,
+		grossProfitWithTax,
+		grossProfitWithoutTax,
 		sga,
 		amazonAds,
 		promotion,
@@ -70,76 +95,76 @@ export function getPlbsData(rangedData: ReportDocumentRowJson[]): PlbsData {
 		inventoryUpdateFee,
 		shippingReturnFee,
 		subscriptionFee,
-		amazonOther,
-		operatingProfit,
+		amazonOtherWithTax,
+		amazonOtherWithoutTax,
+		operatingProfitWithTax,
+		operatingProfitWithoutTax,
 		unpaidBalance,
 		inventoryAssets: 0,
+		accruedConsumptionTax: accruedConsumptionTax,
+		outputConsumptionTax: outputConsumptionTax,
 	} as PlbsData;
 }
 
 export function getSumPlbsData(data: PlbsData[]): PlbsData {
-	return data.reduce(
-		(acc, cur) => {
-			acc.sales += cur.sales;
-			acc.principal += cur.principal;
-			acc.principalTax += cur.principalTax;
-			acc.shipping += cur.shipping;
-			acc.otherTax += cur.otherTax;
-			acc.refund += cur.refund;
-			acc.netSales += cur.netSales;
-			acc.costPrice += cur.costPrice;
-			acc.grossProfit += cur.grossProfit;
-			acc.sga += cur.sga;
-			acc.amazonAds += cur.amazonAds;
-			acc.promotion += cur.promotion;
-			acc.salesCommission += cur.salesCommission;
-			acc.fbaShippingFee += cur.fbaShippingFee;
-			acc.inventoryStorageFee += cur.inventoryStorageFee;
-			acc.inventoryUpdateFee += cur.inventoryUpdateFee;
-			acc.shippingReturnFee += cur.shippingReturnFee;
-			acc.subscriptionFee += cur.subscriptionFee;
-			acc.amazonOther += cur.amazonOther;
-			acc.operatingProfit += cur.operatingProfit;
-			acc.unpaidBalance += cur.unpaidBalance;
-			acc.inventoryAssets += cur.inventoryAssets;
-			return acc;
-		},
-		{
-			sales: 0,
-			principal: 0,
-			principalTax: 0,
-			shipping: 0,
-			otherTax: 0,
-			refund: 0,
-			netSales: 0,
-			costPrice: 0,
-			grossProfit: 0,
-			sga: 0,
-			amazonAds: 0,
-			promotion: 0,
-			salesCommission: 0,
-			fbaShippingFee: 0,
-			inventoryStorageFee: 0,
-			inventoryUpdateFee: 0,
-			shippingReturnFee: 0,
-			subscriptionFee: 0,
-			amazonOther: 0,
-			operatingProfit: 0,
-			unpaidBalance: 0,
-			inventoryAssets: 0,
-		},
-	);
+	return data.reduce((acc: PlbsData, cur: PlbsData) => {
+		for (const key of Object.keys(acc) as (keyof PlbsData)[]) {
+			acc[key] += cur[key] || 0;
+		}
+		return acc;
+	}, getZeroPlbsData());
+}
+function getZeroPlbsData(): PlbsData {
+	return {
+		salesWithTax: 0,
+		salesWithoutTax: 0,
+		principal: 0,
+		principalTax: 0,
+		shipping: 0,
+		shippingTax: 0,
+		otherTax: 0,
+		refund: 0,
+		netSalesWithTax: 0,
+		netSalesWithoutTax: 0,
+		costPrice: 0,
+		grossProfitWithTax: 0,
+		grossProfitWithoutTax: 0,
+		sga: 0,
+		amazonAds: 0,
+		promotion: 0,
+		salesCommission: 0,
+		fbaShippingFee: 0,
+		inventoryStorageFee: 0,
+		inventoryUpdateFee: 0,
+		shippingReturnFee: 0,
+		subscriptionFee: 0,
+		amazonOtherWithTax: 0,
+		amazonOtherWithoutTax: 0,
+		operatingProfitWithTax: 0,
+		operatingProfitWithoutTax: 0,
+		unpaidBalance: 0,
+		inventoryAssets: 0,
+		accruedConsumptionTax: 0,
+		outputConsumptionTax: 0,
+	} as PlbsData;
 }
 
 // 売上（Sales）
-export function getSales(
+export function getSalesWithTax(
 	principal: number,
 	PrincipalTax: number,
 	shipping: number,
 	ShippingTax: number,
 	refund: number,
 ) {
-	return principal + PrincipalTax + shipping + ShippingTax - refund;
+	return principal + PrincipalTax + shipping + ShippingTax + refund;
+}
+export function getSalesWithoutTax(
+	principal: number,
+	shipping: number,
+	refund: number,
+) {
+	return principal + shipping + refund;
 }
 
 // 純売上（Net Sales）
