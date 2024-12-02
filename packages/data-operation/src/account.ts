@@ -22,8 +22,8 @@ export async function updateAccessToken(
 	clientSecret: string,
 ) {
 	if (
-		accountData.expiresAt &&
-		accountData.expiresAt.getTime() < Date.now() &&
+		accountData.accessTokenExpiresAt &&
+		accountData.accessTokenExpiresAt.getTime() < Date.now() &&
 		accountData.refreshToken
 	) {
 		const getAccessToken = await fetch(
@@ -48,7 +48,10 @@ export async function updateAccessToken(
 
 		await db
 			.update(account)
-			.set({ accessToken: accessTokenJson.access_token, expiresAt: expiresAt })
+			.set({
+				accessToken: accessTokenJson.access_token,
+				accessTokenExpiresAt: expiresAt,
+			})
 			.where(eq(account.id, accountData.id))
 			.run();
 	}
@@ -67,8 +70,8 @@ export async function refreshAccountsTokens(
 		.where(
 			and(
 				isNotNull(account.refreshToken),
-				isNotNull(account.expiresAt),
-				lt(account.expiresAt, new Date()),
+				isNotNull(account.accessTokenExpiresAt),
+				lt(account.accessTokenExpiresAt, new Date()),
 			),
 		)
 		.all();

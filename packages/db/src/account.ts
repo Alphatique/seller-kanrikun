@@ -30,7 +30,10 @@ export async function updateAccessToken(
 	}
 
 	// 期限が有効ならそのまま返す
-	if (accountData.expiresAt && Date.now() < accountData.expiresAt.getTime())
+	if (
+		accountData.accessTokenExpiresAt &&
+		Date.now() < accountData.accessTokenExpiresAt.getTime()
+	)
 		return accountData;
 
 	// リフレッシュトークンから新規アクセストークンを取得
@@ -45,14 +48,14 @@ export async function updateAccessToken(
 	db.update(account)
 		.set({
 			accessToken,
-			expiresAt,
+			accessTokenExpiresAt: expiresAt,
 		})
 		.where(eq(account.id, account.id))
 		.execute();
 
 	// 更新したデータを返す
 	accountData.accessToken = accessToken;
-	accountData.expiresAt = expiresAt;
+	accountData.accessTokenExpiresAt = expiresAt;
 	return accountData;
 }
 
