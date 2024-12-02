@@ -1,0 +1,22 @@
+{
+	"name": "@seller-kanrikun/sp-api",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./schema/*": "./schema/*.ts",
+		"./client/*": "./client/*.ts"
+	},
+	"scripts": {
+		"generate": "tsx ./generate.ts",
+		"typecheck": "tsc"
+	},
+	"dependencies": {
+		"openapi-fetch": "^0.13.1"
+	},
+	"devDependencies": {
+		"fflate": "^0.8.2",
+		"openapi-typescript": "^7.4.4",
+		"tsx": "^4.19.2",
+		"typescript": "^5.7.2"
+	}
+}
