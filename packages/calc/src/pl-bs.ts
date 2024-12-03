@@ -162,7 +162,7 @@ export function getSalesWithoutTax(
 	shipping: number,
 	refund: number,
 ) {
-	return principal + shipping + refund;
+	return principal + shipping;
 }
 
 // 純売上（Net Sales）
@@ -234,5 +234,5 @@ export function getAmazonOther(
 
 // 営業利益
 export function getOperatingProfit(grossProfit: number, SGA: number) {
-	return grossProfit - SGA;
+	return grossProfit + SGA;
 }
