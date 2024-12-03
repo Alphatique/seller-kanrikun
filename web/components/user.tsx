@@ -1,7 +1,6 @@
 'use client';
 
 import type { User as UserType } from 'better-auth';
-import { useRouter } from 'next/navigation';
 
 import { signOut } from '@seller-kanrikun/auth/client';
 import {
@@ -24,15 +23,15 @@ interface Props {
 }
 
 export function User({ user }: Props) {
-	const router = useRouter();
-
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Button variant='ghost' className='relative size-8 rounded-full'>
+				<Button variant='ghost' className='relative size-10 rounded-full'>
 					<Avatar>
 						<AvatarImage src={user.image ?? undefined} alt={user.name} />
-						<AvatarFallback>{user.name[0].toUpperCase()}</AvatarFallback>
+						<AvatarFallback className='select-none'>
+							{user.name[0].toUpperCase()}
+						</AvatarFallback>
 					</Avatar>
 				</Button>
 			</DropdownMenuTrigger>
@@ -51,7 +50,6 @@ export function User({ user }: Props) {
 				<DropdownMenuItem
 					onClick={async () => {
 						await signOut();
-						router.push('/sign-in');
 					}}
 				>
 					<span className='w-full text-center text-red-600'>サインアウト</span>
