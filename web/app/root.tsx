@@ -9,7 +9,7 @@ import {
 
 import './tailwind.css';
 
-export const meta: MetaFunction = () => [{ title: 'Amazon' }];
+export const meta: MetaFunction = () => [{ title: 'Seller管理くん' }];
 
 export function Layout({ children }: { children: React.ReactNode }) {
 	return (
