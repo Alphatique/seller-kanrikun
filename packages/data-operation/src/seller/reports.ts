@@ -42,7 +42,7 @@ export async function getSettlementReports(
 	return result;
 }
 async function getReportsByNextToken(nextToken: string, accessToken: string) {
-	const reponse = await fetch(
+	const response = await fetch(
 		`https://sellingpartnerapi-fe.amazon.com/reports/2021-06-30/reports?nextToken=${encodeURIComponent(nextToken)}`,
 		{
 			method: 'GET',
@@ -52,7 +52,7 @@ async function getReportsByNextToken(nextToken: string, accessToken: string) {
 		},
 	);
 
-	const responseData = (await reponse.json()) as SettlementReportsResponse;
+	const responseData = (await response.json()) as SettlementReportsResponse;
 	return responseData;
 }
 
