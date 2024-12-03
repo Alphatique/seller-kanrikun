@@ -1,8 +1,9 @@
 'use client';
 
+import type { User as UserType } from 'better-auth';
 import { useRouter } from 'next/navigation';
 
-import { signOut, useSession } from '@seller-kanrikun/auth/client';
+import { signOut } from '@seller-kanrikun/auth/client';
 import {
 	Avatar,
 	AvatarFallback,
@@ -18,24 +19,20 @@ import {
 	DropdownMenuTrigger,
 } from '@seller-kanrikun/ui/components/dropdown-menu';
 
-export function User() {
-	const router = useRouter();
-	const { data: session } = useSession();
+interface Props {
+	user: UserType;
+}
 
-	if (!session) return null;
+export function User({ user }: Props) {
+	const router = useRouter();
 
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
 				<Button variant='ghost' className='relative size-8 rounded-full'>
 					<Avatar>
-						<AvatarImage
-							src={session.user.image ?? undefined}
-							alt={session.user.name}
-						/>
-						<AvatarFallback>
-							{session.user.name[0].toUpperCase()}
-						</AvatarFallback>
+						<AvatarImage src={user.image ?? undefined} alt={user.name} />
+						<AvatarFallback>{user.name[0].toUpperCase()}</AvatarFallback>
 					</Avatar>
 				</Button>
 			</DropdownMenuTrigger>
@@ -43,10 +40,10 @@ export function User() {
 				<DropdownMenuLabel>
 					<div className='flex flex-col gap-1'>
 						<p className='text-center font-medium text-sm leading-none'>
-							{session.user.name}
+							{user.name}
 						</p>
 						<p className='text-center text-muted-foreground text-xs leading-none'>
-							{session.user.email}
+							{user.email}
 						</p>
 					</div>
 				</DropdownMenuLabel>

@@ -1,6 +1,74 @@
+import { auth } from '@seller-kanrikun/auth/server';
+import { buttonVariants } from '@seller-kanrikun/ui/components/button';
+import { cn } from '@seller-kanrikun/ui/lib/utils';
+import {
+	BlocksIcon,
+	DollarSignIcon,
+	HouseIcon,
+	ListIcon,
+	ScaleIcon,
+	Settings2Icon,
+	TrendingUpIcon,
+} from 'lucide-react';
+import { headers } from 'next/headers';
+import Link from 'next/link';
+import { RedirectType, redirect } from 'next/navigation';
+
 import { User } from '~/components/user';
 
-export default function Layout() {
+type HeaderItem = {
+	title: string;
+	icon: React.ReactNode;
+	href: string;
+};
+
+const items: HeaderItem[] = [
+	{
+		title: 'ホーム',
+		icon: <HouseIcon />,
+		href: '/',
+	},
+	{
+		title: 'PL/BS',
+		icon: <ScaleIcon />,
+		href: '/pl-bs',
+	},
+	{
+		title: '商品',
+		icon: <ListIcon />,
+		href: '/items',
+	},
+	{
+		title: '仕入れ',
+		icon: <BlocksIcon />,
+		href: '/stocking',
+	},
+	{
+		title: 'セッション/CVR',
+		icon: <TrendingUpIcon />,
+		href: '/session-cvr',
+	},
+	{
+		title: '原価入力',
+		icon: <DollarSignIcon />,
+		href: '/input-price',
+	},
+	{
+		title: '設定',
+		icon: <Settings2Icon />,
+		href: '/settings',
+	},
+];
+
+export default async function Layout() {
+	const session = await auth.api.getSession({
+		headers: await headers(),
+	});
+
+	if (!session) {
+		throw redirect('/sign-in', RedirectType.replace);
+	}
+
 	return (
 		<div className='flex h-screen flex-col'>
 			<header className='min-h-0 shrink-0 bg-teal-800'>
@@ -53,7 +121,23 @@ export default function Layout() {
 
 					<div className='grow' />
 
-					<User />
+					<User user={session.user} />
+				</div>
+
+				<div className='-mt-2 flex flex-wrap justify-center'>
+					{items.map(item => (
+						<Link
+							href={`/dashboard/${item.href}`}
+							key={item.href}
+							className={cn(
+								buttonVariants({ variant: 'ghost' }),
+								'h-10 rounded-none text-background transition-none hover:bg-teal-900 hover:text-background',
+							)}
+						>
+							{item.icon}
+							{item.title}
+						</Link>
+					))}
 				</div>
 			</header>
 		</div>
