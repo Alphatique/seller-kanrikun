@@ -19,7 +19,29 @@ const nextConfig: NextConfig = {
 			config.plugins.push(new DefinePlugin(defines));
 		}
 
+		config.module.rules.push({
+			test: /\.svg$/,
+			use: [
+				{
+					loader: '@svgr/webpack',
+				},
+			],
+		});
+
 		return config;
+	},
+	images: {
+		disableStaticImages: true,
+	},
+	experimental: {
+		turbo: {
+			rules: {
+				'*.svg': {
+					loaders: ['@svgr/webpack'],
+					as: '*.js',
+				},
+			},
+		},
 	},
 };
 

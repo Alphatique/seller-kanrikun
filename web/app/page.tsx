@@ -1,8 +1,7 @@
 import { headers } from 'next/headers';
+import Link from 'next/link';
 
 import { auth } from '@seller-kanrikun/auth/server';
-
-import { SignIn } from '~/components/signIn';
 
 export default async function Home() {
 	const session = await auth.api.getSession({
@@ -11,7 +10,8 @@ export default async function Home() {
 
 	return (
 		<>
-			<SignIn />
+			<Link href='/sign-in'>SignIn</Link>
+			<p>session:</p>
 			<p>{JSON.stringify(session, null, 4)}</p>
 		</>
 	);
