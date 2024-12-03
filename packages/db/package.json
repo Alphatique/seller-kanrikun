@@ -7,12 +7,11 @@
 		"./schema": "./src/schema.ts"
 	},
 	"scripts": {
-		"push": "dotenv -e ../../web/.env.development.local -- drizzle-kit push",
-		"studio": "dotenv -e ../../web/.env.development.local -- drizzle-kit studio",
+		"push": "dotenvx run -f ../../.env -- drizzle-kit push",
+		"studio": "dotenvx run -f ../../.env -- drizzle-kit studio",
 		"typecheck": "tsc"
 	},
 	"devDependencies": {
-		"dotenv-cli": "^7.4.2",
 		"drizzle-kit": "^0.28.0",
 		"@seller-kanrikun/api-fetch": "workspace:*"
 	},

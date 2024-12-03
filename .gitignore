@@ -2,7 +2,6 @@ node_modules
 
 /.cache
 /build
-.env
 .dev.vars
 
 .wrangler
@@ -13,11 +12,7 @@ node_modules
 node_modules
 
 # Local env files
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.keys
 
 # Build Outputs
 build

@@ -3,10 +3,9 @@
 	"version": "1.0.0",
 	"private": true,
 	"scripts": {
-		"dev": "next dev --turbo --experimental-https",
-		"build": "next build",
-		"start": "next start",
-		"lint": "next lint"
+		"dev": "dotenvx run -f ../.env -- next dev --turbo --experimental-https",
+		"build": "dotenvx run -f ../.env -- next build",
+		"start": "dotenvx run -f ../.env -- next start"
 	},
 	"dependencies": {
 		"@hookform/resolvers": "^3.9.1",
