@@ -3,6 +3,7 @@ import type { NextConfig } from 'next';
 import { DefinePlugin } from 'webpack';
 
 const nextConfig: NextConfig = {
+	transpilePackages: ['@seller-kanrikun/db', '@seller-kanrikun/ui'],
 	webpack: (config, { nextRuntime }) => {
 		if (nextRuntime === 'edge' || nextRuntime === 'nodejs') {
 			const env = JSON.parse(

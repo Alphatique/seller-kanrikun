@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+		"lib": ["ES2022", "DOM", "DOM.Iterable"],
+		"isolatedModules": true,
+		"jsx": "react-jsx",
+		"module": "ESNext",
+		"moduleDetection": "force",
+		"moduleResolution": "Bundler",
+		"target": "ES2022",
+		"strict": true,
+		"allowJs": false,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+		"noEmit": true
+	},
+	"include": ["./components", "./hooks", "./lib"]
+}

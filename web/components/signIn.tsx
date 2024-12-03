@@ -1,8 +1,7 @@
 'use client';
 
 import { signIn } from '@seller-kanrikun/auth/client';
-
-import { Button } from './ui/button';
+import { Button } from '@seller-kanrikun/ui/components/button';
 
 export function SignIn() {
 	return (
