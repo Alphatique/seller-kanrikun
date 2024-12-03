@@ -1,7 +1,5 @@
-import type { Metadata } from 'next';
-
 export const metadata: Metadata = {
-	title: 'ログイン | セラー管理君',
+	title: 'サインイン | セラー管理君',
 };
 
 export default function Layout({ children }: LayoutProps) {
