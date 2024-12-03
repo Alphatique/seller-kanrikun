@@ -1,6 +1,7 @@
 {
 	"name": "seller-kanrikun",
 	"private": true,
+	"type": "module",
 	"workspaces": ["web", "packages/*"],
 	"scripts": {
 		"format": "biome check --fix --unsafe",
@@ -9,6 +10,8 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
+		"@commitlint/cli": "^19.6.0",
+		"@commitlint/config-conventional": "^19.6.0",
 		"lefthook": "^1.8.2"
 	},
 	"trustedDependencies": ["@biomejs/biome"]
