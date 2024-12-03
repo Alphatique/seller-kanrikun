@@ -41,7 +41,7 @@ export default function Page() {
 	});
 
 	return (
-		<div className='grid w-[25rem] gap-6 rounded-xl bg-background p-8'>
+		<main className='grid w-[25rem] gap-6 rounded-xl bg-background p-8'>
 			<div className='flex justify-center gap-1 align-center'>
 				<Logo />
 				<span className='font-bold text-sm leading-6'>セラー管理君</span>
@@ -99,6 +99,6 @@ export default function Page() {
 					)}
 				/>
 			</div>
-		</div>
+		</main>
 	);
 }
