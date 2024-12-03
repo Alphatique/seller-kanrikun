@@ -7,7 +7,7 @@ terraform {
   }
 }
 
-variable "DOTENV_PRIVATE_KEY_PRODUCTION" {
+variable "DOTENV_PRIVATE_KEY" {
   type = string
 }
 
@@ -16,14 +16,15 @@ resource "vercel_project" "seller-kanrikun" {
   team_id   = "alphatique"
   framework = "nextjs"
   git_repository = {
-    type = "github"
-    repo = "alphatique/seller-kanrikun"
+    type              = "github"
+    repo              = "Alphatique/seller-kanrikun"
+    production_branch = "main"
   }
   root_directory = "web"
   build_command  = "bun run build"
   environment = [{
-    key    = "DOTENV_PRIVATE_KEY_PRODUCTION"
+    key    = "DOTENV_PRIVATE_KEY"
     target = ["production", "preview"]
-    value  = var.DOTENV_PRIVATE_KEY_PRODUCTION
+    value  = var.DOTENV_PRIVATE_KEY
   }]
 }
