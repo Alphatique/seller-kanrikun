@@ -77,6 +77,23 @@ export const verification = sqliteTable('verification', {
 	}),
 });
 
+export const passkey = sqliteTable('passkey', {
+	id: text('id').primaryKey(),
+	name: text('name'),
+	publicKey: text('publicKey').notNull(),
+	userId: text('userId')
+		.notNull()
+		.references(() => user.id),
+	WebAuthnUserId: text('WebAuthnUserId').notNull(),
+	counter: integer('counter').notNull(),
+	deviceType: text('deviceType').notNull(),
+	backedUp: integer('backedUp', { mode: 'boolean' }).notNull(),
+	transports: text('transports').notNull(),
+	createdAt: integer('createdAt', {
+		mode: 'timestamp',
+	}),
+});
+
 export const plbsData = sqliteTable('plbsData', {
 	id: text('id').primaryKey(),
 	year_month: integer('year_month', {

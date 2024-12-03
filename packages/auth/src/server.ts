@@ -3,6 +3,7 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 
 import { createClient } from '@seller-kanrikun/db';
 
+import { passkey } from 'better-auth/plugins';
 import { genericOAuth } from './generic-auth';
 
 export const auth = betterAuth({
@@ -42,5 +43,6 @@ export const auth = betterAuth({
 				},
 			],
 		}),
+		passkey(),
 	],
 });

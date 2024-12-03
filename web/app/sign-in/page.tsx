@@ -19,20 +19,41 @@ export default function Page() {
 	async function signInWithAmazon() {
 		setLoading('amazon');
 
-		await signIn
-			.oauth2({
+		const { error } = await signIn.oauth2({
+			providerId: 'amazon',
+			callbackURL: '/dashboard',
+		});
+
+		if (error) {
+			console.log(error);
+			setLoading(false);
+		}
+
+		try {
+			const result = await signIn.oauth2({
 				providerId: 'amazon',
 				callbackURL: '/dashboard',
-			})
-			.catch(() => setLoading(false));
+			});
+
+			if (result.error) {
+				throw result.error;
+			}
+		} catch (e) {
+			setLoading(false);
+		}
 	}
 	async function signInWithPasskey() {
 		setLoading('passkey');
 
-		// Not implemented
-		await new Promise(resolve => setTimeout(resolve, 1000));
+		try {
+			const result = await signIn.passkey();
 
-		setLoading(false);
+			if (result?.error) {
+				throw result.error;
+			}
+		} catch (e) {
+			setLoading(false);
+		}
 	}
 
 	useEffect(() => {
