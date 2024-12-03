@@ -89,7 +89,9 @@ const PlbsTable = ({ title, data }: PlbsTableInputProps) => {
 							{value.leftHead}
 						</IndentableTableCell>
 						{value.values.map((row, i) => (
-							<TableCell key={`${key}${i.toString()}`}>{row}</TableCell>
+							<TableCell key={`${key}${i.toString()}`}>
+								{row.toLocaleString()}
+							</TableCell>
 						))}
 					</PlbsTableRow>
 				))}
