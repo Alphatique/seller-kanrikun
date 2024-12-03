@@ -12,7 +12,7 @@ export async function generateR2Hash(
 	// 16進文字列に変換
 	const hashArray = Array.from(new Uint8Array(hashBuffer));
 	const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-	return `${hashHex}.json`;
+	return hashHex;
 }
 
 export function removeDuplicatesAndEmpty<T extends Record<string, unknown>>(
