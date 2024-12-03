@@ -22,6 +22,7 @@ export default function Page() {
 		await signIn
 			.oauth2({
 				providerId: 'amazon',
+				callbackURL: '/dashboard',
 			})
 			.catch(() => setLoading(false));
 	}
