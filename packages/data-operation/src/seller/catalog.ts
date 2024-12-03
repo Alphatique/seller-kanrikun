@@ -11,7 +11,7 @@ export async function getCatalogData(accessToken: string) {
 		},
 	);
 
-	const responseData: CatalogItemsResponse = await response.json();
+	const responseData = (await response.json()) as CatalogItemsResponse;
 
 	console.log(responseData);
 	console.log(responseData.items[0]);

@@ -20,7 +20,7 @@ export async function getSettlementReports(
 			},
 		},
 	);
-	const reportsData: SettlementReportsResponse = await reports.json();
+	const reportsData = (await reports.json()) as SettlementReportsResponse;
 
 	if ('errors' in reportsData) {
 		console.error('Error, please try again: ', reportsData);
@@ -52,7 +52,7 @@ async function getReportsByNextToken(nextToken: string, accessToken: string) {
 		},
 	);
 
-	const responseData: SettlementReportsResponse = await reponse.json();
+	const responseData = (await reponse.json()) as SettlementReportsResponse;
 	return responseData;
 }
 
@@ -70,8 +70,8 @@ export async function getReportDocument(
 		},
 	);
 
-	const reportDocumentData: SettlementReportDocumentResponse =
-		await response.json();
+	const reportDocumentData =
+		(await response.json()) as SettlementReportDocumentResponse;
 
 	if ('errors' in reportDocumentData) {
 		console.error('Error, please try again: ', reportDocumentData);

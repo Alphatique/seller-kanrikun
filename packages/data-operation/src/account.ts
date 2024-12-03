@@ -42,7 +42,7 @@ export async function updateAccessToken(
 			},
 		);
 
-		const accessTokenJson: AuthTokenResponse = await getAccessToken.json();
+		const accessTokenJson = (await getAccessToken.json()) as AuthTokenResponse;
 
 		const expiresAt = new Date(Date.now() + accessTokenJson.expires_in * 1000);
 
