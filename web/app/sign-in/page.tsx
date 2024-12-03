@@ -58,7 +58,7 @@ export default function Page() {
 
 	useEffect(() => {
 		if (session) {
-			router.replace('/');
+			router.replace('/dashboard');
 		}
 	});
 
