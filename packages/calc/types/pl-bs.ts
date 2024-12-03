@@ -5,7 +5,6 @@ export type PlbsData = {
 	principalTax: number;
 	shipping: number;
 	shippingTax: number;
-	otherTax: number;
 	refund: number;
 	netSalesWithTax: number;
 	netSalesWithoutTax: number;

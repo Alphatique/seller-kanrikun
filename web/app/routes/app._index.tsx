@@ -123,11 +123,6 @@ const plViewRowsWithTax: {
 		indent: 2,
 	},
 	{
-		key: 'otherTax',
-		head: 'その他の税金',
-		indent: 2,
-	},
-	{
 		key: 'refund',
 		head: '返品額',
 		indent: 1,
