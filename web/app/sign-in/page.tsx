@@ -1,13 +1,13 @@
 'use client';
 
 import { KeyRoundIcon, Loader2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { signIn, useSession } from '@seller-kanrikun/auth/client';
 import { Button } from '@seller-kanrikun/ui/components/button';
 import { cn } from '@seller-kanrikun/ui/lib/utils';
 
-import { useRouter } from 'next/navigation';
 import AmazonLogo from '../../assets/amazon.svg';
 import Logo from '../../assets/logo.svg';
 
