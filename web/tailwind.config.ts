@@ -3,29 +3,11 @@ import type { Config } from 'tailwindcss';
 export default {
 	darkMode: ['class'],
 	content: [
-		'./app/**/{**,.client,.server}/**/*.{ts,tsx}',
-		'./components/**/*.{ts,tsx}',
-		'../packages/ui/**/*.{ts,tsx}',
+		'./components/**/*.{js,ts,jsx,tsx,mdx}',
+		'./app/**/*.{js,ts,jsx,tsx,mdx}',
 	],
 	theme: {
 		extend: {
-			fontFamily: {
-				sans: [
-					'Inter"',
-					'ui-sans-serif',
-					'system-ui',
-					'sans-serif',
-					'Apple Color Emoji"',
-					'Segoe UI Emoji"',
-					'Segoe UI Symbol"',
-					'Noto Color Emoji"',
-				],
-			},
-			borderRadius: {
-				lg: 'var(--radius)',
-				md: 'calc(var(--radius) - 2px)',
-				sm: 'calc(var(--radius) - 4px)',
-			},
 			colors: {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
@@ -77,6 +59,11 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))',
 				},
+			},
+			borderRadius: {
+				lg: 'var(--radius)',
+				md: 'calc(var(--radius) - 2px)',
+				sm: 'calc(var(--radius) - 4px)',
 			},
 			keyframes: {
 				'accordion-down': {
