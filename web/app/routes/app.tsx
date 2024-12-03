@@ -1,31 +1,6 @@
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from '@radix-ui/react-dropdown-menu';
-import { Outlet } from '@remix-run/react';
+import { Link, Outlet } from '@remix-run/react';
 import { useSession } from '@seller-kanrikun/auth/client';
-import {
-	Sidebar,
-	SidebarContent,
-	SidebarFooter,
-	SidebarGroup,
-	SidebarGroupContent,
-	SidebarGroupLabel,
-	SidebarMenu,
-	SidebarMenuButton,
-	SidebarMenuItem,
-	SidebarProvider,
-} from '@seller-kanrikun/ui';
-import {
-	Calendar,
-	ChevronUp,
-	Home,
-	Inbox,
-	Search,
-	Settings,
-} from 'lucide-react';
+import { Calendar, Home, Inbox, Search, Settings } from 'lucide-react';
 
 const items = [
 	{
@@ -59,18 +34,16 @@ import { signOut } from '@seller-kanrikun/auth/client';
 
 export default function AppLayout() {
 	return (
-		<SidebarProvider>
-			<div className='flex h-full w-full bg-background'>
-				<AppSidebar />
-				<main className='min-h-0 grow overflow-y-auto p-4'>
-					<Outlet />
-				</main>
-			</div>
-		</SidebarProvider>
+		<div className='flex h-full w-full flex-col bg-background'>
+			<AppHeader />
+			<main className='min-h-0 grow overflow-y-auto p-4'>
+				<Outlet />
+			</main>
+		</div>
 	);
 }
 
-function AppSidebar() {
+function AppHeader() {
 	const { data: session, error: sessionError } = useSession();
 	const handleSignOut = async () => {
 		const response = await signOut();
@@ -80,58 +53,26 @@ function AppSidebar() {
 	if (sessionError) {
 		// TODO: loginにリダイレクトしたい人生だった
 	}
-
 	return (
-		<Sidebar>
-			<SidebarContent>
-				<SidebarGroup>
-					<SidebarGroupLabel>Seller-kanrikun</SidebarGroupLabel>
-					<SidebarGroupContent>
-						<SidebarMenu>
-							{items.map(item => (
-								<SidebarMenuItem key={item.title}>
-									<SidebarMenuButton asChild>
-										<a href={item.url}>
-											<item.icon />
-											<span>{item.title}</span>
-										</a>
-									</SidebarMenuButton>
-								</SidebarMenuItem>
-							))}
-						</SidebarMenu>
-					</SidebarGroupContent>
-				</SidebarGroup>
-			</SidebarContent>
-			<SidebarFooter>
-				<SidebarMenu>
-					<SidebarMenuItem>
-						{session ? (
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<SidebarMenuButton>
-										{session.user.email}
-										<ChevronUp className='ml-auto' />
-									</SidebarMenuButton>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent
-									side='top'
-									className='w-[--radix-popper-anchor-width]'
-								>
-									<DropdownMenuItem onClick={handleSignOut}>
-										<span>Sign out</span>
-									</DropdownMenuItem>
-								</DropdownMenuContent>
-							</DropdownMenu>
-						) : (
-							<SidebarMenuButton asChild>
-								<a href='/login'>
-									<span>Login</span>
-								</a>
-							</SidebarMenuButton>
-						)}
-					</SidebarMenuItem>
-				</SidebarMenu>
-			</SidebarFooter>
-		</Sidebar>
+		<header className='flex flex-col items-center justify-between bg-emerald-900 text-white'>
+			<div className='flex h-14 w-full items-center justify-between border-b-2'>
+				<Link to='/app' className='text-3xl'>
+					セラー管理くん
+				</Link>
+				{session ? (
+					<div>{session.user.email}</div>
+				) : (
+					<Link to='/login'>login</Link>
+				)}
+			</div>
+			<div className='flex h-8 w-full justify-between'>
+				{items.map(item => (
+					<a href={item.url} key={item.title} className='m-auto flex'>
+						<item.icon />
+						<span>{item.title}</span>
+					</a>
+				))}
+			</div>
+		</header>
 	);
 }
