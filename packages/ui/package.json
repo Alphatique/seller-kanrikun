@@ -4,6 +4,7 @@
 	"type": "module",
 	"exports": {
 		"./components/*": "./components/*.tsx",
+		"./confirm-dialog": "./confirm-dialog/index.ts",
 		"./hooks/*": "./hooks/*.ts",
 		"./lib/*": "./lib/*.ts"
 	},
