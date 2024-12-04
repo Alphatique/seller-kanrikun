@@ -1,63 +1,8 @@
 import type { User as UserType } from 'better-auth';
-import {
-	BlocksIcon,
-	DollarSignIcon,
-	HouseIcon,
-	ListIcon,
-	ScaleIcon,
-	Settings2Icon,
-	TrendingUpIcon,
-} from 'lucide-react';
 import Link from 'next/link';
 
-import { buttonVariants } from '@seller-kanrikun/ui/components/button';
-import { cn } from '@seller-kanrikun/ui/lib/utils';
-
 import { User } from '~/components/user';
-
-type HeaderItem = {
-	title: string;
-	icon: React.ReactNode;
-	href: string;
-};
-
-const items: HeaderItem[] = [
-	{
-		title: 'ホーム',
-		icon: <HouseIcon />,
-		href: '/',
-	},
-	{
-		title: 'PL/BS',
-		icon: <ScaleIcon />,
-		href: '/pl-bs',
-	},
-	{
-		title: '商品',
-		icon: <ListIcon />,
-		href: '/items',
-	},
-	{
-		title: '仕入れ',
-		icon: <BlocksIcon />,
-		href: '/stocking',
-	},
-	{
-		title: 'セッション/CVR',
-		icon: <TrendingUpIcon />,
-		href: '/session-cvr',
-	},
-	{
-		title: '原価入力',
-		icon: <DollarSignIcon />,
-		href: '/input-price',
-	},
-	{
-		title: '設定',
-		icon: <Settings2Icon />,
-		href: '/settings',
-	},
-];
+import { HeaderLinks } from './links';
 
 interface Props {
 	user: UserType;
@@ -122,21 +67,7 @@ export function Header({ user }: Props) {
 				</div>
 			</div>
 
-			<div className='-mt-2 flex flex-wrap justify-center'>
-				{items.map(item => (
-					<Link
-						href={`/dashboard/${item.href}`}
-						key={item.href}
-						className={cn(
-							buttonVariants({ variant: 'ghost' }),
-							'h-10 rounded-none text-background transition-none hover:bg-teal-900 hover:text-background',
-						)}
-					>
-						{item.icon}
-						{item.title}
-					</Link>
-				))}
-			</div>
+			<HeaderLinks />
 		</header>
 	);
 }
