@@ -5,7 +5,7 @@ import {
 	AccordionTrigger,
 } from '@seller-kanrikun/ui/components/accordion';
 
-import InputPriceUpload from '~/components/input-price-upload';
+import InputPriceUpload from './upload-xlsx';
 
 export const metadata: Metadata = {
 	title: '原価入力 | セラー管理君',
