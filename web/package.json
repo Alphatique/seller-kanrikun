@@ -17,6 +17,7 @@
 		"react-dom": "19.0.0-rc-66855b96-20241106",
 		"request": "^2.88.2",
 		"useragent": "^2.3.0",
+		"xlsx": "^0.18.5",
 		"yamlparser": "^0.0.2"
 	},
 	"devDependencies": {
