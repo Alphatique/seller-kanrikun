@@ -79,7 +79,9 @@ export default function InputPriceUpload() {
 	};
 
 	return (
-		<div>
+		<div className='grid gap-3'>
+			<h2 className='font-bold text-2xl'>アップロード</h2>
+
 			<div className='flex items-center justify-between'>
 				<InputExcel onFileChange={handleFileChanged} />
 				<div className='flex'>
@@ -104,7 +106,7 @@ export default function InputPriceUpload() {
 					))}
 				</TableBody>
 			</Table>
-			<div className=' my-5 w-full text-center text-muted-foreground leading-tight'>
+			<div className=' my-3 w-full text-center text-muted-foreground leading-tight'>
 				{xlsxData?.length === 0 && 'データがありません'}
 				{xlsxData === undefined && '正しいファイルが選択されていません'}
 			</div>

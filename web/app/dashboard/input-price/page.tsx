@@ -4,6 +4,7 @@ import {
 	AccordionItem,
 	AccordionTrigger,
 } from '@seller-kanrikun/ui/components/accordion';
+import { Separator } from '@seller-kanrikun/ui/components/separator';
 
 import InputPriceUpload from './upload-xlsx';
 
@@ -17,11 +18,13 @@ export default function Page() {
 	}
 
 	return (
-		<>
+		<div className='grid gap-4'>
+			<h1 className='font-bold text-3xl'>原価入力</h1>
+			<Separator />
 			<Accordion
 				type='single'
 				collapsible
-				className='mb-5 w-auto rounded-lg px-4 hover:bg-muted'
+				className='w-auto rounded-lg px-4 hover:bg-muted'
 			>
 				<AccordionItem value='item-1'>
 					<AccordionTrigger>原価入力について</AccordionTrigger>
@@ -58,6 +61,6 @@ export default function Page() {
 				</AccordionItem>
 			</Accordion>
 			<InputPriceUpload />
-		</>
+		</div>
 	);
 }
