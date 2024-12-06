@@ -14,6 +14,7 @@ import {
 
 import { getSession, listSessions } from '~/lib/session';
 
+import { Badge } from '@seller-kanrikun/ui/components/badge';
 import { SignOutAllSessionButton } from './sign-out';
 
 export const metadata: Metadata = {
@@ -21,8 +22,11 @@ export const metadata: Metadata = {
 };
 
 export default async function Page() {
-	const [session, sessions] = await Promise.all([getSession(), listSessions()]);
-	const { user } = session!;
+	const [_session, sessions] = await Promise.all([
+		getSession(),
+		listSessions(),
+	]);
+	const { user, session } = _session!;
 
 	return (
 		<div className='grid gap-4'>
@@ -53,21 +57,33 @@ export default async function Page() {
 									<TableHead>時刻</TableHead>
 									<TableHead>デバイス</TableHead>
 									<TableHead>IPアドレス</TableHead>
+									<TableHead />
 								</TableRow>
 							</TableHeader>
 							<TableBody>
-								{sessions.map(session => {
-									const userAgent = parse(session.userAgent ?? undefined);
+								{sessions.map(({ id, userAgent, ipAddress, updatedAt }) => {
+									const {
+										family,
+										os: { family: osFamily },
+									} = parse(userAgent ?? undefined);
 
 									return (
-										<TableRow key={session.id}>
+										<TableRow key={id}>
+											<TableCell>{updatedAt.toLocaleString('ja-JP')}</TableCell>
 											<TableCell>
-												{session.updatedAt.toLocaleString('ja-JP')}
+												{family}/{osFamily}
 											</TableCell>
+											<TableCell>{ipAddress}</TableCell>
 											<TableCell>
-												{userAgent.family}/{userAgent.os.family}
+												{id === session.id && (
+													<Badge
+														variant='outline'
+														className='rounded-full bg-blue-200'
+													>
+														現在使用中のデバイス
+													</Badge>
+												)}
 											</TableCell>
-											<TableCell>{session.ipAddress}</TableCell>
 										</TableRow>
 									);
 								})}
