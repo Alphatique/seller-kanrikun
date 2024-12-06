@@ -15,6 +15,7 @@ import {
 import { getSession, listSessions } from '~/lib/session';
 
 import { Badge } from '@seller-kanrikun/ui/components/badge';
+import { Time } from '~/components/time';
 import { SignOutAllSessionButton } from './sign-out';
 
 export const metadata: Metadata = {
@@ -69,7 +70,9 @@ export default async function Page() {
 
 									return (
 										<TableRow key={id}>
-											<TableCell>{updatedAt.toLocaleString('ja-JP')}</TableCell>
+											<TableCell>
+												<Time date={updatedAt.getTime()} />
+											</TableCell>
 											<TableCell>
 												{family}/{osFamily}
 											</TableCell>
