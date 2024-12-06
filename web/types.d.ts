@@ -9,3 +9,12 @@ type PageProps<ParamKeys extends string = string> = Readonly<{
 }>;
 
 type Metadata = import('next').Metadata;
+
+type Period = 'monthly' | 'quarterly' | 'yearly';
+type TableMetaData = {
+	key: string;
+	head: string;
+	indent: number;
+	underLine?: boolean;
+	doubleUnderLine?: boolean;
+};
