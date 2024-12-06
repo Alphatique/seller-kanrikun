@@ -7,6 +7,9 @@ interface Props {
 	date: number;
 }
 
-export const Time = dynamic(async () =>
-	memo(({ date }: Props) => new Date(date).toLocaleString('ja-JP')),
+export const Time = dynamic(
+	async () => memo(({ date }: Props) => new Date(date).toLocaleString('ja-JP')),
+	{
+		ssr: false,
+	},
 );
