@@ -22,7 +22,7 @@ import {
 	PlbsTableRow,
 } from '@seller-kanrikun/ui/components/table-pl-bs';
 
-import { PopoverMonthRangePicker } from '../../../components/popover-month-range-picker';
+import { PopoverMonthRangePicker } from '~/components/popover-month-range-picker';
 
 const plTableWithTax: TableMetaData[] = [
 	{
