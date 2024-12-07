@@ -1,6 +1,6 @@
 import { Input } from '@seller-kanrikun/ui/components/input';
 
-export default function InputExcel({
+export function InputExcel({
 	onFileChange,
 }: { onFileChange: (file: File | null) => void }) {
 	const handleOnChange = (e: React.ChangeEvent<HTMLInputElement>) => {

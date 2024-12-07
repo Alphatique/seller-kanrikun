@@ -1,6 +1,6 @@
 import { Separator } from '@seller-kanrikun/ui/components/separator';
 
-import PlbsTableFilter from './table-filter';
+import { PlbsTableFilter } from './table-filter';
 
 export const metadata: Metadata = {
 	title: '原価入力 | セラー管理君',

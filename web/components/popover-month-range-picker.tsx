@@ -17,7 +17,7 @@ interface MonthPickerWithRangeProps {
 	value: { start: Date; end: Date };
 }
 
-export default function PopoverMonthRangePicker({
+export function PopoverMonthRangePicker({
 	value,
 	onMonthRangeSelect,
 	onStartMonthSelect,

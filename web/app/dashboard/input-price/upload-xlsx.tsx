@@ -15,8 +15,8 @@ import {
 	TableRow,
 } from '@seller-kanrikun/ui/components/table';
 
-import DatePickerWithRange from '~/components/date-range';
-import InputExcel from '~/components/input-excel';
+import { DatePickerWithRange } from '~/components/date-range';
+import { InputExcel } from '~/components/input-excel';
 
 const fileToBinaryString = (file: File): Promise<ArrayBuffer> => {
 	return new Promise((resolve, reject) => {
@@ -51,7 +51,7 @@ const parseXlsxData = (binaryStr: ArrayBuffer): CostPrice[] => {
 		.map(({ ASIN, '原価(円)': Price }) => ({ ASIN, Price }));
 };
 
-export default function InputPriceUpload() {
+export function InputPriceUpload() {
 	const [date, setDate] = useState<DateRange | undefined>({
 		from: new Date(),
 		to: new Date(),

@@ -22,7 +22,7 @@ import {
 	PlbsTableRow,
 } from '@seller-kanrikun/ui/components/table-pl-bs';
 
-import PopoverMonthRangePicker from '../../../components/popover-month-range-picker';
+import { PopoverMonthRangePicker } from '../../../components/popover-month-range-picker';
 
 const plTableWithTax: TableMetaData[] = [
 	{
@@ -278,7 +278,7 @@ const bsTableWithoutTax: TableMetaData[] = [
 	},
 ];
 
-export default function PlbsTableFilter() {
+export function PlbsTableFilter() {
 	const [period, setPeriod] = useState<Period>('monthly');
 	const [date, setDate] = useState<{ start: Date; end: Date }>({
 		start: new Date(),

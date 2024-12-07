@@ -18,7 +18,7 @@ interface DatePickerWithRangeProps extends React.HTMLAttributes<HTMLElement> {
 	onValueChange: React.Dispatch<React.SetStateAction<DateRange | undefined>>;
 }
 
-export default function DatePickerWithRange({
+export function DatePickerWithRange({
 	className,
 	value,
 	onValueChange,
