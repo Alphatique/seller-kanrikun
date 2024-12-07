@@ -137,8 +137,8 @@ function MonthRangePicker({
 	...props
 }: React.HTMLAttributes<HTMLDivElement> & MonthRangeCalProps) {
 	return (
-		<div className={cn('min-w-[400px]  p-3', className)} {...props}>
-			<div className='flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0'>
+		<div className={cn('min-w-[400px] p-3', className)} {...props}>
+			<div className='flex flex-col space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0'>
 				<div className='w-full'>
 					<MonthRangeCal
 						onMonthRangeSelect={onMonthRangeSelect}
@@ -193,11 +193,11 @@ function MonthRangeCal({
 	return (
 		<div className='flex gap-4'>
 			<div className='min-w-[400px] space-y-4'>
-				<div className='flex justify-evenly pt-1 relative items-center'>
-					<div className='text-sm font-medium'>
+				<div className='relative flex items-center justify-evenly pt-1'>
+					<div className='font-medium text-sm'>
 						{callbacks?.yearLabel ? callbacks?.yearLabel(menuYear) : menuYear}
 					</div>
-					<div className='space-x-1 flex items-center'>
+					<div className='flex items-center space-x-1'>
 						<button
 							onClick={() => {
 								setMenuYear(menuYear - 1);
@@ -205,10 +205,10 @@ function MonthRangeCal({
 							}}
 							className={cn(
 								buttonVariants({ variant: variant?.chevrons ?? 'outline' }),
-								'inline-flex items-center justify-center h-7 w-7 p-0 absolute left-1',
+								'absolute left-1 inline-flex h-7 w-7 items-center justify-center p-0',
 							)}
 						>
-							<ChevronLeft className='opacity-50 h-4 w-4' />
+							<ChevronLeft className='h-4 w-4 opacity-50' />
 						</button>
 						<button
 							onClick={() => {
@@ -217,13 +217,13 @@ function MonthRangeCal({
 							}}
 							className={cn(
 								buttonVariants({ variant: variant?.chevrons ?? 'outline' }),
-								'inline-flex items-center justify-center h-7 w-7 p-0 absolute right-1',
+								'absolute right-1 inline-flex h-7 w-7 items-center justify-center p-0',
 							)}
 						>
-							<ChevronRight className='opacity-50 h-4 w-4' />
+							<ChevronRight className='h-4 w-4 opacity-50' />
 						</button>
 					</div>
-					<div className='text-sm font-medium'>
+					<div className='font-medium text-sm'>
 						{callbacks?.yearLabel
 							? callbacks?.yearLabel(menuYear + 1)
 							: menuYear + 1}
@@ -233,7 +233,7 @@ function MonthRangeCal({
 					<tbody>
 						{MONTHS.map((monthRow, a: number) => {
 							return (
-								<tr key={`row-${a.toString()}`} className='flex w-full mt-2'>
+								<tr key={`row-${a.toString()}`} className='mt-2 flex w-full'>
 									{monthRow.map((m, i) => {
 										return (
 											<td
@@ -242,7 +242,7 @@ function MonthRangeCal({
 													cn(
 														cn(
 															cn(
-																'h-10 w-1/4 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20',
+																'relative h-10 w-1/4 p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected].day-range-end)]:rounded-r-md',
 																(menuYear + m.yearOffset > startYear ||
 																	(menuYear + m.yearOffset === startYear &&
 																		m.number > startMonth)) &&
@@ -250,13 +250,13 @@ function MonthRangeCal({
 																		(menuYear + m.yearOffset === endYear &&
 																			m.number < endMonth)) &&
 																	(rangePending || endLocked)
-																	? 'text-accent-foreground bg-accent'
+																	? 'bg-accent text-accent-foreground'
 																	: '',
 															),
 															menuYear + m.yearOffset === startYear &&
 																m.number === startMonth &&
 																(rangePending || endLocked)
-																? 'text-accent-foreground bg-accent rounded-l-md'
+																? 'rounded-l-md bg-accent text-accent-foreground'
 																: '',
 														),
 														menuYear + m.yearOffset === endYear &&
@@ -264,7 +264,7 @@ function MonthRangeCal({
 															(rangePending || endLocked) &&
 															menuYear + m.yearOffset >= startYear &&
 															m.number >= startMonth
-															? 'text-accent-foreground bg-accent rounded-r-md'
+															? 'rounded-r-md bg-accent text-accent-foreground'
 															: '',
 													),
 													i === 3 ? 'mr-2' : i === 4 ? 'ml-2' : '',
@@ -366,7 +366,7 @@ function MonthRangeCal({
 			</div>
 
 			{showQuickSelectors ? (
-				<div className=' flex flex-col gap-1 justify-center'>
+				<div className=' flex flex-col justify-center gap-1'>
 					{quickSelectors.map(s => {
 						return (
 							<Button
