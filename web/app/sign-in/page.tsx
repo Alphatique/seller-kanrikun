@@ -51,6 +51,8 @@ export default function Page() {
 			if (result?.error) {
 				throw result.error;
 			}
+
+			router.replace('/dashboard');
 		} catch (e) {
 			setLoading(false);
 		}

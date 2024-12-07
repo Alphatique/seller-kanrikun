@@ -1,5 +1,7 @@
+import { headers as _headers } from 'next/headers';
 import { parse } from 'useragent';
 
+import { auth } from '@seller-kanrikun/auth/server';
 import { Badge } from '@seller-kanrikun/ui/components/badge';
 import { Input } from '@seller-kanrikun/ui/components/input';
 import { Label } from '@seller-kanrikun/ui/components/label';
@@ -14,18 +16,25 @@ import {
 } from '@seller-kanrikun/ui/components/table';
 
 import { Time } from '~/components/time';
-import { getSession, listSessions } from '~/lib/session';
+import { getSession } from '~/lib/session';
 
-import { SignOutAllSessionButton } from './sign-out';
+import { CreatePasskeyButton, SignOutAllSessionButton } from './client';
 
 export const metadata: Metadata = {
 	title: '設定 | セラー管理君',
 };
 
 export default async function Page() {
-	const [_session, sessions] = await Promise.all([
+	const headers = await _headers();
+
+	const [_session, sessions, passkeys] = await Promise.all([
 		getSession(),
-		listSessions(),
+		auth.api.listSessions({
+			headers,
+		}),
+		auth.api.listPasskeys({
+			headers,
+		}),
 	]);
 	const { user, session } = _session!;
 
@@ -35,15 +44,15 @@ export default async function Page() {
 
 			<Separator />
 
-			<div className='grid gap-3'>
+			<div className='grid gap-4'>
 				<h2 className='font-bold text-2xl'>アカウント</h2>
 
-				<div className='grid gap-1'>
+				<div className='grid gap-2'>
 					<Label htmlFor='name'>アカウント名</Label>
 					<Input id='name' readOnly value={user.name} />
 				</div>
 
-				<div className='grid gap-1'>
+				<div className='grid gap-2'>
 					<Label htmlFor='email'>メールアドレス</Label>
 					<Input id='email' readOnly value={user.email} />
 				</div>
@@ -74,10 +83,10 @@ export default async function Page() {
 												<Time date={updatedAt.getTime()} />
 											</TableCell>
 											<TableCell>
-												{family}/{osFamily}
+												{family} / {osFamily}
 											</TableCell>
 											<TableCell>{ipAddress}</TableCell>
-											<TableCell>
+											<TableCell className='text-right'>
 												{id === session.id && (
 													<Badge
 														variant='outline'
@@ -96,6 +105,35 @@ export default async function Page() {
 
 					<div className='flex justify-end'>
 						<SignOutAllSessionButton />
+					</div>
+				</div>
+
+				<div className='grid gap-3'>
+					<h3 className='font-bold text-xl'>パスキー</h3>
+
+					<div className='rounded-md border'>
+						<Table>
+							<TableHeader>
+								<TableRow>
+									<TableHead>名前</TableHead>
+									<TableHead>作成時刻</TableHead>
+								</TableRow>
+							</TableHeader>
+							<TableBody>
+								{passkeys.map(({ id, name, createdAt }) => (
+									<TableRow key={id}>
+										<TableCell>{name}</TableCell>
+										<TableCell>
+											<Time date={createdAt.getTime()} />
+										</TableCell>
+									</TableRow>
+								))}
+							</TableBody>
+						</Table>
+					</div>
+
+					<div className='flex justify-end'>
+						<CreatePasskeyButton />
 					</div>
 				</div>
 			</div>

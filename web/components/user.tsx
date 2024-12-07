@@ -1,6 +1,7 @@
 'use client';
 
 import type { User as UserType } from 'better-auth';
+import { useRouter } from 'next/navigation';
 
 import { signOut } from '@seller-kanrikun/auth/client';
 import {
@@ -23,6 +24,8 @@ interface Props {
 }
 
 export function User({ user }: Props) {
+	const router = useRouter();
+
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
@@ -50,6 +53,7 @@ export function User({ user }: Props) {
 				<DropdownMenuItem
 					onClick={async () => {
 						await signOut();
+						router.push('/sign-in');
 					}}
 				>
 					<span className='w-full text-center text-red-600'>サインアウト</span>

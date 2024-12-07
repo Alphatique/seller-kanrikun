@@ -8,9 +8,3 @@ export const getSession = cache(async () => {
 		headers: await headers(),
 	});
 });
-
-export const listSessions = cache(async () => {
-	return await auth.api.listSessions({
-		headers: await headers(),
-	});
-});

@@ -5,4 +5,4 @@ export const client = createAuthClient({
 	plugins: [genericOAuthClient(), passkeyClient()],
 });
 
-export const { signIn, signUp, useSession, signOut } = client;
+export const { signIn, signUp, passkey, useSession, signOut } = client;

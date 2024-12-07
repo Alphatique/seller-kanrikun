@@ -5,30 +5,18 @@ export const user = sqliteTable('user', {
 	id: text('id').primaryKey(),
 	name: text('name').notNull(),
 	email: text('email').notNull().unique(),
-	emailVerified: integer('emailVerified', {
-		mode: 'boolean',
-	}).notNull(),
+	emailVerified: integer('emailVerified', { mode: 'boolean' }).notNull(),
 	image: text('image'),
-	createdAt: integer('createdAt', {
-		mode: 'timestamp',
-	}).notNull(),
-	updatedAt: integer('updatedAt', {
-		mode: 'timestamp',
-	}).notNull(),
+	createdAt: integer('createdAt', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull(),
 });
 
 export const session = sqliteTable('session', {
 	id: text('id').primaryKey(),
-	expiresAt: integer('expiresAt', {
-		mode: 'timestamp',
-	}).notNull(),
+	expiresAt: integer('expiresAt', { mode: 'timestamp' }).notNull(),
 	token: text('token').notNull().unique(),
-	createdAt: integer('createdAt', {
-		mode: 'timestamp',
-	}).notNull(),
-	updatedAt: integer('updatedAt', {
-		mode: 'timestamp',
-	}).notNull(),
+	createdAt: integer('createdAt', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull(),
 	ipAddress: text('ipAddress'),
 	userAgent: text('userAgent'),
 	userId: text('userId')
@@ -46,35 +34,23 @@ export const account = sqliteTable('account', {
 	accessToken: text('accessToken'),
 	refreshToken: text('refreshToken'),
 	idToken: text('idToken'),
-	accessTokenExpiresAt: integer('accessTokenExpiresAt', {
-		mode: 'timestamp',
-	}),
+	accessTokenExpiresAt: integer('accessTokenExpiresAt', { mode: 'timestamp' }),
 	refreshTokenExpiresAt: integer('refreshTokenExpiresAt', {
 		mode: 'timestamp',
 	}),
 	scope: text('scope'),
 	password: text('password'),
-	createdAt: integer('createdAt', {
-		mode: 'timestamp',
-	}).notNull(),
-	updatedAt: integer('updatedAt', {
-		mode: 'timestamp',
-	}).notNull(),
+	createdAt: integer('createdAt', { mode: 'timestamp' }).notNull(),
+	updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull(),
 });
 
 export const verification = sqliteTable('verification', {
 	id: text('id').primaryKey(),
 	identifier: text('identifier').notNull(),
 	value: text('value').notNull(),
-	expiresAt: integer('expiresAt', {
-		mode: 'timestamp',
-	}).notNull(),
-	createdAt: integer('createdAt', {
-		mode: 'timestamp',
-	}),
-	updatedAt: integer('updatedAt', {
-		mode: 'timestamp',
-	}),
+	expiresAt: integer('expiresAt', { mode: 'timestamp' }).notNull(),
+	createdAt: integer('createdAt', { mode: 'timestamp' }),
+	updatedAt: integer('updatedAt', { mode: 'timestamp' }),
 });
 
 export const passkey = sqliteTable('passkey', {
@@ -84,14 +60,12 @@ export const passkey = sqliteTable('passkey', {
 	userId: text('userId')
 		.notNull()
 		.references(() => user.id),
-	WebAuthnUserId: text('WebAuthnUserId').notNull(),
+	webauthnUserID: text('webauthnUserID').notNull(),
 	counter: integer('counter').notNull(),
 	deviceType: text('deviceType').notNull(),
 	backedUp: integer('backedUp', { mode: 'boolean' }).notNull(),
-	transports: text('transports').notNull(),
-	createdAt: integer('createdAt', {
-		mode: 'timestamp',
-	}),
+	transports: text('transports'),
+	createdAt: integer('createdAt', { mode: 'timestamp' }),
 });
 
 export const plbsData = sqliteTable('plbsData', {
