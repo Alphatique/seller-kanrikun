@@ -20,8 +20,9 @@ resource "vercel_project" "seller-kanrikun" {
     repo              = "Alphatique/seller-kanrikun"
     production_branch = "main"
   }
-  root_directory = "web"
-  build_command  = "bun run build"
+  root_directory             = "web"
+  build_command              = "bun run build"
+  serverless_function_region = "hnd1"
   environment = [{
     key    = "DOTENV_PRIVATE_KEY"
     target = ["production", "preview"]
