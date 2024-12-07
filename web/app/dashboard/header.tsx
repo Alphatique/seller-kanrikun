@@ -2,6 +2,7 @@ import type { User as UserType } from 'better-auth';
 import Link from 'next/link';
 
 import { User } from '~/components/user';
+
 import { HeaderLinks } from './links';
 
 interface Props {

@@ -10,10 +10,10 @@ import {
 	TrendingUpIcon,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useSelectedLayoutSegment } from 'next/navigation';
 
 import { buttonVariants } from '@seller-kanrikun/ui/components/button';
 import { cn } from '@seller-kanrikun/ui/lib/utils';
-import { useSelectedLayoutSegment } from 'next/navigation';
 
 type HeaderItem = {
 	title: string;

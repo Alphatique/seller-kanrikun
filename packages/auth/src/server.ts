@@ -1,9 +1,9 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { passkey } from 'better-auth/plugins';
 
 import { createClient } from '@seller-kanrikun/db';
 
-import { passkey } from 'better-auth/plugins';
 import { genericOAuth } from './generic-auth';
 
 export const auth = betterAuth({

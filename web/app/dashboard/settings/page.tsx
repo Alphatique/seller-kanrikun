@@ -1,5 +1,6 @@
 import { parse } from 'useragent';
 
+import { Badge } from '@seller-kanrikun/ui/components/badge';
 import { Input } from '@seller-kanrikun/ui/components/input';
 import { Label } from '@seller-kanrikun/ui/components/label';
 import { Separator } from '@seller-kanrikun/ui/components/separator';
@@ -12,10 +13,9 @@ import {
 	TableRow,
 } from '@seller-kanrikun/ui/components/table';
 
+import { Time } from '~/components/time';
 import { getSession, listSessions } from '~/lib/session';
 
-import { Badge } from '@seller-kanrikun/ui/components/badge';
-import { Time } from '~/components/time';
 import { SignOutAllSessionButton } from './sign-out';
 
 export const metadata: Metadata = {
