@@ -8,12 +8,10 @@ export const metadata: Metadata = {
 
 export default function Page() {
 	return (
-		<div>
-			<div className='grid gap-4'>
-				<h1 className='font-bold text-3xl'>PL/BS</h1>
-				<Separator />
-				<PlbsTableFilter />
-			</div>
+		<div className='grid gap-4'>
+			<h1 className='font-bold text-3xl'>PL/BS</h1>
+			<Separator />
+			<PlbsTableFilter />
 		</div>
 	);
 }

@@ -287,7 +287,7 @@ export function PlbsTableFilter() {
 
 	const [withTax, setWithTax] = useState(true);
 	return (
-		<div>
+		<div className='grid gap-3'>
 			<div className='flex justify-start gap-3 align-center'>
 				<Select
 					value={period}
