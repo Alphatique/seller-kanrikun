@@ -15,6 +15,13 @@ export const metadata: Metadata = {
 	title: 'セッション/CVR | セラー管理君',
 };*/
 
+import {
+	Table,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from '@seller-kanrikun/ui/components/table';
+
 import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 
@@ -47,6 +54,14 @@ export default function Page() {
 			<MultiSelect values={[{ key: 'henoheno', value: '3' }]} />
 			<LineChart />
 			<BarChart />
+			<Table>
+				<TableHeader>
+					<TableRow>
+						<TableHead>ASIN</TableHead>
+						<TableHead>原価(円)</TableHead>
+					</TableRow>
+				</TableHeader>
+			</Table>
 		</div>
 	);
 }
