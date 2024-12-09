@@ -24,7 +24,7 @@ import {
 
 import { PopoverMonthRangePicker } from '~/components/popover-month-range-picker';
 
-const plTableWithTax: TableMetaData[] = [
+const plTableWithTax: PlbsTableMetaData[] = [
 	{
 		key: 'sales',
 		head: '売上',
@@ -129,7 +129,7 @@ const plTableWithTax: TableMetaData[] = [
 	},
 ];
 
-const plTableWithoutTax: TableMetaData[] = [
+const plTableWithoutTax: PlbsTableMetaData[] = [
 	{
 		key: 'sales',
 		head: '売上',
@@ -224,7 +224,7 @@ const plTableWithoutTax: TableMetaData[] = [
 	},
 ];
 
-const indexTable: TableMetaData[] = [
+const indexTable: PlbsTableMetaData[] = [
 	{
 		key: 'grossProfitRate',
 		head: '粗利率',
@@ -247,7 +247,7 @@ const indexTable: TableMetaData[] = [
 	},
 ];
 
-const bsTableWithTax: TableMetaData[] = [
+const bsTableWithTax: PlbsTableMetaData[] = [
 	{
 		key: 'unpaidBalance',
 		head: '売掛金(未入金額)',
@@ -260,7 +260,7 @@ const bsTableWithTax: TableMetaData[] = [
 	},
 ];
 
-const bsTableWithoutTax: TableMetaData[] = [
+const bsTableWithoutTax: PlbsTableMetaData[] = [
 	{
 		key: 'inventoryAssets',
 		head: '棚卸資産',
@@ -291,8 +291,8 @@ export function PlbsTableFilter() {
 			<div className='flex justify-start gap-3 align-center'>
 				<Select
 					value={period}
-					onValueChange={() => {
-						setPeriod(period);
+					onValueChange={(value: Period) => {
+						setPeriod(value);
 					}}
 				>
 					<SelectTrigger className='w-[180px]'>

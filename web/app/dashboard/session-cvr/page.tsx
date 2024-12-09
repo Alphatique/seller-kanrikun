@@ -1,6 +1,7 @@
 'use client';
 import BarChart from '@seller-kanrikun/ui/components/bar-chart';
 import LineChart from '@seller-kanrikun/ui/components/line-chart';
+import MultiSelect from '@seller-kanrikun/ui/components/multi-select';
 import {
 	Select,
 	SelectContent,
@@ -22,36 +23,59 @@ import {
 	TableRow,
 } from '@seller-kanrikun/ui/components/table';
 
+import { Button } from '@seller-kanrikun/ui/components/button';
 import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 
 export default function Page() {
-	const [period, setPeriod] = useState<string>('monthly');
+	const [cvrData, setCvrData] = useState<SessionCvrData>('sales');
 	const [date, setDate] = useState<DateRange | undefined>({
 		from: new Date(),
 		to: new Date(),
 	});
+
+	const [selects, setSelects] = useState<string[]>([]);
 	return (
 		<div className='grid gap-4'>
 			<h1 className='font-bold text-3xl'>セッション/CVR</h1>
 			<Separator />
-			<DatePickerWithRange value={date} onValueChange={setDate} />
-			<Select
-				value={period}
-				onValueChange={() => {
-					setPeriod(period);
-				}}
-			>
-				<SelectTrigger className='w-[180px]'>
-					<SelectValue placeholder='period' />
-				</SelectTrigger>
-				<SelectContent>
-					<SelectItem value='monthly'>Monthly</SelectItem>
-					<SelectItem value='quarterly'>Quarterly</SelectItem>
-					<SelectItem value='yearly'>Yearly</SelectItem>
-				</SelectContent>
-			</Select>{' '}
-			<MultiSelect values={[{ key: 'henoheno', value: '3' }]} />
+			<div className='flex gap-3'>
+				<MultiSelect
+					values={{
+						'0': 'トイレタリーバッグ ブラック',
+						'1': 'トイレタリーバッグ ネイビー',
+						'2': 'トイレタリーバッグ オリーブ',
+					}}
+					selects={selects}
+					onSelectChange={setSelects}
+				/>
+				<Select
+					value={cvrData}
+					onValueChange={(value: SessionCvrData) => {
+						setCvrData(value);
+					}}
+				>
+					<SelectTrigger className='w-[180px]'>
+						<SelectValue placeholder='period' />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value='sales'>売上</SelectItem>
+						<SelectItem value='number_of_units_sold'>売上個数</SelectItem>
+						<SelectItem value='average_unit_price'>平均単価</SelectItem>
+						<SelectItem value='number_of_accesses'>アクセス数</SelectItem>
+						<SelectItem value='cvr_unit_session'>
+							CVRユニットセッション
+						</SelectItem>
+						<SelectItem value='cvr_unit_page_view'>
+							CVRユニットページビュー
+						</SelectItem>
+						<SelectItem value='roas'>ROAS</SelectItem>
+						<SelectItem value='acos'>ACOS</SelectItem>
+					</SelectContent>
+				</Select>
+				<DatePickerWithRange value={date} onValueChange={setDate} />
+				<Button>Download</Button>
+			</div>
 			<LineChart />
 			<BarChart />
 			<Table>
@@ -65,66 +89,3 @@ export default function Page() {
 		</div>
 	);
 }
-
-import { Button } from '@seller-kanrikun/ui/components/button';
-import {
-	DropdownMenu,
-	DropdownMenuCheckboxItem,
-	DropdownMenuContent,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from '@seller-kanrikun/ui/components/dropdown-menu';
-interface ISelectProps {
-	values: {
-		key: string;
-		value: string;
-	}[];
-}
-const MultiSelect = ({ values }: ISelectProps) => {
-	const [selectedItems, setSelectedItems] = useState<string[]>([]);
-	const handleSelectChange = (value: string) => {
-		if (!selectedItems.includes(value)) {
-			setSelectedItems(prev => [...prev, value]);
-		} else {
-			const referencedArray = [...selectedItems];
-			const indexOfItemToBeRemoved = referencedArray.indexOf(value);
-			referencedArray.splice(indexOfItemToBeRemoved, 1);
-			setSelectedItems(referencedArray);
-		}
-	};
-
-	const isOptionSelected = (value: string): boolean => {
-		return selectedItems.includes(value);
-	};
-	return (
-		<>
-			<DropdownMenu>
-				<DropdownMenuTrigger asChild>
-					<Button variant='outline' className='flex gap-2 font-bold'>
-						<span>Select Values</span>
-					</Button>
-				</DropdownMenuTrigger>
-				<DropdownMenuContent
-					className='w-56'
-					onCloseAutoFocus={e => e.preventDefault()}
-				>
-					<DropdownMenuLabel>Appearance</DropdownMenuLabel>
-					<DropdownMenuSeparator />
-					{values.map((value: ISelectProps['values'][0], index: number) => {
-						return (
-							<DropdownMenuCheckboxItem
-								onSelect={e => e.preventDefault()}
-								key={index.toString()}
-								checked={isOptionSelected(value.key)}
-								onCheckedChange={() => handleSelectChange(value.key)}
-							>
-								{value.value}
-							</DropdownMenuCheckboxItem>
-						);
-					})}
-				</DropdownMenuContent>
-			</DropdownMenu>
-		</>
-	);
-};
