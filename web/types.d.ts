@@ -20,12 +20,19 @@ type PlbsTableMetaData = {
 	doubleUnderLine?: boolean;
 };
 
-type SessionCvrData =
-	| 'sales'
-	| 'number_of_units_sold'
-	| 'average_unit_price'
-	| 'number_of_accesses'
-	| 'cvr_unit_session'
-	| 'cvr_unit_page_view'
-	| 'roas'
-	| 'acos';
+type SessionCvrData = {
+	date: string;
+	sales: number;
+	number_of_units_sold: number;
+	average_unit_price: number;
+	number_of_accesses: number;
+	cvr_unit_session: number;
+	cvr_unit_page_view: number;
+	roas: number;
+	acos: number;
+};
+
+type ChartDataBase = {
+	date: string;
+	[key: string]: number | string;
+};
