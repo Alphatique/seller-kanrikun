@@ -15,7 +15,6 @@ import {
 	Table,
 	TableBody,
 	TableCell,
-	TableHead,
 	TableHeader,
 	TableRow,
 } from '@seller-kanrikun/ui/components/table';
@@ -162,16 +161,13 @@ export default function SessionCvrTableFilter() {
 			<Table>
 				<TableHeader>
 					<TableRow>
-						<TableHead>商品名</TableHead>
-						<TableHead>日付</TableHead>
-						<TableHead>売上</TableHead>
-						<TableHead>売上個数</TableHead>
-						<TableHead>平均単価</TableHead>
-						<TableHead>アクセス数</TableHead>
-						<TableHead>CVRユニットセッション</TableHead>
-						<TableHead>CVRユニットページビュー</TableHead>
-						<TableHead>ROAS</TableHead>
-						<TableHead>ACOS</TableHead>
+						{headers.map((header, index) => {
+							return (
+								<TableCell key={`${header}-${index.toString()}`}>
+									{header}
+								</TableCell>
+							);
+						})}
 					</TableRow>
 				</TableHeader>
 				<TableBody>
