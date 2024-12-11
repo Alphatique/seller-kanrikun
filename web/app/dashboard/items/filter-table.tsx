@@ -27,6 +27,7 @@ import { useState } from 'react';
 
 export default function ItemsFilterTable() {
 	const [selects, setSelects] = useState<string[]>([]);
+	const [filterText, setfilterText] = useState<string>('');
 
 	const goods: Record<string, string> = {};
 
@@ -42,7 +43,12 @@ export default function ItemsFilterTable() {
 					selects={selects}
 					onSelectChange={setSelects}
 				/>
-				<Input className='w-1/6' placeholder='SKU、ASIN、商品名でフィルター' />
+				<Input
+					className='w-1/6'
+					placeholder='SKU、ASIN、商品名でフィルター'
+					value={filterText}
+					onChange={e => setfilterText(e.target.value)}
+				/>
 				<Label>出品ステータス</Label>
 				<Select>
 					<SelectTrigger className='w-[180px]'>
@@ -90,6 +96,19 @@ export default function ItemsFilterTable() {
 				</TableHeader>
 				<TableBody>
 					{TmpData.map((data, index) => {
+						if (
+							filterText !== '' &&
+							!data.itemName.includes(filterText) &&
+							!data.asin.includes(filterText)
+						) {
+							console.log(data.itemName, data.asin, filterText);
+							console.log(
+								data.itemName.includes(filterText),
+								data.asin.includes(filterText),
+							);
+							return null;
+						}
+						if (!selects.includes(data.itemName)) return null;
 						return (
 							<TableRow key={`${data.itemName}-${index.toString()}`}>
 								<TableCell>{data.category}</TableCell>
