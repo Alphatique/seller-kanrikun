@@ -278,7 +278,7 @@ const bsTableWithoutTax: PlbsTableMetaData[] = [
 	},
 ];
 
-export function PlbsTableFilter() {
+export default function PlbsTableFilter() {
 	const [period, setPeriod] = useState<Period>('monthly');
 	const [date, setDate] = useState<{ start: Date; end: Date }>({
 		start: new Date(),
