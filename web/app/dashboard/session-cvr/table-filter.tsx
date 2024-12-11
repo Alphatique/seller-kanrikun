@@ -27,6 +27,8 @@ import type { DateRange } from 'react-day-picker';
 
 import tmpData from './tmp-data';
 
+import downloadCsv from '~/lib/csv-download';
+
 export default function SessionCvrTableFilter() {
 	const [selectSessionCvrProp, setSelectSessionCvrProp] =
 		useState<keyof SessionCvrData>('sales');
@@ -64,6 +66,39 @@ export default function SessionCvrTableFilter() {
 			row[item_id] = sales;
 		}
 	}
+
+	const headers: string[] = [
+		'商品名',
+		'日付',
+		'売上',
+		'売上個数',
+		'平均単価',
+		'アクセス数',
+		'CVRユニットセッション',
+		'CVRユニットページビュー',
+		'ROAS',
+		'ACOS',
+	];
+
+	const handleDownload = () => {
+		const downloadData = filteredTableData.map(
+			({ item_id, item_name, data }) => {
+				return {
+					商品名: item_name,
+					日付: data.date,
+					売上: data.sales,
+					売上個数: data.number_of_units_sold,
+					平均単価: data.average_unit_price,
+					アクセス数: data.number_of_accesses,
+					CVRユニットセッション: data.cvr_unit_session,
+					CVRユニットページビュー: data.cvr_unit_page_view,
+					ROAS: data.roas,
+					ACOS: data.acos,
+				};
+			},
+		);
+		downloadCsv(downloadData, headers, 'session-cvr.csv');
+	};
 
 	const goods: Record<string, string> = {
 		black: 'トイレタリーバッグ ブラック',
@@ -104,7 +139,7 @@ export default function SessionCvrTableFilter() {
 					</SelectContent>
 				</Select>
 				<DatePickerWithRange value={dateRange} onValueChange={setDateRange} />
-				<Button>Download</Button>
+				<Button onClick={handleDownload}>Download</Button>
 			</div>
 			{selectSessionCvrProp === 'sales' ||
 			selectSessionCvrProp === 'number_of_units_sold' ? (
