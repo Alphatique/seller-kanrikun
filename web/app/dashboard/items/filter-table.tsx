@@ -10,6 +10,7 @@ import {
 } from '@seller-kanrikun/ui/components/table';
 
 import MultiSelect from '@seller-kanrikun/ui/components/multi-select';
+
 import TmpData from './tmp-data';
 
 import {
@@ -24,16 +25,58 @@ import { Input } from '@seller-kanrikun/ui/components/input';
 import { Label } from '@seller-kanrikun/ui/components/label';
 import { FilterIcon } from 'lucide-react';
 import { useState } from 'react';
+import downloadCsv from '~/lib/csv-download';
+
+const dataHeader = [
+	'所属カテゴリー名',
+	'所属サブカテゴリー名',
+	'ASIN',
+	'商品名',
+	'年月',
+	'総売上',
+	'返品額',
+	'純売上',
+	'総販売個数',
+	'返品個数',
+	'純販売個数',
+	'平均販売価格(円／税抜)',
+	'総原価',
+	'返品原価',
+	'純原価',
+	'平均原価',
+	'純粗利額',
+	'棚卸資産額',
+	'在庫個数(FBA在庫)',
+];
 
 export default function ItemsFilterTable() {
 	const [selects, setSelects] = useState<string[]>([]);
-	const [filterText, setfilterText] = useState<string>('');
+	const [filterText, setFilterText] = useState<string>('');
 
 	const goods: Record<string, string> = {};
+
+	const filteredData = TmpData.filter(data => {
+		// 商品選択
+		if (!selects.includes(data.itemName)) return false;
+		// テキストフィルター
+		if (
+			filterText !== '' &&
+			!data.itemName.includes(filterText) &&
+			!data.asin.includes(filterText)
+		) {
+			return false;
+		}
+
+		return true;
+	});
 
 	for (const data of TmpData) {
 		goods[data.itemName] = data.itemName;
 	}
+
+	const handleDownload = () => {
+		downloadCsv(filteredData, dataHeader, '商品別明細.csv');
+	};
 
 	return (
 		<>
@@ -47,7 +90,7 @@ export default function ItemsFilterTable() {
 					className='w-1/6'
 					placeholder='SKU、ASIN、商品名でフィルター'
 					value={filterText}
-					onChange={e => setfilterText(e.target.value)}
+					onChange={e => setFilterText(e.target.value)}
 				/>
 				<Label>出品ステータス</Label>
 				<Select>
@@ -68,47 +111,22 @@ export default function ItemsFilterTable() {
 					すべてのフィルター
 				</Button>
 				<Button>データ更新</Button>
-				<Button>ダウンロード</Button>
+				<Button onClick={handleDownload}>ダウンロード</Button>
 			</div>
 			<Table>
 				<TableHeader>
 					<TableRow>
-						<TableHead>所属カテゴリー名</TableHead>
-						<TableHead>所属サブカテゴリー名</TableHead>
-						<TableHead>ASIN</TableHead>
-						<TableHead>商品名</TableHead>
-						<TableHead>年月</TableHead>
-						<TableHead>総売上</TableHead>
-						<TableHead>返品額</TableHead>
-						<TableHead>純売上</TableHead>
-						<TableHead>総販売個数</TableHead>
-						<TableHead>返品個数</TableHead>
-						<TableHead>純販売個数</TableHead>
-						<TableHead>平均販売価格(円／税抜)</TableHead>
-						<TableHead>総原価</TableHead>
-						<TableHead>返品原価</TableHead>
-						<TableHead>純原価</TableHead>
-						<TableHead>平均原価</TableHead>
-						<TableHead>純粗利額</TableHead>
-						<TableHead>棚卸資産額</TableHead>
-						<TableHead>在庫個数(FBA在庫)</TableHead>
+						{dataHeader.map((header, index) => {
+							return (
+								<TableHead key={`${header}-${index.toString()}`}>
+									{header}
+								</TableHead>
+							);
+						})}
 					</TableRow>
 				</TableHeader>
 				<TableBody>
-					{TmpData.map((data, index) => {
-						if (
-							filterText !== '' &&
-							!data.itemName.includes(filterText) &&
-							!data.asin.includes(filterText)
-						) {
-							console.log(data.itemName, data.asin, filterText);
-							console.log(
-								data.itemName.includes(filterText),
-								data.asin.includes(filterText),
-							);
-							return null;
-						}
-						if (!selects.includes(data.itemName)) return null;
+					{filteredData.map((data, index) => {
 						return (
 							<TableRow key={`${data.itemName}-${index.toString()}`}>
 								<TableCell>{data.category}</TableCell>
