@@ -3,8 +3,6 @@ import {
 	DropdownMenu,
 	DropdownMenuCheckboxItem,
 	DropdownMenuContent,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from '@seller-kanrikun/ui/components/dropdown-menu';
 interface ISelectProps {
@@ -37,6 +35,15 @@ export default function MultiSelect({
 		onSelectChange(result);
 	};
 
+	const handleSelectAll = () => {
+		const result = Object.keys(values);
+		onSelectChange(result);
+	};
+
+	const handleClearAll = () => {
+		onSelectChange([]);
+	};
+
 	const isOptionSelected = (value: string): boolean => {
 		return selects.includes(value);
 	};
@@ -57,8 +64,8 @@ export default function MultiSelect({
 				className='w-56'
 				onCloseAutoFocus={e => e.preventDefault()}
 			>
-				<DropdownMenuLabel>Appearance</DropdownMenuLabel>
-				<DropdownMenuSeparator />
+				<Button onClick={handleSelectAll}>select all</Button>
+				<Button onClick={handleClearAll}>clear all</Button>
 				{Object.entries(values).map(([key, value], index) => {
 					return (
 						<DropdownMenuCheckboxItem
