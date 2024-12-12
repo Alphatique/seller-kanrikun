@@ -41,7 +41,7 @@ const dataHeader = [
 	'在庫個数(FBA在庫)',
 ];
 
-export default function ItemsFilterTable() {
+export default function ItemsTableFilter() {
 	const categoryArray: Record<string, string> = {};
 	const subCategoryArray: Record<string, string> = {};
 
