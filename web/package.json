@@ -5,7 +5,8 @@
 	"scripts": {
 		"dev": "dotenvx run -f ../.env -- next dev --turbo --experimental-https",
 		"build": "dotenvx run -f ../.env -- next build",
-		"start": "dotenvx run -f ../.env -- next start"
+		"start": "dotenvx run -f ../.env -- next start",
+		"typecheck": "tsc"
 	},
 	"dependencies": {
 		"@hookform/resolvers": "^3.9.1",
