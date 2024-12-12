@@ -1,4 +1,4 @@
-export default function downloadCsv(
+export function downloadCsv(
 	data: object[],
 	headers: string[],
 	fileName: string,

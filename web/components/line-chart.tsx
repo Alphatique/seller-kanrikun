@@ -1,4 +1,11 @@
 import {
+	CartesianGrid,
+	Line,
+	LineChart as LineChartIcon,
+	XAxis,
+} from 'recharts';
+
+import {
 	Card,
 	CardContent,
 	CardDescription,
@@ -14,19 +21,13 @@ import {
 	ChartTooltipContent,
 } from '@seller-kanrikun/ui/components/chart';
 import { cn } from '@seller-kanrikun/ui/lib/utils';
-import {
-	CartesianGrid,
-	Line,
-	LineChart as LineChartIcon,
-	XAxis,
-} from 'recharts';
 
 interface LineChartProps extends React.HTMLAttributes<HTMLElement> {
 	data: ChartDataBase[] | undefined;
 	config: ChartConfig;
 }
 
-export default function LineChart({ className, data, config }: LineChartProps) {
+export function LineChart({ className, data, config }: LineChartProps) {
 	return (
 		<Card className={cn(className)}>
 			<CardHeader>

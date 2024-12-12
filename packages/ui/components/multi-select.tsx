@@ -5,6 +5,7 @@ import {
 	DropdownMenuContent,
 	DropdownMenuTrigger,
 } from '@seller-kanrikun/ui/components/dropdown-menu';
+
 interface ISelectProps {
 	values: {
 		key: string;
@@ -18,7 +19,7 @@ interface MultiSelectProps {
 	onSelectChange: (value: string[]) => void;
 }
 
-export default function MultiSelect({
+export function MultiSelect({
 	values,
 	selects,
 	onSelectChange,

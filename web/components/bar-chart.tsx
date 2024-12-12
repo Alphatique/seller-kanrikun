@@ -1,3 +1,5 @@
+import { Bar, BarChart as BarChartIcon, CartesianGrid, XAxis } from 'recharts';
+
 import {
 	Card,
 	CardContent,
@@ -15,14 +17,12 @@ import {
 } from '@seller-kanrikun/ui/components/chart';
 import { cn } from '@seller-kanrikun/ui/lib/utils';
 
-import { Bar, BarChart as BarChartIcon, CartesianGrid, XAxis } from 'recharts';
-
 interface BarChartProps extends React.HTMLAttributes<HTMLElement> {
 	data: ChartDataBase[] | undefined;
 	config: ChartConfig;
 }
 
-export default function BarChart({ className, data, config }: BarChartProps) {
+export function BarChart({ className, data, config }: BarChartProps) {
 	return (
 		<Card className={cn(className)}>
 			<CardHeader>
