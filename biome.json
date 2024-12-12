@@ -1,14 +1,14 @@
 {
 	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
 	"files": {
-		"ignore": ["node_modules", ".next", "build", ".wrangler", "*.template.ts"]
+		"ignore": ["node_modules", ".next", "build", "*.template.ts"]
 	},
 	"organizeImports": {
 		"enabled": true
 	},
 	"formatter": {
 		"indentStyle": "tab",
-		"indentWidth": 2,
+		"indentWidth": 4,
 		"lineEnding": "lf",
 		"lineWidth": 80
 	},
@@ -21,7 +21,8 @@
 			},
 			"style": {
 				"noNonNullAssertion": "off",
-				"noUselessElse": "off"
+				"noUselessElse": "off",
+				"noDefaultExport": "error"
 			},
 			"a11y": {
 				"useButtonType": "off"
@@ -40,5 +41,25 @@
 			"semicolons": "always",
 			"trailingCommas": "all"
 		}
-	}
+	},
+	"overrides": [
+		{
+			"include": [
+				"*.config.mjs",
+				"*.config.ts",
+				"layout.tsx",
+				"page.tsx",
+				"loading.tsx",
+				"error.tsx",
+				"not-found.tsx"
+			],
+			"linter": {
+				"rules": {
+					"style": {
+						"noDefaultExport": "off"
+					}
+				}
+			}
+		}
+	]
 }
