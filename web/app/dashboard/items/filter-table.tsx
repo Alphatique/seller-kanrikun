@@ -13,18 +13,10 @@ import MultiSelect from '@seller-kanrikun/ui/components/multi-select';
 
 import TmpData from './tmp-data';
 
-import {
-	Select,
-	SelectContent,
-	SelectTrigger,
-	SelectValue,
-} from '@seller-kanrikun/ui/components/select';
-
 import { Button } from '@seller-kanrikun/ui/components/button';
 import { Input } from '@seller-kanrikun/ui/components/input';
-import { Label } from '@seller-kanrikun/ui/components/label';
-import { FilterIcon } from 'lucide-react';
 import { useState } from 'react';
+import { PopoverMonthRangePicker } from '~/components/popover-month-range-picker';
 import downloadCsv from '~/lib/csv-download';
 
 const dataHeader = [
@@ -50,14 +42,36 @@ const dataHeader = [
 ];
 
 export default function ItemsFilterTable() {
-	const [selects, setSelects] = useState<string[]>([]);
+	const categoryArray: Record<string, string> = {};
+	const subCategoryArray: Record<string, string> = {};
+
+	for (const data of TmpData) {
+		categoryArray[data.category] = data.category;
+		subCategoryArray[data.subCategory] = data.subCategory;
+	}
+
+	const [categorySelects, setCategorySelects] = useState<string[]>(
+		Object.keys(categoryArray),
+	);
+	const [subCategorySelects, setSubCategorySelects] = useState<string[]>(
+		Object.keys(subCategoryArray),
+	);
+
 	const [filterText, setFilterText] = useState<string>('');
 
-	const goods: Record<string, string> = {};
+	const [monthRange, setMonthRange] = useState<{ start: Date; end: Date }>({
+		start: new Date(),
+		end: new Date(),
+	});
 
 	const filteredData = TmpData.filter(data => {
-		// 商品選択
-		if (!selects.includes(data.itemName)) return false;
+		// カテゴリー選択
+		if (
+			!categorySelects.includes(data.category) ||
+			!subCategorySelects.includes(data.subCategory)
+		) {
+			return false;
+		}
 		// テキストフィルター
 		if (
 			filterText !== '' &&
@@ -66,13 +80,15 @@ export default function ItemsFilterTable() {
 		) {
 			return false;
 		}
+		// 月選択
+		const yearMonth = new Date(data.yearMonth);
+		console.log(yearMonth);
+		if (yearMonth < monthRange.start || yearMonth > monthRange.end) {
+			return false;
+		}
 
 		return true;
 	});
-
-	for (const data of TmpData) {
-		goods[data.itemName] = data.itemName;
-	}
 
 	const handleDownload = () => {
 		downloadCsv(filteredData, dataHeader, '商品別明細.csv');
@@ -82,9 +98,14 @@ export default function ItemsFilterTable() {
 		<>
 			<div className='flex items-center gap-2'>
 				<MultiSelect
-					values={goods}
-					selects={selects}
-					onSelectChange={setSelects}
+					values={categoryArray}
+					selects={categorySelects}
+					onSelectChange={setCategorySelects}
+				/>
+				<MultiSelect
+					values={subCategoryArray}
+					selects={subCategorySelects}
+					onSelectChange={setSubCategorySelects}
 				/>
 				<Input
 					className='w-1/6'
@@ -92,25 +113,10 @@ export default function ItemsFilterTable() {
 					value={filterText}
 					onChange={e => setFilterText(e.target.value)}
 				/>
-				<Label>出品ステータス</Label>
-				<Select>
-					<SelectTrigger className='w-[180px]'>
-						<SelectValue placeholder='すべての商品' />
-					</SelectTrigger>
-					<SelectContent />
-				</Select>
-				<Label>出荷元</Label>
-				<Select>
-					<SelectTrigger className='w-[180px]'>
-						<SelectValue placeholder='すべての商品' />
-					</SelectTrigger>
-					<SelectContent />
-				</Select>
-				<Button>
-					<FilterIcon />
-					すべてのフィルター
-				</Button>
-				<Button>データ更新</Button>
+				<PopoverMonthRangePicker
+					value={monthRange}
+					onMonthRangeSelect={setMonthRange}
+				/>
 				<Button onClick={handleDownload}>ダウンロード</Button>
 			</div>
 			<Table>

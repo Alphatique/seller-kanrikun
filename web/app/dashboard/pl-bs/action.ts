@@ -1,6 +1,8 @@
 'use server';
 
-export async function getReportData() {
-	const res = [{ name: 'Sales', value: 100 }];
-	return await res;
+import type { PlbsData } from '@seller-kanrikun/calc/types';
+
+export function getReportData(): PlbsData[] {
+	return res;
 }
+const res: PlbsData[] = [];
