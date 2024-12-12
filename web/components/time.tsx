@@ -8,7 +8,8 @@ interface Props {
 }
 
 export const Time = dynamic(
-	async () => memo(({ date }: Props) => new Date(date).toLocaleString('ja-JP')),
+	async () =>
+		memo(({ date }: Props) => new Date(date).toLocaleString('ja-JP')),
 	{
 		ssr: false,
 	},

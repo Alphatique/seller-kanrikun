@@ -43,7 +43,9 @@ export function SignOutAllSessionButton() {
 		}
 	}
 
-	return <Button onClick={onClick}>全てのデバイスからサインアウトする</Button>;
+	return (
+		<Button onClick={onClick}>全てのデバイスからサインアウトする</Button>
+	);
 }
 
 export function CreatePasskeyButton() {
@@ -92,7 +94,8 @@ export function CreatePasskeyForm() {
 					if (
 						await confirm({
 							title: 'セッションエラー',
-							description: 'パスキーを作成するにはサインインし直してください',
+							description:
+								'パスキーを作成するにはサインインし直してください',
 							confirmText: 'サインアウト',
 						})
 					) {

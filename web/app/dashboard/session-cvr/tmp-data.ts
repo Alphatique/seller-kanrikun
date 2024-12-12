@@ -1,3 +1,4 @@
+// biome-ignore lint/style/noDefaultExport:
 export default [
 	{
 		item_id: 'black',

@@ -9,6 +9,7 @@ type StockingData = {
 	stockCount: number;
 };
 
+// biome-ignore lint/style/noDefaultExport:
 export default [
 	{
 		item_id: '12345',

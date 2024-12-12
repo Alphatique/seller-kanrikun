@@ -50,7 +50,9 @@ export function LineChart({ className, data, config }: LineChartProps) {
 							tickLine={false}
 							axisLine={false}
 							tickMargin={8}
-							tickFormatter={value => new Date(value).toLocaleDateString()}
+							tickFormatter={value =>
+								new Date(value).toLocaleDateString()
+							}
 						/>
 						<ChartTooltip
 							cursor={false}

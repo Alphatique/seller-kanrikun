@@ -20,6 +20,7 @@ export type ItemTableData = {
 	stockCount: number;
 };
 
+// biome-ignore lint/style/noDefaultExport:
 export default [
 	{
 		category: 'Electronics',

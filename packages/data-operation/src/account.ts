@@ -42,9 +42,12 @@ export async function updateAccessToken(
 			},
 		);
 
-		const accessTokenJson = (await getAccessToken.json()) as AuthTokenResponse;
+		const accessTokenJson =
+			(await getAccessToken.json()) as AuthTokenResponse;
 
-		const expiresAt = new Date(Date.now() + accessTokenJson.expires_in * 1000);
+		const expiresAt = new Date(
+			Date.now() + accessTokenJson.expires_in * 1000,
+		);
 
 		await db
 			.update(account)

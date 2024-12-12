@@ -278,7 +278,7 @@ const bsTableWithoutTax: PlbsTableMetaData[] = [
 	},
 ];
 
-export default function PlbsTableFilter() {
+export function PlbsTableFilter() {
 	const [period, setPeriod] = useState<Period>('monthly');
 	const [date, setDate] = useState<{ start: Date; end: Date }>({
 		start: new Date(),
@@ -312,7 +312,10 @@ export default function PlbsTableFilter() {
 					/>
 					<Label htmlFor='airplane-mode'>Without Tax</Label>
 				</div>
-				<PopoverMonthRangePicker value={date} onMonthRangeSelect={setDate} />
+				<PopoverMonthRangePicker
+					value={date}
+					onMonthRangeSelect={setDate}
+				/>
 			</div>
 
 			<Table>
@@ -324,18 +327,20 @@ export default function PlbsTableFilter() {
 						<IndentTableCell />
 						<TableCell>2024</TableCell>
 					</PlbsTableRow>
-					{(withTax ? plTableWithTax : plTableWithoutTax).map(item => (
-						<PlbsTableRow
-							key={item.key}
-							underLine={item.underLine}
-							doubleUnderLine={item.doubleUnderLine}
-						>
-							<IndentTableCell indent={item.indent}>
-								{item.head}
-							</IndentTableCell>
-							<TableCell>100</TableCell>
-						</PlbsTableRow>
-					))}
+					{(withTax ? plTableWithTax : plTableWithoutTax).map(
+						item => (
+							<PlbsTableRow
+								key={item.key}
+								underLine={item.underLine}
+								doubleUnderLine={item.doubleUnderLine}
+							>
+								<IndentTableCell indent={item.indent}>
+									{item.head}
+								</IndentTableCell>
+								<TableCell>100</TableCell>
+							</PlbsTableRow>
+						),
+					)}
 				</TableBody>
 			</Table>
 			{withTax && (
@@ -373,18 +378,20 @@ export default function PlbsTableFilter() {
 						<IndentTableCell />
 						<TableCell>2024</TableCell>
 					</PlbsTableRow>
-					{(withTax ? bsTableWithTax : bsTableWithoutTax).map(item => (
-						<PlbsTableRow
-							key={item.key}
-							underLine={item.underLine}
-							doubleUnderLine={item.doubleUnderLine}
-						>
-							<IndentTableCell indent={item.indent}>
-								{item.head}
-							</IndentTableCell>
-							<TableCell>100</TableCell>
-						</PlbsTableRow>
-					))}
+					{(withTax ? bsTableWithTax : bsTableWithoutTax).map(
+						item => (
+							<PlbsTableRow
+								key={item.key}
+								underLine={item.underLine}
+								doubleUnderLine={item.doubleUnderLine}
+							>
+								<IndentTableCell indent={item.indent}>
+									{item.head}
+								</IndentTableCell>
+								<TableCell>100</TableCell>
+							</PlbsTableRow>
+						),
+					)}
 				</TableBody>
 			</Table>
 		</div>

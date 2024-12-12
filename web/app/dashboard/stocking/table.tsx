@@ -28,7 +28,7 @@ const headers: string[] = [
 	'欠品リスク',
 ];
 
-export default function StockingTable() {
+export function StockingTable() {
 	return (
 		<Table>
 			<TableHeader>
@@ -40,14 +40,18 @@ export default function StockingTable() {
 			</TableHeader>
 			<TableBody>
 				{tmpData.map((data, index) => {
-					const daysInStock = data.stockCount / data.salesCountPast30Days / 30;
-					const recommendedStockLevel = (data.salesCountPast30Days / 30) * 45;
+					const daysInStock =
+						data.stockCount / data.salesCountPast30Days / 30;
+					const recommendedStockLevel =
+						(data.salesCountPast30Days / 30) * 45;
 					const leadTime = 30;
-					const leadTimeStock = (data.salesCountPast30Days / 30) * leadTime;
+					const leadTimeStock =
+						(data.salesCountPast30Days / 30) * leadTime;
 					const recommendedOrder =
 						recommendedStockLevel - daysInStock - leadTimeStock;
 
-					const orderRequired = data.stockCount > recommendedOrder * 1.5;
+					const orderRequired =
+						data.stockCount > recommendedOrder * 1.5;
 					const risk = data.stockCount > leadTime;
 					return (
 						<TableRow key={`row-${index.toString()}`}>
@@ -63,8 +67,12 @@ export default function StockingTable() {
 							<TableCell>{leadTimeStock}</TableCell>
 							<TableCell>{recommendedOrder}</TableCell>
 							<TableCell />
-							<TableCell>{orderRequired ? '問題なし' : '用受注'}</TableCell>
-							<TableCell>{risk ? '問題なし' : '欠品リスク高'}</TableCell>
+							<TableCell>
+								{orderRequired ? '問題なし' : '用受注'}
+							</TableCell>
+							<TableCell>
+								{risk ? '問題なし' : '欠品リスク高'}
+							</TableCell>
 						</TableRow>
 					);
 				})}

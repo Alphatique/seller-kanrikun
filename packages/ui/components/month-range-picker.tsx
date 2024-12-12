@@ -195,7 +195,9 @@ function MonthRangeCal({
 			<div className='min-w-[400px] space-y-4'>
 				<div className='relative flex items-center justify-evenly pt-1'>
 					<div className='font-medium text-sm'>
-						{callbacks?.yearLabel ? callbacks?.yearLabel(menuYear) : menuYear}
+						{callbacks?.yearLabel
+							? callbacks?.yearLabel(menuYear)
+							: menuYear}
 					</div>
 					<div className='flex items-center space-x-1'>
 						<button
@@ -204,7 +206,9 @@ function MonthRangeCal({
 								if (onYearBackward) onYearBackward();
 							}}
 							className={cn(
-								buttonVariants({ variant: variant?.chevrons ?? 'outline' }),
+								buttonVariants({
+									variant: variant?.chevrons ?? 'outline',
+								}),
 								'absolute left-1 inline-flex h-7 w-7 items-center justify-center p-0',
 							)}
 						>
@@ -216,7 +220,9 @@ function MonthRangeCal({
 								if (onYearForward) onYearForward();
 							}}
 							className={cn(
-								buttonVariants({ variant: variant?.chevrons ?? 'outline' }),
+								buttonVariants({
+									variant: variant?.chevrons ?? 'outline',
+								}),
 								'absolute right-1 inline-flex h-7 w-7 items-center justify-center p-0',
 							)}
 						>
@@ -233,7 +239,10 @@ function MonthRangeCal({
 					<tbody>
 						{MONTHS.map((monthRow, a: number) => {
 							return (
-								<tr key={`row-${a.toString()}`} className='mt-2 flex w-full'>
+								<tr
+									key={`row-${a.toString()}`}
+									className='mt-2 flex w-full'
+								>
 									{monthRow.map((m, i) => {
 										return (
 											<td
@@ -243,35 +252,67 @@ function MonthRangeCal({
 														cn(
 															cn(
 																'relative h-10 w-1/4 p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected].day-range-end)]:rounded-r-md',
-																(menuYear + m.yearOffset > startYear ||
-																	(menuYear + m.yearOffset === startYear &&
-																		m.number > startMonth)) &&
-																	(menuYear + m.yearOffset < endYear ||
-																		(menuYear + m.yearOffset === endYear &&
-																			m.number < endMonth)) &&
-																	(rangePending || endLocked)
+																(menuYear +
+																	m.yearOffset >
+																	startYear ||
+																	(menuYear +
+																		m.yearOffset ===
+																		startYear &&
+																		m.number >
+																			startMonth)) &&
+																	(menuYear +
+																		m.yearOffset <
+																		endYear ||
+																		(menuYear +
+																			m.yearOffset ===
+																			endYear &&
+																			m.number <
+																				endMonth)) &&
+																	(rangePending ||
+																		endLocked)
 																	? 'bg-accent text-accent-foreground'
 																	: '',
 															),
-															menuYear + m.yearOffset === startYear &&
-																m.number === startMonth &&
-																(rangePending || endLocked)
+															menuYear +
+																m.yearOffset ===
+																startYear &&
+																m.number ===
+																	startMonth &&
+																(rangePending ||
+																	endLocked)
 																? 'rounded-l-md bg-accent text-accent-foreground'
 																: '',
 														),
-														menuYear + m.yearOffset === endYear &&
-															m.number === endMonth &&
-															(rangePending || endLocked) &&
-															menuYear + m.yearOffset >= startYear &&
-															m.number >= startMonth
+														menuYear +
+															m.yearOffset ===
+															endYear &&
+															m.number ===
+																endMonth &&
+															(rangePending ||
+																endLocked) &&
+															menuYear +
+																m.yearOffset >=
+																startYear &&
+															m.number >=
+																startMonth
 															? 'rounded-r-md bg-accent text-accent-foreground'
 															: '',
 													),
-													i === 3 ? 'mr-2' : i === 4 ? 'ml-2' : '',
+													i === 3
+														? 'mr-2'
+														: i === 4
+															? 'ml-2'
+															: '',
 												)}
 												onMouseEnter={() => {
-													if (rangePending && !endLocked) {
-														setEndYear(menuYear + m.yearOffset);
+													if (
+														rangePending &&
+														!endLocked
+													) {
+														setEndYear(
+															menuYear +
+																m.yearOffset,
+														);
 														setEndMonth(m.number);
 													}
 												}}
@@ -280,79 +321,154 @@ function MonthRangeCal({
 													onClick={() => {
 														if (rangePending) {
 															if (
-																menuYear + m.yearOffset < startYear ||
-																(menuYear + m.yearOffset === startYear &&
-																	m.number < startMonth)
+																menuYear +
+																	m.yearOffset <
+																	startYear ||
+																(menuYear +
+																	m.yearOffset ===
+																	startYear &&
+																	m.number <
+																		startMonth)
 															) {
-																setRangePending(true);
-																setEndLocked(false);
-																setStartMonth(m.number);
-																setStartYear(menuYear + m.yearOffset);
-																setEndYear(menuYear + m.yearOffset);
-																setEndMonth(m.number);
-																if (onStartMonthSelect)
+																setRangePending(
+																	true,
+																);
+																setEndLocked(
+																	false,
+																);
+																setStartMonth(
+																	m.number,
+																);
+																setStartYear(
+																	menuYear +
+																		m.yearOffset,
+																);
+																setEndYear(
+																	menuYear +
+																		m.yearOffset,
+																);
+																setEndMonth(
+																	m.number,
+																);
+																if (
+																	onStartMonthSelect
+																)
 																	onStartMonthSelect(
-																		new Date(menuYear + m.yearOffset, m.number),
-																	);
-															} else {
-																setRangePending(false);
-																setEndLocked(true);
-																// Event fire data selected
-
-																if (onMonthRangeSelect)
-																	onMonthRangeSelect({
-																		start: new Date(startYear, startMonth),
-																		end: new Date(
-																			menuYear + m.yearOffset,
+																		new Date(
+																			menuYear +
+																				m.yearOffset,
 																			m.number,
 																		),
-																	});
+																	);
+															} else {
+																setRangePending(
+																	false,
+																);
+																setEndLocked(
+																	true,
+																);
+																// Event fire data selected
+
+																if (
+																	onMonthRangeSelect
+																)
+																	onMonthRangeSelect(
+																		{
+																			start: new Date(
+																				startYear,
+																				startMonth,
+																			),
+																			end: new Date(
+																				menuYear +
+																					m.yearOffset,
+																				m.number,
+																			),
+																		},
+																	);
 															}
 														} else {
-															setRangePending(true);
+															setRangePending(
+																true,
+															);
 															setEndLocked(false);
-															setStartMonth(m.number);
-															setStartYear(menuYear + m.yearOffset);
-															setEndYear(menuYear + m.yearOffset);
-															setEndMonth(m.number);
-															if (onStartMonthSelect)
+															setStartMonth(
+																m.number,
+															);
+															setStartYear(
+																menuYear +
+																	m.yearOffset,
+															);
+															setEndYear(
+																menuYear +
+																	m.yearOffset,
+															);
+															setEndMonth(
+																m.number,
+															);
+															if (
+																onStartMonthSelect
+															)
 																onStartMonthSelect(
-																	new Date(menuYear + m.yearOffset, m.number),
+																	new Date(
+																		menuYear +
+																			m.yearOffset,
+																		m.number,
+																	),
 																);
 														}
 													}}
 													disabled={
 														(maxDate
-															? menuYear + m.yearOffset >
+															? menuYear +
+																	m.yearOffset >
 																	maxDate?.getFullYear() ||
-																(menuYear + m.yearOffset ===
+																(menuYear +
+																	m.yearOffset ===
 																	maxDate?.getFullYear() &&
-																	m.number > maxDate.getMonth())
+																	m.number >
+																		maxDate.getMonth())
 															: false) ||
 														(minDate
-															? menuYear + m.yearOffset <
+															? menuYear +
+																	m.yearOffset <
 																	minDate?.getFullYear() ||
-																(menuYear + m.yearOffset ===
+																(menuYear +
+																	m.yearOffset ===
 																	minDate?.getFullYear() &&
-																	m.number < minDate.getMonth())
+																	m.number <
+																		minDate.getMonth())
 															: false)
 													}
 													className={cn(
 														buttonVariants({
 															variant:
-																(startMonth === m.number &&
-																	menuYear + m.yearOffset === startYear) ||
-																(endMonth === m.number &&
-																	menuYear + m.yearOffset === endYear &&
+																(startMonth ===
+																	m.number &&
+																	menuYear +
+																		m.yearOffset ===
+																		startYear) ||
+																(endMonth ===
+																	m.number &&
+																	menuYear +
+																		m.yearOffset ===
+																		endYear &&
 																	!rangePending)
-																	? (variant?.calendar?.selected ?? 'default')
-																	: (variant?.calendar?.main ?? 'ghost'),
+																	? (variant
+																			?.calendar
+																			?.selected ??
+																		'default')
+																	: (variant
+																			?.calendar
+																			?.main ??
+																		'ghost'),
 														}),
 														'h-full w-full p-0 font-normal aria-selected:opacity-100',
 													)}
 												>
 													{callbacks?.monthLabel
-														? callbacks.monthLabel(m)
+														? callbacks.monthLabel(
+																m,
+															)
 														: m.name}
 												</button>
 											</td>

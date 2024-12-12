@@ -82,7 +82,9 @@ export function Header() {
 					) : (
 						<Link
 							href='/sign-in'
-							className={cn(buttonVariants({ variant: 'secondary' }))}
+							className={cn(
+								buttonVariants({ variant: 'secondary' }),
+							)}
 							key='sign-in'
 						>
 							サインイン

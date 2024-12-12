@@ -1,6 +1,6 @@
 import { Separator } from '@seller-kanrikun/ui/components/separator';
 
-import SessionCvrTableFilter from './table-filter';
+import { SessionCvrTableFilter } from './table-filter';
 
 export const metadata: Metadata = {
 	title: 'セッション/CVR | セラー管理君',

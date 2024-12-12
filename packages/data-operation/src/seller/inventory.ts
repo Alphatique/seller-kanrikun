@@ -10,7 +10,8 @@ export async function getInventoryData(accessToken: string) {
 			},
 		},
 	);
-	const inventoryData = (await inventory.json()) as InventorySummariesResponse;
+	const inventoryData =
+		(await inventory.json()) as InventorySummariesResponse;
 	console.log(inventoryData);
 	const summaries = inventoryData.payload.inventorySummaries;
 	console.log(summaries);

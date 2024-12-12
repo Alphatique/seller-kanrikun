@@ -38,9 +38,13 @@ export function BarChart({ className, data, config }: BarChartProps) {
 							tickLine={false}
 							tickMargin={10}
 							axisLine={false}
-							tickFormatter={value => new Date(value).toLocaleDateString()}
+							tickFormatter={value =>
+								new Date(value).toLocaleDateString()
+							}
 						/>
-						<ChartTooltip content={<ChartTooltipContent hideLabel />} />
+						<ChartTooltip
+							content={<ChartTooltipContent hideLabel />}
+						/>
 						<ChartLegend content={<ChartLegendContent />} />
 						{data &&
 							data.length > 0 &&

@@ -29,9 +29,15 @@ export function User({ user }: Props) {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Button variant='ghost' className='relative size-10 rounded-full'>
+				<Button
+					variant='ghost'
+					className='relative size-10 rounded-full'
+				>
 					<Avatar>
-						<AvatarImage src={user.image ?? undefined} alt={user.name} />
+						<AvatarImage
+							src={user.image ?? undefined}
+							alt={user.name}
+						/>
 						<AvatarFallback className='select-none'>
 							{user.name[0].toUpperCase()}
 						</AvatarFallback>
@@ -56,7 +62,9 @@ export function User({ user }: Props) {
 						router.push('/sign-in');
 					}}
 				>
-					<span className='w-full text-center text-red-600'>サインアウト</span>
+					<span className='w-full text-center text-red-600'>
+						サインアウト
+					</span>
 				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>

@@ -28,7 +28,7 @@ import { downloadCsv } from '~/lib/csv-download';
 
 import tmpData from './tmp-data';
 
-export default function SessionCvrTableFilter() {
+export function SessionCvrTableFilter() {
 	const [selectSessionCvrProp, setSelectSessionCvrProp] =
 		useState<keyof SessionCvrData>('sales');
 	const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -124,9 +124,15 @@ export default function SessionCvrTableFilter() {
 					</SelectTrigger>
 					<SelectContent>
 						<SelectItem value='sales'>売上</SelectItem>
-						<SelectItem value='number_of_units_sold'>売上個数</SelectItem>
-						<SelectItem value='average_unit_price'>平均単価</SelectItem>
-						<SelectItem value='number_of_accesses'>アクセス数</SelectItem>
+						<SelectItem value='number_of_units_sold'>
+							売上個数
+						</SelectItem>
+						<SelectItem value='average_unit_price'>
+							平均単価
+						</SelectItem>
+						<SelectItem value='number_of_accesses'>
+							アクセス数
+						</SelectItem>
 						<SelectItem value='cvr_unit_session'>
 							CVRユニットセッション
 						</SelectItem>
@@ -137,25 +143,40 @@ export default function SessionCvrTableFilter() {
 						<SelectItem value='acos'>ACOS</SelectItem>
 					</SelectContent>
 				</Select>
-				<DatePickerWithRange value={dateRange} onValueChange={setDateRange} />
+				<DatePickerWithRange
+					value={dateRange}
+					onValueChange={setDateRange}
+				/>
 				<Button onClick={handleDownload}>Download</Button>
 			</div>
 			{selectSessionCvrProp === 'sales' ||
 			selectSessionCvrProp === 'number_of_units_sold' ? (
 				<BarChart
 					data={chartData}
-					config={Object.entries(goods).reduce((acc, [key, label], i) => {
-						acc[key] = { label, color: `hsl(var(--chart-${i + 1}))` };
-						return acc;
-					}, {} as ChartConfig)}
+					config={Object.entries(goods).reduce(
+						(acc, [key, label], i) => {
+							acc[key] = {
+								label,
+								color: `hsl(var(--chart-${i + 1}))`,
+							};
+							return acc;
+						},
+						{} as ChartConfig,
+					)}
 				/>
 			) : (
 				<LineChart
 					data={chartData}
-					config={Object.entries(goods).reduce((acc, [key, label], i) => {
-						acc[key] = { label, color: `hsl(var(--chart-${i + 1}))` };
-						return acc;
-					}, {} as ChartConfig)}
+					config={Object.entries(goods).reduce(
+						(acc, [key, label], i) => {
+							acc[key] = {
+								label,
+								color: `hsl(var(--chart-${i + 1}))`,
+							};
+							return acc;
+						},
+						{} as ChartConfig,
+					)}
 				/>
 			)}
 			<Table>
@@ -163,7 +184,9 @@ export default function SessionCvrTableFilter() {
 					<TableRow>
 						{headers.map((header, index) => {
 							return (
-								<TableCell key={`${header}-${index.toString()}`}>
+								<TableCell
+									key={`${header}-${index.toString()}`}
+								>
 									{header}
 								</TableCell>
 							);
@@ -171,22 +194,36 @@ export default function SessionCvrTableFilter() {
 					</TableRow>
 				</TableHeader>
 				<TableBody>
-					{filteredTableData.map(({ item_id, item_name, data }, index) => {
-						return (
-							<TableRow key={`${item_id}-${index.toString()}`}>
-								<TableCell>{item_name}</TableCell>
-								<TableCell>{data.date}</TableCell>
-								<TableCell>{data.sales}</TableCell>
-								<TableCell>{data.number_of_units_sold}</TableCell>
-								<TableCell>{data.average_unit_price}</TableCell>
-								<TableCell>{data.number_of_accesses}</TableCell>
-								<TableCell>{data.cvr_unit_session}</TableCell>
-								<TableCell>{data.cvr_unit_page_view}</TableCell>
-								<TableCell>{data.roas}</TableCell>
-								<TableCell>{data.acos}</TableCell>
-							</TableRow>
-						);
-					})}
+					{filteredTableData.map(
+						({ item_id, item_name, data }, index) => {
+							return (
+								<TableRow
+									key={`${item_id}-${index.toString()}`}
+								>
+									<TableCell>{item_name}</TableCell>
+									<TableCell>{data.date}</TableCell>
+									<TableCell>{data.sales}</TableCell>
+									<TableCell>
+										{data.number_of_units_sold}
+									</TableCell>
+									<TableCell>
+										{data.average_unit_price}
+									</TableCell>
+									<TableCell>
+										{data.number_of_accesses}
+									</TableCell>
+									<TableCell>
+										{data.cvr_unit_session}
+									</TableCell>
+									<TableCell>
+										{data.cvr_unit_page_view}
+									</TableCell>
+									<TableCell>{data.roas}</TableCell>
+									<TableCell>{data.acos}</TableCell>
+								</TableRow>
+							);
+						},
+					)}
 				</TableBody>
 			</Table>
 		</div>

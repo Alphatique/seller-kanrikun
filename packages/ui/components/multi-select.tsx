@@ -56,7 +56,8 @@ export function MultiSelect({
 						<span>Select Values</span>
 					) : (
 						<span>
-							{selects.length} item{selects.length === 1 ? '' : 's'} selected
+							{selects.length} item
+							{selects.length === 1 ? '' : 's'} selected
 						</span>
 					)}
 				</Button>

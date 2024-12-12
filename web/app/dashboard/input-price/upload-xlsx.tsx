@@ -46,7 +46,8 @@ const parseXlsxData = (binaryStr: ArrayBuffer): CostPrice[] => {
 	return jsonData
 		.filter(
 			item =>
-				typeof item?.ASIN === 'string' && typeof item['原価(円)'] === 'number',
+				typeof item?.ASIN === 'string' &&
+				typeof item['原価(円)'] === 'number',
 		)
 		.map(({ ASIN, '原価(円)': Price }) => ({ ASIN, Price }));
 };

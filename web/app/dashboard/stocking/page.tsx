@@ -1,6 +1,6 @@
 import { Separator } from '@seller-kanrikun/ui/components/separator';
 
-import StockingTable from './table';
+import { StockingTable } from './table';
 
 export const metadata: Metadata = {
 	title: '仕入れサポート | セラー管理君',

@@ -183,15 +183,18 @@ export function getCostPrice(
 	);
 
 	// SKUごとに quantity-purchased を集計
-	const quantityBySKU = orderData.reduce((acc: Record<string, number>, row) => {
-		const sku = row.sku;
-		const quantity = Number(row['quantity-purchased']) || 0;
+	const quantityBySKU = orderData.reduce(
+		(acc: Record<string, number>, row) => {
+			const sku = row.sku;
+			const quantity = Number(row['quantity-purchased']) || 0;
 
-		// SKUがまだリストにない場合は初期化
-		acc[sku] = (acc[sku] || 0) + quantity;
+			// SKUがまだリストにない場合は初期化
+			acc[sku] = (acc[sku] || 0) + quantity;
 
-		return acc;
-	}, {});
+			return acc;
+		},
+		{},
+	);
 
 	return quantityBySKU;
 }

@@ -108,7 +108,9 @@ export default function Page() {
 						fill='lightskyblue'
 					/>
 				</svg>
-				<span className='font-bold text-sm leading-6'>セラー管理君</span>
+				<span className='font-bold text-sm leading-6'>
+					セラー管理君
+				</span>
 			</div>
 
 			<div className='grid gap-1'>
@@ -127,7 +129,11 @@ export default function Page() {
 					{loading === 'amazon' ? (
 						<Loader2 className='animate-spin' />
 					) : (
-						<Image src={amazonLogo} alt='amazon logo' className='size-4' />
+						<Image
+							src={amazonLogo}
+							alt='amazon logo'
+							className='size-4'
+						/>
 					)}
 					Amazonでサインイン
 				</Button>

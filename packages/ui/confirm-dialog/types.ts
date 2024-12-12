@@ -30,12 +30,16 @@ export type ConfirmOptions = {
 	alertDialogContent?: React.ComponentPropsWithoutRef<
 		typeof AlertDialogContent
 	>;
-	alertDialogHeader?: React.ComponentPropsWithoutRef<typeof AlertDialogHeader>;
+	alertDialogHeader?: React.ComponentPropsWithoutRef<
+		typeof AlertDialogHeader
+	>;
 	alertDialogTitle?: React.ComponentPropsWithoutRef<typeof AlertDialogTitle>;
 	alertDialogDescription?: React.ComponentPropsWithoutRef<
 		typeof AlertDialogDescription
 	>;
-	alertDialogFooter?: React.ComponentPropsWithoutRef<typeof AlertDialogFooter>;
+	alertDialogFooter?: React.ComponentPropsWithoutRef<
+		typeof AlertDialogFooter
+	>;
 };
 
 export interface ConfirmContextType {

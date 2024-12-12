@@ -164,23 +164,27 @@ export const genericOAuth = (options: GenericOAuthOptions) => {
 							 */
 							currentURL: z
 								.string({
-									description: 'Redirect to the current URL after sign in',
+									description:
+										'Redirect to the current URL after sign in',
 								})
 								.optional(),
 						})
 						.optional(),
 					body: z.object({
 						providerId: z.string({
-							description: 'The provider ID for the OAuth provider',
+							description:
+								'The provider ID for the OAuth provider',
 						}),
 						callbackURL: z
 							.string({
-								description: 'The URL to redirect to after sign in',
+								description:
+									'The URL to redirect to after sign in',
 							})
 							.optional(),
 						errorCallbackURL: z
 							.string({
-								description: 'The URL to redirect to if an error occurs',
+								description:
+									'The URL to redirect to if an error occurs',
 							})
 							.optional(),
 					}),
@@ -212,7 +216,9 @@ export const genericOAuth = (options: GenericOAuthOptions) => {
 				},
 				async ctx => {
 					const { providerId } = ctx.body;
-					const config = options.config.find(c => c.providerId === providerId);
+					const config = options.config.find(
+						c => c.providerId === providerId,
+					);
 					if (!config) {
 						throw new APIError('BAD_REQUEST', {
 							message: `No config found for provider ${providerId}`,
@@ -239,13 +245,18 @@ export const genericOAuth = (options: GenericOAuthOptions) => {
 							token_endpoint: string;
 						}>(discoveryUrl, {
 							onError(context) {
-								ctx.context.logger.error(context.error.message, context.error, {
-									discoveryUrl,
-								});
+								ctx.context.logger.error(
+									context.error.message,
+									context.error,
+									{
+										discoveryUrl,
+									},
+								);
 							},
 						});
 						if (discovery.data) {
-							finalAuthUrl = discovery.data.authorization_endpoint;
+							finalAuthUrl =
+								discovery.data.authorization_endpoint;
 							finalTokenUrl = discovery.data.token_endpoint;
 						}
 					}
@@ -308,7 +319,8 @@ export const genericOAuth = (options: GenericOAuthOptions) => {
 							})
 							.optional(),
 						state: z.string({
-							description: 'The state parameter from the OAuth2 request',
+							description:
+								'The state parameter from the OAuth2 request',
 						}),
 					}),
 					metadata: {
@@ -358,7 +370,8 @@ export const genericOAuth = (options: GenericOAuthOptions) => {
 					const parsedState = await parseState(ctx);
 
 					const { callbackURL, codeVerifier, errorURL } = parsedState;
-					const code = (ctx.query.code || ctx.query.spapi_oauth_code)!;
+					const code = (ctx.query.code ||
+						ctx.query.spapi_oauth_code)!;
 
 					let finalTokenUrl = provider.tokenUrl;
 					let finalUserInfoUrl = provider.userInfoUrl;
@@ -418,7 +431,10 @@ export const genericOAuth = (options: GenericOAuthOptions) => {
 					) as User | null;
 
 					if (!userInfo?.email) {
-						ctx.context.logger.error('Unable to get user info', userInfo);
+						ctx.context.logger.error(
+							'Unable to get user info',
+							userInfo,
+						);
 						throw ctx.redirect(
 							`${ctx.context.baseURL}/error?error=email_is_missing`,
 						);
@@ -436,12 +452,16 @@ export const genericOAuth = (options: GenericOAuthOptions) => {
 					function redirectOnError(error: string) {
 						throw ctx.redirect(
 							`${
-								errorURL || callbackURL || `${ctx.context.baseURL}/error`
+								errorURL ||
+								callbackURL ||
+								`${ctx.context.baseURL}/error`
 							}?error=${error}`,
 						);
 					}
 					if (result.error) {
-						return redirectOnError(result.error.split(' ').join('_'));
+						return redirectOnError(
+							result.error.split(' ').join('_'),
+						);
 					}
 					const { session, user } = result.data!;
 					await setSessionCookie(ctx, {

@@ -71,34 +71,45 @@ export default async function Page() {
 								</TableRow>
 							</TableHeader>
 							<TableBody>
-								{sessions.map(({ id, userAgent, ipAddress, updatedAt }) => {
-									const {
-										family,
-										os: { family: osFamily },
-									} = parse(userAgent ?? undefined);
+								{sessions.map(
+									({
+										id,
+										userAgent,
+										ipAddress,
+										updatedAt,
+									}) => {
+										const {
+											family,
+											os: { family: osFamily },
+										} = parse(userAgent ?? undefined);
 
-									return (
-										<TableRow key={id}>
-											<TableCell>
-												<Time date={updatedAt.getTime()} />
-											</TableCell>
-											<TableCell>
-												{family} / {osFamily}
-											</TableCell>
-											<TableCell>{ipAddress}</TableCell>
-											<TableCell className='text-right'>
-												{id === session.id && (
-													<Badge
-														variant='outline'
-														className='rounded-full bg-blue-200'
-													>
-														現在使用中のデバイス
-													</Badge>
-												)}
-											</TableCell>
-										</TableRow>
-									);
-								})}
+										return (
+											<TableRow key={id}>
+												<TableCell>
+													<Time
+														date={updatedAt.getTime()}
+													/>
+												</TableCell>
+												<TableCell>
+													{family} / {osFamily}
+												</TableCell>
+												<TableCell>
+													{ipAddress}
+												</TableCell>
+												<TableCell className='text-right'>
+													{id === session.id && (
+														<Badge
+															variant='outline'
+															className='rounded-full bg-blue-200'
+														>
+															現在使用中のデバイス
+														</Badge>
+													)}
+												</TableCell>
+											</TableRow>
+										);
+									},
+								)}
 							</TableBody>
 						</Table>
 					</div>
