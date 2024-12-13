@@ -24,6 +24,7 @@ import {
 
 import { PopoverMonthRangePicker } from '~/components/popover-month-range-picker';
 
+import { getReportData } from './action';
 import {
 	bsTableWithTax,
 	bsTableWithoutTax,
@@ -31,8 +32,6 @@ import {
 	plTableWithTax,
 	plTableWithoutTax,
 } from './table-meta';
-
-import { getReportData } from './action';
 
 export async function PlbsTableFilter() {
 	const [period, setPeriod] = useState<Period>('monthly');

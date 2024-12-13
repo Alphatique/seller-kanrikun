@@ -1,12 +1,12 @@
 'use client';
 
+import type { User as UserType } from 'better-auth';
 import Link from 'next/link';
 
 import { useSession } from '@seller-kanrikun/auth/client';
 import { buttonVariants } from '@seller-kanrikun/ui/components/button';
 import { cn } from '@seller-kanrikun/ui/lib/utils';
 
-import type { User as UserType } from 'better-auth';
 import { User } from '~/components/user';
 
 export function Header() {
