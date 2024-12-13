@@ -42,17 +42,19 @@ export function SessionCvrTableFilter() {
 
 	const filteredTableData = useMemo(
 		() =>
-			tmpData.filter(({ item_id, data }) => {
-				if (dateRange === undefined) return false;
-				if (dateRange.from === undefined || dateRange.to === undefined)
-					return false;
-				const dataDate = new Date(data.date);
-				if (dataDate < dateRange.from || dataDate > dateRange.to)
-					return false;
-				if (!selects.includes(item_id)) return false;
+			dateRange?.from && dateRange?.to
+				? tmpData.filter(({ item_id, data }) => {
+						const dataDate = new Date(data.date);
 
-				return true;
-			}),
+						if (
+							dateRange.from! <= dataDate &&
+							dataDate <= dateRange.to! &&
+							selects.includes(item_id)
+						) {
+							return true;
+						}
+					})
+				: [],
 		[dateRange, selects],
 	);
 
