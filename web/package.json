@@ -13,6 +13,7 @@
 		"@seller-kanrikun/auth": "workspace:*",
 		"@seller-kanrikun/db": "workspace:*",
 		"@seller-kanrikun/ui": "workspace:*",
+		"@seller-kanrikun/api-fetch": "workspace:*",
 		"lucide-react": "^0.462.0",
 		"next": "15.0.3",
 		"react": "19.0.0-rc-66855b96-20241106",

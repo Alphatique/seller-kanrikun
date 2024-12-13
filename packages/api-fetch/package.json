@@ -9,7 +9,11 @@
 	"scripts": {
 		"typecheck": "tsc"
 	},
+	"devDependencies": {
+		"@seller-kanrikun/sp-api": "workspace:*"
+	},
 	"dependencies": {
+		"openapi-typescript": "^7.4.4",
 		"zod": "^3.23.8"
 	}
 }
