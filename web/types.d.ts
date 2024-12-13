@@ -12,14 +12,6 @@ type Metadata = import('next').Metadata;
 
 type Period = 'monthly' | 'quarterly' | 'yearly';
 
-type PlbsTableMetaData = {
-	key: string;
-	head: string;
-	indent: number;
-	underLine?: boolean;
-	doubleUnderLine?: boolean;
-};
-
 type SessionCvrData = {
 	date: string;
 	sales: number;
