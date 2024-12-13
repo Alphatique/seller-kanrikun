@@ -6,6 +6,7 @@ import { useSession } from '@seller-kanrikun/auth/client';
 import { buttonVariants } from '@seller-kanrikun/ui/components/button';
 import { cn } from '@seller-kanrikun/ui/lib/utils';
 
+import type { User as UserType } from 'better-auth';
 import { User } from '~/components/user';
 
 export function Header() {
@@ -77,7 +78,7 @@ export function Header() {
 							>
 								ダッシュボード
 							</Link>
-							<User user={session.user} />
+							<User user={session.user as UserType} />
 						</>
 					) : (
 						<Link
