@@ -1,5 +1,4 @@
 'use client';
-
 import { useState } from 'react';
 
 import { Label } from '@seller-kanrikun/ui/components/label';
@@ -16,11 +15,6 @@ import {
 	TableBody,
 	TableCell,
 } from '@seller-kanrikun/ui/components/table';
-import {
-	HeadTableRow,
-	IndentTableCell,
-	PlbsTableRow,
-} from '@seller-kanrikun/ui/components/table-pl-bs';
 
 import { PopoverMonthRangePicker } from '~/components/popover-month-range-picker';
 
@@ -32,6 +26,7 @@ import {
 	plTableWithTax,
 	plTableWithoutTax,
 } from './table-meta';
+import { HeadTableRow, IndentTableCell, PlbsTableRow } from './table-pl-bs';
 
 export async function PlbsTableFilter() {
 	const [period, setPeriod] = useState<Period>('monthly');

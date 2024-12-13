@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { cn } from '../lib/utils';
+import { cn } from '@seller-kanrikun/ui/lib/utils';
 
 const HeadTableRow = React.forwardRef<
 	HTMLTableRowElement,
