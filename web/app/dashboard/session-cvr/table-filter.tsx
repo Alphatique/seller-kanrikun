@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 
 import { Button } from '@seller-kanrikun/ui/components/button';
@@ -40,16 +40,21 @@ export function SessionCvrTableFilter() {
 	>();
 	const [selects, setSelects] = useState<string[]>([]);
 
-	const filteredTableData = tmpData.filter(({ item_id, data }) => {
-		if (dateRange === undefined) return false;
-		if (dateRange.from === undefined || dateRange.to === undefined)
-			return false;
-		const dataDate = new Date(data.date);
-		if (dataDate < dateRange.from || dataDate > dateRange.to) return false;
-		if (!selects.includes(item_id)) return false;
+	const filteredTableData = useMemo(
+		() =>
+			tmpData.filter(({ item_id, data }) => {
+				if (dateRange === undefined) return false;
+				if (dateRange.from === undefined || dateRange.to === undefined)
+					return false;
+				const dataDate = new Date(data.date);
+				if (dataDate < dateRange.from || dataDate > dateRange.to)
+					return false;
+				if (!selects.includes(item_id)) return false;
 
-		return true;
-	});
+				return true;
+			}),
+		[dateRange, selects],
+	);
 
 	const chartData: ChartDataBase[] = [];
 
