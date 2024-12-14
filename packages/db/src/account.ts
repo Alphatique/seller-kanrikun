@@ -55,27 +55,27 @@ export async function refreshAccessToken(
 		.where(eq(account.id, account.id))
 		.execute();
 
+	// 値渡しっぽくなると呼び出し元のトークンが変更されなくなったりするので注意
 	// 更新したデータを返す
 	accountData.accessToken = accessToken;
 	accountData.accessTokenExpiresAt = expiresAt;
 	return accountData;
 }
 
-export async function refreshAccountsTokens(
+export async function refreshAccountsToken(
 	db: ClientType,
+	accounts: Account[],
 	amazonClientId: string,
 	amazonClientSecret: string,
 	spApiClientId: string,
 	spApiClientSecret: string,
 ) {
-	// 全アカウントを取得
-	const accounts = await db.select().from(account).all();
-
 	// アカウントごとにトークンを更新
 	for (let eachAccount of accounts) {
 		// アカウントのプロバイダーによって処理を分岐
 		switch (eachAccount.providerId) {
 			case 'amazon':
+				// 値渡しっぽくなるとトークンが変更されなくなったりするので注意
 				eachAccount = await refreshAccessToken(
 					db,
 					'https://api.amazon.co.jp/auth/o2/token',
@@ -95,6 +95,5 @@ export async function refreshAccountsTokens(
 				break;
 		}
 	}
-
-	return new Response('ok');
+	return accounts;
 }
