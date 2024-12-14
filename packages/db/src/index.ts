@@ -16,5 +16,3 @@ export function createClient(config: {
 }
 
 export type ClientType = ReturnType<typeof createClient>;
-
-export * from './account';

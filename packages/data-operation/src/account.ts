@@ -15,7 +15,7 @@ export async function getAccountsByProviderId(
 		.all();
 }
 
-export async function updateAccessToken(
+export async function refreshAccessToken(
 	db: ClientType,
 	accountData: Account,
 	clientId: string,
@@ -83,7 +83,7 @@ export async function refreshAccountsTokens(
 		console.log(eachAccount);
 		switch (eachAccount.providerId) {
 			case 'amazon':
-				await updateAccessToken(
+				await refreshAccessToken(
 					db,
 					eachAccount,
 					amazonClientId,
@@ -91,7 +91,7 @@ export async function refreshAccountsTokens(
 				);
 				break;
 			case 'seller-central':
-				await updateAccessToken(
+				await refreshAccessToken(
 					db,
 					eachAccount,
 					spApiClientId,

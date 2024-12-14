@@ -18,7 +18,7 @@ export async function getAccountsByProviderId(
 }
 
 // 一旦dbに置いておくけど全然動かしていい
-export async function updateAccessToken(
+export async function refreshAccessToken(
 	db: ClientType,
 	url: string,
 	accountData: Account,
@@ -76,7 +76,7 @@ export async function refreshAccountsTokens(
 		// アカウントのプロバイダーによって処理を分岐
 		switch (eachAccount.providerId) {
 			case 'amazon':
-				eachAccount = await updateAccessToken(
+				eachAccount = await refreshAccessToken(
 					db,
 					'https://api.amazon.co.jp/auth/o2/token',
 					eachAccount,
@@ -85,7 +85,7 @@ export async function refreshAccountsTokens(
 				);
 				break;
 			case 'seller-central':
-				eachAccount = await updateAccessToken(
+				eachAccount = await refreshAccessToken(
 					db,
 					'https://api.amazon.co.jp/auth/o2/token',
 					eachAccount,

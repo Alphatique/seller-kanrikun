@@ -3,8 +3,8 @@
 	"private": true,
 	"type": "module",
 	"exports": {
-		".": "./src/index.ts",
-		"./schema": "./src/schema.ts"
+		"./*": "./src/*.ts",
+		".": "./src/index.ts"
 	},
 	"scripts": {
 		"push": "dotenvx run -f ../../.env -- drizzle-kit push",
