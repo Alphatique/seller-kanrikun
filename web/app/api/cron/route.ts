@@ -3,7 +3,7 @@ import type { Middleware } from 'openapi-fetch';
 import { createClient } from '@seller-kanrikun/db';
 import {
 	getAccountsByProviderId,
-	refreshAccountsToken,
+	refreshAccessToken,
 } from '@seller-kanrikun/db/account';
 import { reportsClient } from '@seller-kanrikun/sp-api/client/reports';
 
@@ -17,52 +17,70 @@ export async function GET(request: Request) {
 	});
 
 	// セラーセントラルのアカウントを全取得
-	let accounts = await getAccountsByProviderId(db, 'seller-central');
-
-	// アカウントのアクセストークンをリフレッシュ
-	accounts = await refreshAccountsToken(
-		db,
-		accounts,
-		process.env.AMAZON_CLIENT_ID!,
-		process.env.AMAZON_CLIENT_SECRET!,
-		process.env.SP_API_CLIENT_ID!,
-		process.env.SP_API_CLIENT_SECRET!,
-	);
+	const accounts = await getAccountsByProviderId(db, 'seller-central');
 
 	// アカウントごとにループ
-	for (const account of accounts) {
-		// アクセストークンがない場合はスキップ
-		if (account.accessToken === null) {
-			console.error('accessToken is undefined');
-			continue;
-		}
+	for (let account of accounts) {
 		// アクセストークンを追加するミドルウェアを作成
 		const tokenMiddleware: Middleware = {
 			async onRequest({ request, options }) {
+				// アクセストークンを更新
+				account = await refreshAccessToken(
+					db,
+					'https://api.amazon.com/auth/o2/token',
+					account,
+					process.env.SP_API_CLIENT_ID!,
+					process.env.SP_API_CLIENT_SECRET!,
+				);
+
+				// アクセストークンが取得できなかった場合はエラーを返す
+				if (account.accessToken === undefined) {
+					console.error('accessToken is undefined');
+					return request;
+				}
+
+				// リクエストにアクセストークンを追加
 				request.headers.set('x-amz-access-token', account.accessToken!);
 				return request;
 			},
 		};
 		reportsClient.use(tokenMiddleware);
 
-		const reportsFetch = new retryFetch(() =>
-			reportsClient.GET('/reports/2021-06-30/reports', {
-				params: {
-					query: {
-						reportTypes: [
-							'GET_V2_SETTLEMENT_REPORT_DATA_FLAT_FILE',
-						],
+		// レポートの一覧を取得
+		const reports = await fetchWithRetryNextToken(nextToken => {
+			if (nextToken !== null) {
+				return fetchWithRetryTokenLimit(() =>
+					reportsClient.GET('/reports/2021-06-30/reports', {
+						params: {
+							query: {
+								nextToken: nextToken,
+							},
+						},
+					}),
+				);
+			}
+			return fetchWithRetryTokenLimit(() =>
+				reportsClient.GET('/reports/2021-06-30/reports', {
+					params: {
+						query: {
+							reportTypes: [
+								'GET_V2_SETTLEMENT_REPORT_DATA_FLAT_FILE',
+							],
+							pageSize: 10, // 最大を指定
+						},
 					},
-				},
-			}),
-		);
+				}),
+			);
+		});
 
-		const reports = await reportsFetch.runWithTokenRetry();
-		console.log('result token retry:', reports.response);
-		if (reports.error) {
-			console.error(reports.error);
-		} else {
-			console.log(reports.data);
+		// 結果を出力
+		console.log('result token retry:', reports);
+		for (const report of reports) {
+			if (report.error) {
+				console.error(report.error);
+			} else {
+				console.log(report.data);
+			}
 		}
 
 		reportsClient.eject(tokenMiddleware);
@@ -94,42 +112,46 @@ interface fetchReturn<Data, Error> {
 	error?: Error;
 }
 
-// リトライ付きfetch
-class retryFetch<Data, Error> {
-	// 現状クラスである意味はないです
-	func: () => Promise<fetchReturn<Data, Error>>;
-	waitTimes: number[];
+async function fetchWithRetryNextToken<
+	Data extends { nextToken?: string },
+	Error,
+>(
+	func: (nextToken: string | null) => Promise<fetchReturn<Data, Error>>,
+	waitTime = 0.5,
+): Promise<fetchReturn<Data, Error>[]> {
+	const results = [];
 
-	constructor(
-		func: () => Promise<fetchReturn<Data, Error>>,
-		waitTimes: number[] = [0.5, 0.5, 0.5],
-	) {
-		this.func = func;
-		this.waitTimes = waitTimes;
+	let nextToken: string | undefined | null = null;
+	while (nextToken !== undefined) {
+		const result = await func(nextToken);
+		results.push(result);
+		if (result.error) break;
+		nextToken = result.data?.nextToken;
+		await waitRateLimitTime(result.response, waitTime);
 	}
+	return results;
+}
 
-	// トークンによるリトライ付きfetchを実行
-	async runWithTokenRetry(count = 0): Promise<fetchReturn<Data, Error>> {
-		const result = await this.func();
-		// エラーがある場合はエラーをログ
-		if (result.error) {
-			console.error(result.error);
-			// エラーがレートリミットの場合
-			if (result.response.status === 429) {
-				// リトライ回数が最後の場合はそのまま返す
-				if (count === this.waitTimes.length - 1) {
-					return result;
-				}
-				// 待機
-				const retryTime = this.waitTimes[count];
-				await waitRateLimitTime(result.response, retryTime);
-				// リトライ
-				return await this.runWithTokenRetry(count + 1);
-			} else {
-				return result;
-			}
+// トークンによるリトライ付きfetchを実行
+async function fetchWithRetryTokenLimit<Data, Error>(
+	func: () => Promise<fetchReturn<Data, Error>>,
+	count = 0,
+	waitTimes: number[] = [0.5, 0.5, 0.5],
+): Promise<fetchReturn<Data, Error>> {
+	const result = await func();
+	// エラーがレートリミットの場合
+	if (result.response.status === 429) {
+		// リトライ回数が最後の場合はそのまま返す
+		if (count === waitTimes.length - 1) {
+			return result;
 		}
-
-		return result;
+		// エラーをログ
+		console.error(result.error);
+		// 待機
+		const retryTime = waitTimes[count];
+		await waitRateLimitTime(result.response, retryTime);
+		// リトライ
+		return await fetchWithRetryTokenLimit(func, count + 1, waitTimes);
 	}
+	return result;
 }
