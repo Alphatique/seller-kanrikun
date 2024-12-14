@@ -49,7 +49,7 @@ export async function GET(request: Request) {
 		// レポートの一覧を取得
 		const reports = await fetchWithRetryNextToken(nextToken => {
 			if (nextToken !== null) {
-				return fetchWithRetryTokenLimit(() =>
+				return fetchWithRetryRateLimit(() =>
 					reportsClient.GET('/reports/2021-06-30/reports', {
 						params: {
 							query: {
@@ -59,7 +59,7 @@ export async function GET(request: Request) {
 					}),
 				);
 			}
-			return fetchWithRetryTokenLimit(() =>
+			return fetchWithRetryRateLimit(() =>
 				reportsClient.GET('/reports/2021-06-30/reports', {
 					params: {
 						query: {
@@ -80,6 +80,35 @@ export async function GET(request: Request) {
 				console.error(report.error);
 			} else {
 				console.log(report.data);
+			}
+		}
+
+		if (reports[0].data) {
+			const reportDocumentId: string =
+				reports[0].data.reports[0].reportDocumentId!;
+			const reportDocument = await fetchWithRetryRateLimit(() =>
+				reportsClient.GET(
+					'/reports/2021-06-30/documents/{reportDocumentId}',
+					{
+						params: {
+							path: {
+								reportDocumentId: reportDocumentId,
+							},
+						},
+					},
+				),
+			);
+			console.log('reportData:', reportDocument);
+			if (reportDocument.error) {
+				console.error(reportDocument.error);
+			} else {
+				const document = await fetch(reportDocument.data!.url!, {
+					method: 'GET',
+				});
+
+				const data = await document.text();
+				console.log(data);
+				console.log(document);
 			}
 		}
 
@@ -132,8 +161,8 @@ async function fetchWithRetryNextToken<
 	return results;
 }
 
-// トークンによるリトライ付きfetchを実行
-async function fetchWithRetryTokenLimit<Data, Error>(
+// レート制限のリトライ付きfetchを実行
+async function fetchWithRetryRateLimit<Data, Error>(
 	func: () => Promise<fetchReturn<Data, Error>>,
 	count = 0,
 	waitTimes: number[] = [0.5, 0.5, 0.5],
@@ -151,7 +180,7 @@ async function fetchWithRetryTokenLimit<Data, Error>(
 		const retryTime = waitTimes[count];
 		await waitRateLimitTime(result.response, retryTime);
 		// リトライ
-		return await fetchWithRetryTokenLimit(func, count + 1, waitTimes);
+		return await fetchWithRetryRateLimit(func, count + 1, waitTimes);
 	}
 	return result;
 }
