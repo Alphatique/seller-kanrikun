@@ -27,7 +27,7 @@ import {
 } from './table-meta';
 import { HeadTableRow, IndentTableCell, PlbsTableRow } from './table-pl-bs';
 
-export async function PlbsTableFilter() {
+export function PlbsTableFilter() {
 	const [period, setPeriod] = useState<Period>('monthly');
 	const [date, setDate] = useState<{ start: Date; end: Date }>({
 		start: new Date(),
