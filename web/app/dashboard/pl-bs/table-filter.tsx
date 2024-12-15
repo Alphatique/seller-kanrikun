@@ -18,7 +18,6 @@ import {
 
 import { PopoverMonthRangePicker } from '~/components/popover-month-range-picker';
 
-import { getReportData } from './action';
 import {
 	bsTableWithTax,
 	bsTableWithoutTax,
@@ -36,8 +35,6 @@ export async function PlbsTableFilter() {
 	});
 
 	const [withTax, setWithTax] = useState(true);
-
-	const tableData = getReportData();
 
 	return (
 		<div className='grid gap-3'>
