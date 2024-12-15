@@ -3,7 +3,7 @@
 	"version": "1.0.0",
 	"private": true,
 	"scripts": {
-		"dev": "dotenvx run -f ../.env -- next dev --turbo --experimental-https",
+		"dev": "NODE_OPTIONS=--experimental-wasm-modules dotenvx run -f ../.env -- next dev --experimental-https",
 		"build": "dotenvx run -f ../.env -- next build",
 		"start": "dotenvx run -f ../.env -- next start",
 		"typecheck": "tsc"
@@ -11,6 +11,7 @@
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.712.0",
 		"@aws-sdk/s3-request-presigner": "^3.712.0",
+		"@duckdb/duckdb-wasm": "^1.29.0",
 		"@hookform/resolvers": "^3.9.1",
 		"@seller-kanrikun/api-fetch": "workspace:*",
 		"@seller-kanrikun/auth": "workspace:*",

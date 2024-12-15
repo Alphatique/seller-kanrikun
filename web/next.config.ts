@@ -19,6 +19,17 @@ const nextConfig: NextConfig = {
 			config.plugins.push(new DefinePlugin(defines));
 		}
 
+		config.module.rules.push({
+			test: /.*\.wasm$/,
+			type: 'asset/resource',
+			generator: {
+				filename: 'static/wasm/[name].[contenthash][ext]',
+			},
+		});
+		config.experiments = {
+			asyncWebAssembly: true,
+			layers: true,
+		};
 		return config;
 	},
 };
