@@ -1,11 +1,5 @@
 import { Readable } from 'node:stream';
 import type { ReadableStream as WebReadableStream } from 'node:stream/web';
-import {
-	GetObjectCommand,
-	PutObjectCommand,
-	S3Client,
-} from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { gzipSync } from 'fflate';
 import type { Middleware } from 'openapi-fetch';
 import Papa from 'papaparse';
@@ -16,6 +10,8 @@ import {
 	refreshAccessToken,
 } from '@seller-kanrikun/db/account';
 import { reportsClient } from '@seller-kanrikun/sp-api/client/reports';
+
+import { getWriteOnlySignedUrl } from '../r2';
 
 const japanMarketPlaceId = 'A1VC38T7YXB528';
 
@@ -308,54 +304,4 @@ function logFetchReturn<Data, Error>(
 	} else {
 		console.error(`No error and data on ${fetchName}:`, response.response);
 	}
-}
-
-export const R2 = new S3Client({
-	region: 'auto',
-	endpoint: process.env.CLOUDFLARE_R2_ENDPOINT!,
-	credentials: {
-		accessKeyId: process.env.CLOUDFLARE_R2_ACCESS_KEY!,
-		secretAccessKey: process.env.CLOUDFLARE_R2_SECRET_KEY!,
-	},
-});
-
-import { generateR2Hash } from '@seller-kanrikun/calc';
-
-// 読み込み専用ダウンロード用url取得関数
-export async function getReadOnlySignedUrl(
-	userId: string,
-	dataName: string,
-	bucket = 'seller-kanrikun',
-	expiresIn = 60 * 60,
-) {
-	const key = await generateR2Hash(userId, dataName);
-
-	console.log(userId, key);
-
-	return await getSignedUrl(
-		R2,
-		new GetObjectCommand({
-			Bucket: bucket,
-			Key: key,
-		}),
-		{ expiresIn },
-	);
-}
-
-// 書き込み専用アップロード用url取得関数
-export async function getWriteOnlySignedUrl(
-	userId: string,
-	dataName: string,
-	expiresIn = 60,
-) {
-	const key = await generateR2Hash(userId, dataName);
-
-	return await getSignedUrl(
-		R2,
-		new PutObjectCommand({
-			Bucket: 'seller-kanrikun',
-			Key: key,
-		}),
-		{ expiresIn },
-	);
 }
