@@ -35,12 +35,11 @@ export async function GET(request: Request): Promise<Response> {
 		});
 	}
 
-	const data = await getData.text();
+	const data = await getData.arrayBuffer();
 
 	return new Response(data, {
-		status: 200,
 		headers: {
-			'Content-Type': 'text/plain; charset=utf-8',
+			'Content-Type': 'application/octet-stream',
 		},
 	});
 }

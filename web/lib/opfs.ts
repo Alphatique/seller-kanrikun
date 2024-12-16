@@ -6,8 +6,8 @@ const projectRoot = await opfsRoot?.getDirectoryHandle('seller-kanrikun', {
 export async function loadFile(
 	fileName: string,
 	updateTime: number,
-	fetchFunc: () => Promise<string | undefined>,
-): Promise<string | null> {
+	fetchFunc: () => Promise<Uint8Array | undefined>,
+): Promise<Uint8Array | null> {
 	if (!projectRoot) return null;
 
 	const editingFileName = `editing-${fileName}`;
@@ -15,7 +15,7 @@ export async function loadFile(
 	const files = await projectRoot.values();
 
 	let isEditing = false;
-	let existText: string | undefined = undefined;
+	let existData: Uint8Array | undefined = undefined;
 	for await (const value of files) {
 		if (value.name === editingFileName && value.kind === 'file') {
 			// 対象の編集中ファイルがある場合は終了
@@ -27,13 +27,13 @@ export async function loadFile(
 			// 対象ファイルを取得
 			const file = await fileHandle.getFile();
 			if (new Date().getTime() < file.lastModified + updateTime) {
-				existText = await file.text();
+				existData = new Uint8Array(await file.arrayBuffer());
 			}
 		}
 	}
 
-	if (!isEditing && existText !== undefined) {
-		return existText;
+	if (!isEditing && existData !== undefined) {
+		return existData;
 	}
 	const worker = new Worker(
 		new URL('~/lib/opfs-write-worker', import.meta.url),
@@ -49,7 +49,14 @@ export async function loadFile(
 	projectRoot.getFileHandle(editingFileName, { create: true });
 	// データを更新
 	worker.postMessage({ fileName, data: fetchedData });
-	// 編集中ファイルを削除
-	projectRoot.removeEntry(editingFileName);
+	// ワーカーからのメッセージを待つ
+	worker.onmessage = async event => {
+		if (event.data.fileName === fileName) {
+			// 編集中ファイルを削除
+			projectRoot.removeEntry(editingFileName);
+			// ワーカーを終了
+			worker.terminate();
+		}
+	};
 	return fetchedData;
 }
