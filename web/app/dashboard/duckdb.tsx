@@ -4,6 +4,8 @@ import duckdb_wasm_eh from '@duckdb/duckdb-wasm/dist/duckdb-eh.wasm';
 import duckdb_wasm from '@duckdb/duckdb-wasm/dist/duckdb-mvp.wasm';
 import { useState } from 'react';
 
+import { loadFile } from '~/lib/opfs';
+
 const MANUAL_BUNDLES: duckdb.DuckDBBundles = {
 	mvp: {
 		mainModule: duckdb_wasm,
@@ -42,6 +44,9 @@ const initDuckDB = async (
 	setMyDuckDB(db);
 };
 
+loadFile('report.csv', 1000, async () => {
+	return 'jaja';
+});
 export function MyDuckDBComponent() {
 	const [myDuckDB, setMyDuckDB] = useState<duckdb.AsyncDuckDB | null>(null);
 
