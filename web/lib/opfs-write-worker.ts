@@ -12,14 +12,13 @@ worker.addEventListener('message', async event => {
 	});
 
 	const accessHandle = await fileHandle.createSyncAccessHandle();
-	// テキストのエンコードとデコードをするためにインスタンスを取得
-	const textEncoder = new TextEncoder();
 
-	// メインスレッドから受け取ったテキストをエンコード
-	const content = textEncoder.encode(`${data}`);
-	// ファイルの先頭から内容を同期的に書き込む
+	const content = data instanceof Uint8Array ? data : new Uint8Array(data);
+
+	// ファイルの先頭から content を同期的に書き込む
 	accessHandle.write(content, { at: 0 });
-	// 変更をディスクに書き込み、FileSystemSyncAccessHandleを閉じる
+
+	// ディスクに変更を書き込み、ハンドルを閉じる
 	accessHandle.flush();
 	accessHandle.close();
 
