@@ -12,5 +12,11 @@
 	"[terraform]": {
 		"editor.defaultFormatter": "hashicorp.terraform"
 	},
-	"cSpell.ignoreWords": ["Papaparse", "papaparse", "kanrikun", "turso"]
+	"cSpell.ignoreWords": [
+		"Papaparse",
+		"papaparse",
+		"kanrikun",
+		"turso",
+		"opfs"
+	]
 }
