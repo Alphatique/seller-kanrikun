@@ -75,7 +75,13 @@ const initDuckDB = async (
 	const decompressed = gunzipSync(reportData);
 
 	const decoder = new TextDecoder();
-	const csvContent = decoder.decode(decompressed);
+	const csvContent: string = decoder.decode(decompressed);
+
+	await db.registerFileText('report.csv', csvContent);
+	const selectAll = await c.query('SELECT * FROM report.csv;');
+
+	console.log('Report data from DuckDB:', selectAll);
+
 	console.log('Decompressed report data:', csvContent);
 };
 
