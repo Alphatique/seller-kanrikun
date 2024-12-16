@@ -55,8 +55,6 @@ export function MyDuckDBComponent() {
 
 	loadFile('settlement-report.tsv.gz', updateTime, async () => {
 		if (!session) return 'Unauthorized';
-
-		console.log('session:', session);
 		const sessionId: string = session.session.id.toString();
 		const response = await fetch('/api/reports', {
 			method: 'GET',
@@ -64,13 +62,13 @@ export function MyDuckDBComponent() {
 				'x-seller-kanrikun-session-id': sessionId,
 			},
 		});
-		console.log('response:', response);
 		if (response.ok) {
 			const data = await response.text();
-			console.log('data:', data);
 			return await data;
 		} else {
-			return await 'Unauthorized';
+			const error = await response.text();
+			console.error('Failed to fetch report data:', response, error);
+			return await undefined;
 		}
 	});
 

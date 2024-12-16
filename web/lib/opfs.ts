@@ -6,7 +6,7 @@ const projectRoot = await opfsRoot?.getDirectoryHandle('seller-kanrikun', {
 export async function loadFile(
 	fileName: string,
 	updateTime: number,
-	fetchFunc: () => Promise<string>,
+	fetchFunc: () => Promise<string | undefined>,
 ): Promise<string | null> {
 	if (!projectRoot) return null;
 
@@ -40,6 +40,11 @@ export async function loadFile(
 	);
 	// 更新データを取得
 	const fetchedData = await fetchFunc();
+	// データが取得できなかった場合はエラーを出力
+	if (fetchedData === undefined) {
+		console.error(`${fileName} fetchFunc returned undefined`);
+		return null;
+	}
 	// 編集中ファイルを作成
 	projectRoot.getFileHandle(editingFileName, { create: true });
 	// データを更新
