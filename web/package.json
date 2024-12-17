@@ -28,6 +28,7 @@
 		"react-dom": "19.0.0-rc-66855b96-20241106",
 		"react-hook-form": "^7.54.0",
 		"request": "^2.88.2",
+		"swr": "^2.2.5",
 		"useragent": "^2.3.0",
 		"valibot": "^1.0.0-beta.9",
 		"xlsx": "^0.18.5",
