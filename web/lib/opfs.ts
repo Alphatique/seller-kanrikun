@@ -2,6 +2,49 @@ const opfsRoot = await global?.navigator?.storage?.getDirectory();
 const projectRoot = await opfsRoot?.getDirectoryHandle('seller-kanrikun', {
 	create: true,
 });
+const updateTime = 7 * 24 * 60 * 60 * 1000;
+
+import { gunzipSync } from 'fflate';
+
+import type { Fetcher } from 'swr';
+
+export const SWRLoadFile: Fetcher<
+	string | null,
+	{
+		fileName: string;
+		fetchUrl: string;
+		sessionId: string;
+		updateTime: number;
+	}
+> = async key => {
+	const { fileName, fetchUrl, sessionId, updateTime } = key;
+
+	const fileData = await loadFile(fileName, updateTime, async () => {
+		const response = await fetch(fetchUrl, {
+			method: 'GET',
+			headers: {
+				'x-seller-kanrikun-session-id': sessionId,
+			},
+		});
+		if (response.ok) {
+			const data = await response.arrayBuffer();
+			return new Uint8Array(data);
+		}
+		const error = await response.text();
+		console.error(`Failed to fetch '${fetchUrl}':`, response, error);
+		return undefined;
+	});
+	if (fileData === null) return null;
+
+	// ファイルを解凍して文字列として渡す
+	const decompressed = gunzipSync(fileData);
+
+	const decoder = new TextDecoder();
+	const csvContent: string = decoder.decode(decompressed);
+
+	return csvContent;
+};
+
 // ファイルが存在するか確認
 export async function loadFile(
 	fileName: string,

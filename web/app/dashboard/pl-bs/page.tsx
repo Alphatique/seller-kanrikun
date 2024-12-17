@@ -1,6 +1,5 @@
 import { Separator } from '@seller-kanrikun/ui/components/separator';
 
-import { MyDuckDBComponent } from '../duckdb';
 import { PlbsTableFilter } from './table-filter';
 
 export const metadata: Metadata = {
@@ -13,7 +12,6 @@ export default function Page() {
 			<h1 className='font-bold text-3xl'>PL/BS</h1>
 			<Separator />
 			<PlbsTableFilter />
-			<MyDuckDBComponent />
 		</div>
 	);
 }

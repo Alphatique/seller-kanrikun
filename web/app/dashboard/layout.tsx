@@ -1,3 +1,4 @@
+import type { User } from 'better-auth';
 import { RedirectType, redirect } from 'next/navigation';
 
 import { ScrollArea } from '@seller-kanrikun/ui/components/scroll-area';
@@ -5,7 +6,6 @@ import { ConfirmDialogProvider } from '@seller-kanrikun/ui/confirm-dialog';
 
 import { getSession } from '~/lib/session';
 
-import type { User } from 'better-auth';
 import { Header } from './header';
 
 export default async function Layout({ children }: LayoutProps) {
@@ -29,7 +29,6 @@ export default async function Layout({ children }: LayoutProps) {
 		>
 			<div className='flex h-screen flex-col'>
 				<Header user={session.user as User} />
-
 				<ScrollArea className='min-h-0 grow'>
 					<main className='container mx-auto py-6'>{children}</main>
 				</ScrollArea>
