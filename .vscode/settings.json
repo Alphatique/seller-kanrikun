@@ -17,6 +17,8 @@
 		"papaparse",
 		"kanrikun",
 		"turso",
-		"opfs"
+		"opfs",
+		"duckdb",
+		"fflate"
 	]
 }
