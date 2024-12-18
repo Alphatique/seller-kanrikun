@@ -33,6 +33,8 @@ SELECT
     + COALESCE(SUM("other-amount"), 0)
     AS accountsReceivable
 FROM report
+-- posted-dateがNULLの行はスキップ
+WHERE "posted-date" IS NOT NULL
 -- 月ごとにグループ化
 GROUP BY date_trunc('month', "posted-date");
 `;
