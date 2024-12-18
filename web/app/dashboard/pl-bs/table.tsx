@@ -29,6 +29,7 @@ export function PlbsTable({
 	plbsDataWithTax,
 	plbsDataWithoutTax,
 }: Props) {
+	// フラグに沿ってplbsDataを選択
 	const plbsData = withTax ? plbsDataWithTax : plbsDataWithoutTax;
 	return (
 		<>
@@ -59,10 +60,12 @@ export function PlbsTable({
 								</IndentTableCell>
 								{Object.entries(groupedDataIndexes).map(
 									([date, values]) => {
+										// レポートデータかplbsDataかどちらかを取得
 										const child =
 											filteredReport?.getChild(
 												item.key,
 											) ?? plbsData?.getChild(item.key);
+										// グルーピングされたデータの合計を取得
 										const sumValue = values.reduce(
 											(sum, index) =>
 												sum + child?.get(index),

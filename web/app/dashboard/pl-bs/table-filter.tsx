@@ -44,101 +44,124 @@ export function PlbsTableFilter() {
 	// db関連のロードフラグ
 	const reportLoaded = useRef(false);
 
-	// フィルタリング関連
+	// グルーピングの期間
 	const [period, setPeriod] = useState<Period>('monthly');
+	// 日付フィルター
 	const [dateRange, setDateRange] = useState<{ start: Date; end: Date }>({
 		start: new Date(),
 		end: new Date(),
 	});
+	// 税込みか税抜きか
 	const [withTax, setWithTax] = useState(true);
 
+	// 計算したデータ
 	const calcDataWithTax = useRef<arrow.Table | null>(null);
 	const calcDataWithoutTax = useRef<arrow.Table | null>(null);
+	// フィルターしたデータ
 	const [filteredData, setFilteredData] = useState<arrow.Table | null>(null);
 
+	// グルーピングしたデータのインデックス
 	const [groupedDataIndexes, setGroupedDataIndexes] = useState<
 		Record<string, number[]>
 	>({});
 
 	// DB関連のロード処理
-	useMemo(async () => {
-		if (myDuckDB) {
-			if (reportData && !reportLoaded.current) {
-				reportLoaded.current = true;
-				await myDuckDB.db.registerFileText('report.csv', reportData);
-				console.log(myDuckDB.db);
-				// テーブル名を表示
-				await myDuckDB.c.query(
-					/*sql*/ `
+	useMemo(
+		async () => {
+			// duckdbがロードされていない場合は何もしない
+			if (!myDuckDB) return;
+			// レポートデータがない場合は何もしない
+			if (!reportData) return;
+			// レポートデータがロードされていたら何もしない
+			if (reportLoaded.current) return;
+			// ロードフラグをオン
+			reportLoaded.current = true;
+			// ロードしたデータを登録
+			await myDuckDB.db.registerFileText('report.csv', reportData);
+			// レポートテーブルを初期化
+			await myDuckDB.c.query(
+				/*sql*/ `
+					-- データからレポートテーブルを作成
 					CREATE TABLE report AS SELECT * FROM report.csv;
-					`,
-				);
-				// -の値がある場合VARCHARになるので手でDOUBLEに変換。Int系のがいいかも
-				await myDuckDB.c.query(
-					/*sql*/ `
+					-- -の値がある場合VARCHARになるので一部DOUBLEに変換。Int系でもかも
 					ALTER TABLE report ALTER COLUMN "shipment-fee-amount" SET DATA TYPE DOUBLE;
 					ALTER TABLE report ALTER COLUMN "order-fee-amount" SET DATA TYPE DOUBLE;
 					ALTER TABLE report ALTER COLUMN "misc-fee-amount" SET DATA TYPE DOUBLE;
 					ALTER TABLE report ALTER COLUMN "other-amount" SET DATA TYPE DOUBLE;
 					ALTER TABLE report ALTER COLUMN "direct-payment-amount" SET DATA TYPE DOUBLE;
 					`,
-				);
+			);
 
-				const filteredRows = (await myDuckDB.c.query(
-					getFilterReportSql(),
-				)) as unknown as arrow.Table;
+			// フィルターしたデータを取得
+			const filteredRows = (await myDuckDB.c.query(
+				getFilterReportSql(),
+			)) as unknown as arrow.Table;
 
-				const withTaxData = calcPlbs(
-					filteredRows,
-					{
-						amazonAds: 0,
-					},
-					false,
-				);
-				const withoutTaxData = calcPlbs(
-					filteredRows,
-					{
-						amazonAds: 0,
-					},
-					true,
-				);
+			// PLBSデータを計算
+			const withTaxData = calcPlbs(
+				filteredRows,
+				{
+					amazonAds: 0,
+				},
+				false,
+			);
+			const withoutTaxData = calcPlbs(
+				filteredRows,
+				{
+					amazonAds: 0,
+				},
+				true,
+			);
 
-				calcDataWithTax.current = withTaxData;
-				calcDataWithoutTax.current = withoutTaxData;
-				setFilteredData(filteredRows);
-			}
-		}
-	}, [myDuckDB, reportData]);
+			// 計算したデータを登録
+			calcDataWithTax.current = withTaxData;
+			calcDataWithoutTax.current = withoutTaxData;
+			// 最後にstateを更新することで再描画を行う
+			setFilteredData(filteredRows);
+		},
+		[myDuckDB, reportData], // duckdbかreportDataが更新された場合に反応する
+	);
 
-	useMemo(async () => {
-		if (!filteredData) return;
-		if (!filteredData.getChild('date')) return;
-		const dateIndexes: Record<string, number[]> = {};
-		for (let i = 0; i < filteredData.numRows; i++) {
-			const date = new Date(filteredData.getChild('date')!.get(i));
-			console.log(date);
-			console.log(dateRange);
-			if (dateRange.start <= date && dateRange.end >= date) {
-				let dateStr = '';
-				switch (period) {
-					case 'monthly':
-						dateStr = format(date, 'yyyy-MM');
-						break;
-					case 'quarterly':
-						dateStr = format(date, 'yyyy-Q');
-						break;
-					case 'yearly':
-						dateStr = format(date, 'yyyy');
-						break;
+	// データのグルーピング処理
+	useMemo(
+		async () => {
+			// フィルターしたデータがない場合は何もしない
+			if (!filteredData) return;
+			// 仮データ
+			const dateIndexes: Record<string, number[]> = {};
+			// データの行数分繰り返す
+			for (let i = 0; i < filteredData.numRows; i++) {
+				// その行の日付を取得
+				const date = new Date(filteredData.getChild('date')!.get(i));
+				// 日付が範囲内かどうかを判定
+				if (dateRange.start <= date && dateRange.end >= date) {
+					// 日付からグループ化する文字列を作成
+					let dateStr = '';
+					switch (period) {
+						case 'monthly':
+							dateStr = format(date, 'yyyy-MM');
+							break;
+						case 'quarterly':
+							dateStr = format(date, 'yyyy-Q');
+							break;
+						case 'yearly':
+							dateStr = format(date, 'yyyy');
+							break;
+					}
+					// グループ化したデータを登録
+					if (!dateIndexes[dateStr]) {
+						// まだグループがない場合は配列初期化
+						dateIndexes[dateStr] = [];
+					}
+					// インデックスを登録
+					dateIndexes[dateStr].push(i);
 				}
-				if (!dateIndexes[dateStr]) {
-					dateIndexes[dateStr] = [];
-				}
-				dateIndexes[dateStr].push(i);
 			}
-		}
-		setGroupedDataIndexes(dateIndexes);
-	}, [dateRange, filteredData, period]);
+			// グループ化したデータを登録
+			setGroupedDataIndexes(dateIndexes);
+		},
+		[dateRange, filteredData, period], // dateRange, filteredData, periodが更新された場合に反応する
+	);
 
 	return (
 		<div className='grid gap-3'>
