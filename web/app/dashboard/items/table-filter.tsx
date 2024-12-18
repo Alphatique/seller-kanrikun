@@ -15,7 +15,7 @@ import {
 } from '@seller-kanrikun/ui/components/table';
 
 import { PopoverMonthRangePicker } from '~/components/popover-month-range-picker';
-import { downloadCsv } from '~/lib/csv-download';
+import { downloadCsv } from '~/lib/file-downloads';
 
 import TmpData from './tmp-data';
 

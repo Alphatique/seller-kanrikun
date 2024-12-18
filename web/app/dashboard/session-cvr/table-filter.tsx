@@ -24,7 +24,7 @@ import {
 import { BarChart } from '~/components/bar-chart';
 import { DatePickerWithRange } from '~/components/date-range';
 import { LineChart } from '~/components/line-chart';
-import { downloadCsv } from '~/lib/csv-download';
+import { downloadCsv } from '~/lib/file-downloads';
 
 import tmpData from './tmp-data';
 
