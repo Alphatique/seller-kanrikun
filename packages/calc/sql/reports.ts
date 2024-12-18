@@ -1,6 +1,8 @@
 export const filterMonthlyReport = /*sql*/ `
 SELECT
-    strftime(date_trunc('month', "posted-date"), '%Y-%B') AS date,
+    -- strftimeとdate_truncはともにduckdbの関数
+    strftime(date_trunc('month', "posted-date"), '%Y-%B') AS date,　
+    -- 以下は各種フィルターをして各値を合計していってる
     SUM(CASE WHEN "transaction-type" = 'Order' AND "price-type" = 'Principal' THEN "price-amount" ELSE 0 END) AS principal,
     SUM(CASE WHEN "transaction-type" = 'Order' AND "price-type" = 'Tax' THEN "price-amount" ELSE 0 END) AS principalTax,
     SUM(CASE WHEN "transaction-type" = 'Order' AND "price-type" = 'Shipping' THEN "price-amount" ELSE 0 END) AS shipping,
@@ -9,7 +11,6 @@ SELECT
     SUM(CASE WHEN "transaction-type" = 'Refund' THEN "item-related-fee-amount" ELSE 0 END) AS refundFee,
     SUM(CASE WHEN "transaction-type" = 'Refund' THEN "promotion-amount" ELSE 0 END) AS refundPromotion,
     SUM(CASE WHEN "transaction-type" = 'Refund' AND "promotion-type" = 'TaxDiscount' THEN "promotion-amount" ELSE 0 END) AS refundTaxDiscount,
-
     SUM(CASE WHEN "transaction-type" = 'Shipping' THEN "price-amount" ELSE 0 END) AS promotion,
     SUM(CASE WHEN "transaction-type" = 'Order' AND "item-related-fee-type" = 'Commission' THEN "item-related-fee-amount" ELSE 0 END) AS commissionFee,
     SUM(CASE WHEN "transaction-type" = 'Order' AND "item-related-fee-type" = 'FBAPerUnitFulfillmentFee' THEN "item-related-fee-amount" ELSE 0 END) AS fbaShippingFee,
@@ -18,5 +19,6 @@ SELECT
     SUM(CASE WHEN "transaction-type" = 'Order' AND "other-fee-reason-description" = 'ShippingChargeback' THEN "other-amount" ELSE 0 END) AS shippingReturnFee,
     SUM(CASE WHEN "transaction-type" = 'Subscription Fee' THEN "other-amount" ELSE 0 END) AS subscriptionFee,
 FROM report
+-- 月ごとにグループ化
 GROUP BY date_trunc('month', "posted-date");
 `;
