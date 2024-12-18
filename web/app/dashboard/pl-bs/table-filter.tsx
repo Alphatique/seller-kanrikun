@@ -1,10 +1,12 @@
 'use client';
-import type { Table } from 'apache-arrow';
+import type * as arrow from 'apache-arrow';
+import { format } from 'date-fns';
 import { useMemo, useRef, useState } from 'react';
 import useSWR from 'swr';
 
 import { useSession } from '@seller-kanrikun/auth/client';
-import { filterMonthlyReport } from '@seller-kanrikun/calc/sql/reports';
+import { calcPlbs } from '@seller-kanrikun/calc/pl-bs';
+import { getFilterReportSql } from '@seller-kanrikun/calc/sql/reports';
 import { Label } from '@seller-kanrikun/ui/components/label';
 import {
 	Select,
@@ -14,24 +16,12 @@ import {
 	SelectValue,
 } from '@seller-kanrikun/ui/components/select';
 import { Switch } from '@seller-kanrikun/ui/components/switch';
-import {
-	TableBody,
-	TableCell,
-	Table as TableComponent, // apache-arrowと被るので割り食ってもらってる。多分分析用のスクリプト分割するのが正解
-} from '@seller-kanrikun/ui/components/table';
 
 import { PopoverMonthRangePicker } from '~/components/popover-month-range-picker';
 import { initDuckDB } from '~/lib/duckdb';
 import { SWRLoadFile } from '~/lib/opfs';
 
-import {
-	bsTableWithTax,
-	bsTableWithoutTax,
-	indexTable,
-	plTableWithTax,
-	plTableWithoutTax,
-} from './table-meta';
-import { HeadTableRow, IndentTableCell, PlbsTableRow } from './table-pl-bs';
+import { PlbsTable } from './table';
 
 export function PlbsTableFilter() {
 	// セッションの取得
@@ -53,7 +43,22 @@ export function PlbsTableFilter() {
 
 	// db関連のロードフラグ
 	const reportLoaded = useRef(false);
-	const duckdbLoaded = useRef(false);
+
+	// フィルタリング関連
+	const [period, setPeriod] = useState<Period>('monthly');
+	const [dateRange, setDateRange] = useState<{ start: Date; end: Date }>({
+		start: new Date(),
+		end: new Date(),
+	});
+	const [withTax, setWithTax] = useState(true);
+
+	const calcDataWithTax = useRef<arrow.Table | null>(null);
+	const calcDataWithoutTax = useRef<arrow.Table | null>(null);
+	const [filteredData, setFilteredData] = useState<arrow.Table | null>(null);
+
+	const [groupedDataIndexes, setGroupedDataIndexes] = useState<
+		Record<string, number[]>
+	>({});
 
 	// DB関連のロード処理
 	useMemo(async () => {
@@ -61,62 +66,79 @@ export function PlbsTableFilter() {
 			if (reportData && !reportLoaded.current) {
 				reportLoaded.current = true;
 				await myDuckDB.db.registerFileText('report.csv', reportData);
-
-				//downloadStr(reportData, 'report.csv');
-
+				console.log(myDuckDB.db);
 				// テーブル名を表示
 				await myDuckDB.c.query(
 					/*sql*/ `
 					CREATE TABLE report AS SELECT * FROM report.csv;
 					`,
 				);
-				// -の値がある場合VARCHARになるので手でDOUBLEに変換
+				// -の値がある場合VARCHARになるので手でDOUBLEに変換。Int系のがいいかも
 				await myDuckDB.c.query(
 					/*sql*/ `
+					ALTER TABLE report ALTER COLUMN "shipment-fee-amount" SET DATA TYPE DOUBLE;
+					ALTER TABLE report ALTER COLUMN "order-fee-amount" SET DATA TYPE DOUBLE;
+					ALTER TABLE report ALTER COLUMN "misc-fee-amount" SET DATA TYPE DOUBLE;
 					ALTER TABLE report ALTER COLUMN "other-amount" SET DATA TYPE DOUBLE;
+					ALTER TABLE report ALTER COLUMN "direct-payment-amount" SET DATA TYPE DOUBLE;
 					`,
 				);
 
-				const monthlyReportData: Table =
-					await myDuckDB.c.query(filterMonthlyReport);
+				const filteredRows = (await myDuckDB.c.query(
+					getFilterReportSql(),
+				)) as unknown as arrow.Table;
 
-				const monthlyUnpaidBalance: Table = await myDuckDB.c.query(
-					/*sql*/ `SELECT
-						strftime(date_trunc('month', "deposit-date"), '%Y-%B') AS date,
-						SUM("total-amount") AS fbaWeightBasedFee,
-					FROM report
-					GROUP BY date_trunc('month', "deposit-date");
-					`,
+				const withTaxData = calcPlbs(
+					filteredRows,
+					{
+						amazonAds: 0,
+					},
+					false,
 				);
-				console.log('monthlyReportData:', monthlyReportData);
-				console.log(
-					'monthlyUnpaidBalance:',
-					monthlyUnpaidBalance.toString(),
+				const withoutTaxData = calcPlbs(
+					filteredRows,
+					{
+						amazonAds: 0,
+					},
+					true,
 				);
-			}
 
-			if (reportLoaded) {
-				duckdbLoaded.current = true;
+				calcDataWithTax.current = withTaxData;
+				calcDataWithoutTax.current = withoutTaxData;
+				setFilteredData(filteredRows);
 			}
 		}
 	}, [myDuckDB, reportData]);
 
 	useMemo(async () => {
-		if (!duckdbLoaded) return;
-		if (myDuckDB) {
-			const getColumns = await myDuckDB.c.query(
-				'SELECT "transaction-type" from report;',
-			);
-			console.log('Columns:', getColumns);
+		if (!filteredData) return;
+		if (!filteredData.getChild('date')) return;
+		const dateIndexes: Record<string, number[]> = {};
+		for (let i = 0; i < filteredData.numRows; i++) {
+			const date = new Date(filteredData.getChild('date')!.get(i));
+			console.log(date);
+			console.log(dateRange);
+			if (dateRange.start <= date && dateRange.end >= date) {
+				let dateStr = '';
+				switch (period) {
+					case 'monthly':
+						dateStr = format(date, 'yyyy-MM');
+						break;
+					case 'quarterly':
+						dateStr = format(date, 'yyyy-Q');
+						break;
+					case 'yearly':
+						dateStr = format(date, 'yyyy');
+						break;
+				}
+				if (!dateIndexes[dateStr]) {
+					dateIndexes[dateStr] = [];
+				}
+				dateIndexes[dateStr].push(i);
+			}
 		}
-	}, [duckdbLoaded]);
-
-	const [period, setPeriod] = useState<Period>('monthly');
-	const [date, setDate] = useState<{ start: Date; end: Date }>({
-		start: new Date(),
-		end: new Date(),
-	});
-	const [withTax, setWithTax] = useState(true);
+		setGroupedDataIndexes(dateIndexes);
+	}, [dateRange, filteredData, period]);
 
 	return (
 		<div className='grid gap-3'>
@@ -145,87 +167,17 @@ export function PlbsTableFilter() {
 					<Label htmlFor='airplane-mode'>Without Tax</Label>
 				</div>
 				<PopoverMonthRangePicker
-					value={date}
-					onMonthRangeSelect={setDate}
+					value={dateRange}
+					onMonthRangeSelect={setDateRange}
 				/>
 			</div>
-
-			<TableComponent>
-				<TableBody>
-					<HeadTableRow>
-						<TableCell>PL</TableCell>
-					</HeadTableRow>
-					<PlbsTableRow key='pl_date' underLine={true}>
-						<IndentTableCell />
-						<TableCell>2024</TableCell>
-					</PlbsTableRow>
-					{(withTax ? plTableWithTax : plTableWithoutTax).map(
-						item => (
-							<PlbsTableRow
-								key={item.key}
-								underLine={item.underLine}
-								doubleUnderLine={item.doubleUnderLine}
-							>
-								<IndentTableCell indent={item.indent}>
-									{item.head}
-								</IndentTableCell>
-								<TableCell>100</TableCell>
-							</PlbsTableRow>
-						),
-					)}
-				</TableBody>
-			</TableComponent>
-			{withTax && (
-				<TableComponent>
-					<TableBody>
-						<HeadTableRow>
-							<TableCell>指標</TableCell>
-						</HeadTableRow>
-						<PlbsTableRow key='index_date' underLine={true}>
-							<IndentTableCell />
-							<TableCell>2024</TableCell>
-						</PlbsTableRow>
-						{indexTable.map(item => (
-							<PlbsTableRow
-								key={item.key}
-								underLine={item.underLine}
-								doubleUnderLine={item.doubleUnderLine}
-							>
-								<IndentTableCell indent={item.indent}>
-									{item.head}
-								</IndentTableCell>
-								<TableCell>100</TableCell>
-							</PlbsTableRow>
-						))}
-					</TableBody>
-				</TableComponent>
-			)}
-
-			<TableComponent>
-				<TableBody>
-					<HeadTableRow>
-						<TableCell>BS</TableCell>
-					</HeadTableRow>
-					<PlbsTableRow key='bs_date' underLine={true}>
-						<IndentTableCell />
-						<TableCell>2024</TableCell>
-					</PlbsTableRow>
-					{(withTax ? bsTableWithTax : bsTableWithoutTax).map(
-						item => (
-							<PlbsTableRow
-								key={item.key}
-								underLine={item.underLine}
-								doubleUnderLine={item.doubleUnderLine}
-							>
-								<IndentTableCell indent={item.indent}>
-									{item.head}
-								</IndentTableCell>
-								<TableCell>100</TableCell>
-							</PlbsTableRow>
-						),
-					)}
-				</TableBody>
-			</TableComponent>
+			<PlbsTable
+				withTax={withTax}
+				groupedDataIndexes={groupedDataIndexes}
+				filteredReport={filteredData}
+				plbsWithTax={calcDataWithTax.current}
+				plbsWithoutTax={calcDataWithoutTax.current}
+			/>
 		</div>
 	);
 }

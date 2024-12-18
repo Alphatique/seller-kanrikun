@@ -1,246 +1,171 @@
-import type { CostPrice } from '../types/cost';
-import type { PlbsData } from '../types/pl-bs';
-import type { ReportDocumentRowJson } from '../types/reports';
+import { type Table, tableFromArrays } from 'apache-arrow';
+import type {
+	AmazonAdsAmount,
+	FilteredSettlementReport,
+	PlData,
+} from '../types/pl-bs';
 
-import {
-	getFbaShippingFee,
-	getPrincipal,
-	getPrincipalTaxes,
-	getPromotion,
-	getRefund,
-	getSalesCommissionFee,
-	getShipping,
-	getShippingReturnFee,
-	getShippingTaxes,
-	getSubscriptionFee,
-} from './reports';
+// 損益計算書データ
+export function calcPlbs(
+	reportData: Table,
+	amazonAdsData: AmazonAdsAmount,
+	withoutTax: boolean,
+): Table | null {
+	// スキーマ定義してそれが等しいならとかでできそう
+	const numRows = reportData.numRows;
+	const principalCol = reportData.getChild('principal');
+	const principalTaxCol = reportData.getChild('principalTax');
+	const shippingCol = reportData.getChild('shipping');
+	const shippingTaxCol = reportData.getChild('shippingTax');
+	const refundCol = reportData.getChild('refund');
+	const promotionCol = reportData.getChild('promotion');
+	const commissionFeeCol = reportData.getChild('commissionFee');
+	const fbaShippingFeeCol = reportData.getChild('fbaShippingFee');
+	const inventoryStorageFeeCol = reportData.getChild('inventoryStorageFee');
+	const inventoryUpdateFeeCol = reportData.getChild('inventoryUpdateFee');
+	const shippingReturnFeeCol = reportData.getChild('shippingReturnFee');
+	const subscriptionFeeCol = reportData.getChild('accountSubscriptionFee');
+	const accountsReceivableCol = reportData.getChild('accountsReceivable');
+	if (
+		!principalCol ||
+		!principalTaxCol ||
+		!shippingCol ||
+		!shippingTaxCol ||
+		!refundCol ||
+		!promotionCol ||
+		!commissionFeeCol ||
+		!fbaShippingFeeCol ||
+		!inventoryStorageFeeCol ||
+		!inventoryUpdateFeeCol ||
+		!shippingReturnFeeCol ||
+		!subscriptionFeeCol ||
+		!accountsReceivableCol
+	) {
+		console.error('Missing columns in reportData');
+		return null;
+	}
 
-export function getPlbsData(rangedData: ReportDocumentRowJson[]): PlbsData {
-	const principal = getPrincipal(rangedData);
-	const principalTax = getPrincipalTaxes(rangedData);
-	const shipping = getShipping(rangedData);
-	const shippingTax = getShippingTaxes(rangedData);
-	const refund = getRefund(rangedData);
-	const salesWithTax = getSalesWithTax(
-		principal,
-		principalTax,
-		shipping,
-		shippingTax,
-		refund,
-	);
-	const salesWithoutTax = getSalesWithoutTax(principal, shipping, refund);
-	const netSalesWithTax = getNetSales(salesWithTax, refund);
-	const netSalesWithoutTax = getNetSales(salesWithoutTax, refund);
-	const costPrice = 0;
-	const grossProfitWithTax = getGrossProfit(netSalesWithTax, costPrice);
-	const grossProfitWithoutTax = getGrossProfit(netSalesWithoutTax, costPrice);
-	const amazonAds = 0;
-	const promotion = getPromotion(rangedData);
-	const salesCommission = getSalesCommissionFee(rangedData);
-	const fbaShippingFee = getFbaShippingFee(rangedData);
-	const inventoryStorageFee = 0;
-	const inventoryUpdateFee = 0;
-	const shippingReturnFee = getShippingReturnFee(rangedData);
-	const subscriptionFee = getSubscriptionFee(rangedData);
-	const sga = getSGA(
-		amazonAds,
-		promotion,
-		salesCommission,
-		fbaShippingFee,
-		inventoryStorageFee,
-		inventoryUpdateFee,
-		shippingReturnFee,
-		subscriptionFee,
-	);
-	const operatingProfitWithTax = getOperatingProfit(grossProfitWithTax, sga);
-	const operatingProfitWithoutTax = getOperatingProfit(
-		grossProfitWithoutTax,
-		sga,
-	);
-	const unpaidBalance = 0;
-	const amazonOtherWithTax = getAmazonOther(
-		unpaidBalance,
-		salesWithTax,
-		sga,
-		amazonAds,
-	);
-	const amazonOtherWithoutTax = getAmazonOther(
-		unpaidBalance,
-		salesWithoutTax,
-		sga,
-		amazonAds,
-	);
+	// 行ごとに計算
+	const rows = Array.from({ length: numRows }, (_, i) => {
+		const rowData: FilteredSettlementReport = {
+			principal: principalCol.get(i),
+			principalTax: principalTaxCol.get(i),
+			shipping: shippingCol.get(i),
+			shippingTax: shippingTaxCol.get(i),
+			refund: refundCol.get(i),
+			promotion: promotionCol.get(i),
+			commissionFee: commissionFeeCol.get(i),
+			fbaShippingFee: fbaShippingFeeCol.get(i),
+			inventoryStorageFee: inventoryStorageFeeCol.get(i),
+			inventoryUpdateFee: inventoryUpdateFeeCol.get(i),
+			shippingReturnFee: shippingReturnFeeCol.get(i),
+			accountSubscriptionFee: subscriptionFeeCol.get(i),
+			accountsReceivable: accountsReceivableCol.get(i),
+		};
 
-	const accruedConsumptionTax = principalTax + shippingTax;
-	const outputConsumptionTax = accruedConsumptionTax;
+		// 売上 = 商品代金 + 配送料
+		// + 商品代金に対する税金 + 配送料に対する税金(税込みの場合)
+		const sales: number =
+			rowData.principal +
+			rowData.shipping +
+			(withoutTax ? 0 : rowData.principalTax + rowData.shippingTax);
 
-	console.log(principal, principalTax);
-	return {
-		salesWithTax,
-		salesWithoutTax,
-		principal,
-		principalTax,
-		shipping,
-		shippingTax,
-		otherTax: 0,
-		refund,
-		netSalesWithTax,
-		netSalesWithoutTax,
-		costPrice,
-		grossProfitWithTax,
-		grossProfitWithoutTax,
-		sga,
-		amazonAds,
-		promotion,
-		salesCommission,
-		fbaShippingFee,
-		inventoryStorageFee,
-		inventoryUpdateFee,
-		shippingReturnFee,
-		subscriptionFee,
-		amazonOtherWithTax,
-		amazonOtherWithoutTax,
-		operatingProfitWithTax,
-		operatingProfitWithoutTax,
-		unpaidBalance,
-		inventoryAssets: 0,
-		accruedConsumptionTax: accruedConsumptionTax,
-		outputConsumptionTax: outputConsumptionTax,
-	} as PlbsData;
-}
+		const plData = calcPlData(sales, rowData, amazonAdsData);
 
-export function getSumPlbsData(data: PlbsData[]): PlbsData {
-	return data.reduce((acc: PlbsData, cur: PlbsData) => {
-		for (const key of Object.keys(acc) as (keyof PlbsData)[]) {
-			acc[key] += cur[key] || 0;
+		if (withoutTax) {
+			const taxes = rowData.principalTax + rowData.shippingTax;
+			return {
+				taxes,
+				...plData,
+			};
 		}
-		return acc;
-	}, getZeroPlbsData());
-}
-function getZeroPlbsData(): PlbsData {
-	return {
-		salesWithTax: 0,
-		salesWithoutTax: 0,
-		principal: 0,
-		principalTax: 0,
-		shipping: 0,
-		shippingTax: 0,
-		otherTax: 0,
-		refund: 0,
-		netSalesWithTax: 0,
-		netSalesWithoutTax: 0,
-		costPrice: 0,
-		grossProfitWithTax: 0,
-		grossProfitWithoutTax: 0,
-		sga: 0,
-		amazonAds: 0,
-		promotion: 0,
-		salesCommission: 0,
-		fbaShippingFee: 0,
-		inventoryStorageFee: 0,
-		inventoryUpdateFee: 0,
-		shippingReturnFee: 0,
-		subscriptionFee: 0,
-		amazonOtherWithTax: 0,
-		amazonOtherWithoutTax: 0,
-		operatingProfitWithTax: 0,
-		operatingProfitWithoutTax: 0,
-		unpaidBalance: 0,
-		inventoryAssets: 0,
-		accruedConsumptionTax: 0,
-		outputConsumptionTax: 0,
-	} as PlbsData;
+
+		return {
+			taxes: 0,
+			...plData,
+		};
+	});
+
+	// 各配列にマッピング
+	const calcData = {
+		sales: rows.map(r => r.sales),
+		netSales: rows.map(r => r.netSales),
+		costPrice: rows.map(r => r.cost),
+		grossProfit: rows.map(r => r.grossProfit),
+		sga: rows.map(r => r.sga),
+		amazonOther: rows.map(r => r.amazonOther),
+		amazonAds: rows.map(r => amazonAdsData.amazonAds),
+		operatingProfit: rows.map(r => r.operatingProfit),
+		...(withoutTax
+			? {
+					accruedConsumptionTax: rows.map(r => r.taxes),
+					outputConsumptionTax: rows.map(r => r.taxes),
+				}
+			: {}),
+	};
+
+	const calcTable = tableFromArrays(calcData);
+	// 元データと計算結果を結合
+	return calcTable;
 }
 
-// 売上（Sales）
-export function getSalesWithTax(
-	principal: number,
-	PrincipalTax: number,
-	shipping: number,
-	ShippingTax: number,
-	refund: number,
-) {
-	return principal + PrincipalTax + shipping + ShippingTax + refund;
-}
-export function getSalesWithoutTax(
-	principal: number,
-	shipping: number,
-	refund: number,
-) {
-	return principal + shipping + refund;
-}
-
-// 純売上（Net Sales）
-export function getNetSales(sales: number, refund: number) {
-	return sales - refund;
-}
-
-// 原価（Cost）
-export function getCostPrice(
-	reportData: ReportDocumentRowJson[],
-	costData: CostPrice[],
-) {
-	// まず、"Order" タイプの行をフィルタリング
-	const orderData = reportData.filter(
-		row => row['transaction-type'] === 'Order',
-	);
-
-	// SKUごとに quantity-purchased を集計
-	const quantityBySKU = orderData.reduce(
-		(acc: Record<string, number>, row) => {
-			const sku = row.sku;
-			const quantity = Number(row['quantity-purchased']) || 0;
-
-			// SKUがまだリストにない場合は初期化
-			acc[sku] = (acc[sku] || 0) + quantity;
-
-			return acc;
-		},
-		{},
-	);
-
-	return quantityBySKU;
-}
-
-// 粗利益（Gross Profit）
-export function getGrossProfit(netSales: number, costPrice: number) {
-	return netSales - costPrice;
-}
-
-// 販売費及び一般管理費（SG&A）
-export function getSGA(
-	amazonAds: number,
-	promotion: number,
-	salesCommission: number,
-	fbaShippingFee: number,
-	inventoryStorageFee: number,
-	inventoryUpdateFee: number,
-	shippingReturnFee: number,
-	subscriptionFee: number,
-) {
-	return (
-		amazonAds +
-		promotion +
-		salesCommission +
-		fbaShippingFee +
-		inventoryStorageFee +
-		inventoryUpdateFee +
-		shippingReturnFee +
-		subscriptionFee
-	);
-}
-
-// amazonその他
-export function getAmazonOther(
-	unpaidBalance: number,
+// 損益計算書データ
+export function calcPlData(
 	sales: number,
-	SGA: number,
-	amazonAds: number,
-) {
-	return unpaidBalance - (sales + (SGA - amazonAds));
+	reportData: FilteredSettlementReport,
+	amazonAdsData: AmazonAdsAmount,
+): PlData {
+	// 純売上 = 売上 - 返品額
+	const netSales = sales - reportData.refund;
+	// 原価
+	const cost = 0;
+	// 粗利益 = 純売上 - 原価
+	const grossProfit = netSales - cost;
+	// 販売費および一般管理費
+	const sga = calcSellingGeneralAndAdministrativeExpenses(
+		reportData,
+		amazonAdsData,
+	);
+	// アマゾンその他 = 売掛金 - (売上 + (販売費および一般管理費 - 広告宣伝費))
+	const amazonOther =
+		reportData.accountsReceivable -
+		(sales + (sga - amazonAdsData.amazonAds));
+	// 営業利益
+	const operatingProfit = grossProfit - sga;
+
+	return {
+		sales,
+		netSales,
+		cost,
+		grossProfit,
+		sga,
+		amazonOther,
+		operatingProfit,
+	};
 }
 
-// 営業利益
-export function getOperatingProfit(grossProfit: number, SGA: number) {
-	return grossProfit - SGA;
+// 販売費および一般管理費
+function calcSellingGeneralAndAdministrativeExpenses(
+	reportData: FilteredSettlementReport,
+	amazonAdsData: AmazonAdsAmount,
+) {
+	// 販売費および一般管理費 =
+	return (
+		// 広告宣伝費（Amazon広告）+
+		amazonAdsData.amazonAds +
+		// プロモーション費用 +
+		reportData.promotion +
+		// 販売手数料 +
+		reportData.commissionFee +
+		// FBA出荷手数料 +
+		reportData.fbaShippingFee +
+		// 在庫保管料 +
+		reportData.inventoryStorageFee +
+		// 在庫更新費用 +
+		reportData.inventoryUpdateFee +
+		// 配送返戻金 +
+		reportData.shippingReturnFee +
+		// アカウント月額登録料
+		reportData.accountSubscriptionFee
+	);
 }

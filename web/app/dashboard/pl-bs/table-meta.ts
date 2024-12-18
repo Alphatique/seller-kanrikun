@@ -69,7 +69,7 @@ export const plTableWithTax: PlbsTableMetaData[] = [
 		indent: 2,
 	},
 	{
-		key: 'salesCommission',
+		key: 'commissionFee',
 		head: '販売手数料',
 		indent: 2,
 	},
@@ -94,7 +94,7 @@ export const plTableWithTax: PlbsTableMetaData[] = [
 		indent: 2,
 	},
 	{
-		key: 'subscriptionFee',
+		key: 'accountSubscriptionFee',
 		head: 'アカウント月額登録料',
 		indent: 2,
 	},
@@ -163,7 +163,7 @@ export const plTableWithoutTax: PlbsTableMetaData[] = [
 		indent: 2,
 	},
 	{
-		key: 'salesCommission',
+		key: 'commissionFee',
 		head: '販売手数料',
 		indent: 2,
 	},
@@ -188,7 +188,7 @@ export const plTableWithoutTax: PlbsTableMetaData[] = [
 		indent: 2,
 	},
 	{
-		key: 'subscriptionFee',
+		key: 'accountSubscriptionFee',
 		head: 'アカウント月額登録料',
 		indent: 2,
 	},
@@ -217,7 +217,7 @@ export const indexTable: PlbsTableMetaData[] = [
 		indent: 1,
 	},
 	{
-		key: 'salesCommission',
+		key: 'commissionFee',
 		head: '販売手数料',
 		indent: 1,
 	},
