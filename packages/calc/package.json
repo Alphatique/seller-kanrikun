@@ -3,8 +3,9 @@
 	"private": true,
 	"type": "module",
 	"exports": {
-		".": "./src/index.ts",
-		"./types": "./types/index.ts"
+		"./*": "./src/*.ts",
+		"./types/*": "./types/*.ts",
+		"./sql/*": "./sql/*.ts"
 	},
 	"scripts": {
 		"typecheck": "tsc"

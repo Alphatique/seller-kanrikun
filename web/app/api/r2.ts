@@ -5,7 +5,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-import { generateR2Hash } from '@seller-kanrikun/calc';
+import { generateR2Hash } from '@seller-kanrikun/calc/r2';
 
 export const R2 = new S3Client({
 	region: 'auto',

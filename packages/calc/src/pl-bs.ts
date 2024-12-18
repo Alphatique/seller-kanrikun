@@ -1,4 +1,7 @@
-import type { CostPrice, PlbsData, ReportDocumentRowJson } from '../types';
+import type { CostPrice } from '../types/cost';
+import type { PlbsData } from '../types/pl-bs';
+import type { ReportDocumentRowJson } from '../types/reports';
+
 import {
 	getFbaShippingFee,
 	getPrincipal,

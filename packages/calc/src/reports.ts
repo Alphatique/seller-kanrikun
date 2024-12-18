@@ -1,4 +1,7 @@
-import { type ReportDocumentRowJson, ReportDocumentRowSchema } from '../types';
+import {
+	type ReportDocumentRowJson,
+	ReportDocumentRowSchema,
+} from '../types/reports';
 
 export function reportDocumentTextToJson(csv: string): ReportDocumentRowJson[] {
 	// 改行で分割

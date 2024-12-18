@@ -17,6 +17,7 @@
 		"@seller-kanrikun/auth": "workspace:*",
 		"@seller-kanrikun/db": "workspace:*",
 		"@seller-kanrikun/ui": "workspace:*",
+		"@seller-kanrikun/calc": "workspace:*",
 		"@types/papaparse": "^5.3.15",
 		"@types/wicg-file-system-access": "^2023.10.5",
 		"fflate": "^0.8.2",
