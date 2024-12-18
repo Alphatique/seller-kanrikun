@@ -1,6 +1,9 @@
 'use client';
+import type { Table } from 'apache-arrow';
 import { useMemo, useRef, useState } from 'react';
+import useSWR from 'swr';
 
+import { useSession } from '@seller-kanrikun/auth/client';
 import { Label } from '@seller-kanrikun/ui/components/label';
 import {
 	Select,
@@ -11,13 +14,14 @@ import {
 } from '@seller-kanrikun/ui/components/select';
 import { Switch } from '@seller-kanrikun/ui/components/switch';
 import {
-	Table,
 	TableBody,
 	TableCell,
+	Table as TableComponent, // apache-arrowと被るので割り食ってもらってる。多分分析用のスクリプト分割するのが正解
 } from '@seller-kanrikun/ui/components/table';
 
 import { PopoverMonthRangePicker } from '~/components/popover-month-range-picker';
 import { initDuckDB } from '~/lib/duckdb';
+import { SWRLoadFile } from '~/lib/opfs';
 
 import {
 	bsTableWithTax,
@@ -28,13 +32,12 @@ import {
 } from './table-meta';
 import { HeadTableRow, IndentTableCell, PlbsTableRow } from './table-pl-bs';
 
-import { useSession } from '@seller-kanrikun/auth/client';
-import useSWR from 'swr';
-import { SWRLoadFile } from '~/lib/opfs';
-
 export function PlbsTableFilter() {
-	const { data: myDuckDB } = useSWR('initDB', initDuckDB);
+	// セッションの取得
 	const { data: session } = useSession();
+	// duckdbの初期化
+	const { data: myDuckDB } = useSWR('initDB', initDuckDB);
+	// レポートデータの取得
 	const { data: reportData } = useSWR(
 		session === null
 			? null
@@ -47,30 +50,86 @@ export function PlbsTableFilter() {
 		SWRLoadFile,
 	);
 
+	// db関連のロードフラグ
 	const reportLoaded = useRef(false);
+	const duckdbLoaded = useRef(false);
 
+	// DB関連のロード処理
 	useMemo(async () => {
 		if (myDuckDB) {
 			if (reportData && !reportLoaded.current) {
 				reportLoaded.current = true;
 				await myDuckDB.db.registerFileText('report.csv', reportData);
+
+				//downloadStr(reportData, 'report.csv');
+
 				// テーブル名を表示
-				const crateTable = await myDuckDB.c.query(
-					'CREATE TABLE report AS SELECT * FROM report.csv;',
+				await myDuckDB.c.query(
+					/*sql*/ `
+					CREATE TABLE report AS SELECT * FROM report.csv;
+					`,
+				);
+				// -の値がある場合VARCHARになるので手でDOUBLEに変換
+				await myDuckDB.c.query(
+					/*sql*/ `
+					ALTER TABLE report ALTER COLUMN "other-amount" SET DATA TYPE DOUBLE;
+					`,
 				);
 
-				const getColumns = await myDuckDB.c.query(
-					`SELECT SUM("price-amount") AS total_price_amount FROM report WHERE "transaction-type" = 'Order' AND "price-type" = 'Principal';`,
+				const monthlyReportData: Table = await myDuckDB.c.query(
+					/*sql*/ `SELECT
+						strftime(date_trunc('month', "posted-date"), '%Y-%B') AS date,
+						SUM(CASE WHEN "transaction-type" = 'Order' AND "price-type" = 'Principal' THEN "price-amount" ELSE 0 END) AS principal,
+						SUM(CASE WHEN "transaction-type" = 'Order' AND "price-type" = 'Tax' THEN "price-amount" ELSE 0 END) AS principalTax,
+						SUM(CASE WHEN "transaction-type" = 'Order' AND "price-type" = 'Shipping' THEN "price-amount" ELSE 0 END) AS shipping,
+						SUM(CASE WHEN "transaction-type" = 'Order' AND "price-type" = 'ShippingTax' THEN "price-amount" ELSE 0 END) AS shippingTax,
+						SUM(CASE WHEN "transaction-type" = 'Refund' THEN "price-amount" ELSE 0 END) AS refund,
+						SUM(CASE WHEN "transaction-type" = 'Refund' THEN "item-related-fee-amount" ELSE 0 END) AS refundFee,
+						SUM(CASE WHEN "transaction-type" = 'Refund' THEN "promotion-amount" ELSE 0 END) AS refundPromotion,
+						SUM(CASE WHEN "transaction-type" = 'Refund' AND "promotion-type" = 'TaxDiscount' THEN "promotion-amount" ELSE 0 END) AS refundTaxDiscount,
+
+						SUM(CASE WHEN "transaction-type" = 'Shipping' THEN "price-amount" ELSE 0 END) AS promotion,
+						SUM(CASE WHEN "transaction-type" = 'Order' AND "item-related-fee-type" = 'Commission' THEN "item-related-fee-amount" ELSE 0 END) AS commissionFee,
+						SUM(CASE WHEN "transaction-type" = 'Order' AND "item-related-fee-type" = 'FBAPerUnitFulfillmentFee' THEN "item-related-fee-amount" ELSE 0 END) AS fbaShippingFee,
+						SUM(CASE WHEN "transaction-type" = 'Storage Fee' THEN "item-related-fee-amount" ELSE 0 END) AS inventoryStorageFee,
+						SUM(CASE WHEN "transaction-type" = 'StorageRenewalBilling' THEN "other-amount" ELSE 0 END) AS inventoryUpdateFee,
+						SUM(CASE WHEN "transaction-type" = 'Order' AND "other-fee-reason-description" = 'ShippingChargeback' THEN "other-amount" ELSE 0 END) AS shippingReturnFee,
+						SUM(CASE WHEN "transaction-type" = 'Subscription Fee' THEN "other-amount" ELSE 0 END) AS subscriptionFee,
+					FROM report
+					GROUP BY date_trunc('month', "posted-date");
+					`,
 				);
 
-				console.log('Report data from DuckDB:', getColumns);
+				const monthlyUnpaidBalance: Table = await myDuckDB.c.query(
+					/*sql*/ `SELECT
+						strftime(date_trunc('month', "deposit-date"), '%Y-%B') AS date,
+						SUM("total-amount") AS fbaWeightBasedFee,
+					FROM report
+					GROUP BY date_trunc('month', "deposit-date");
+					`,
+				);
+				console.log('monthlyReportData:', monthlyReportData);
 				console.log(
-					'Columns:',
-					getColumns.toArray()[0].total_price_amount,
+					'monthlyUnpaidBalance:',
+					monthlyUnpaidBalance.toString(),
 				);
+			}
+
+			if (reportLoaded) {
+				duckdbLoaded.current = true;
 			}
 		}
 	}, [myDuckDB, reportData]);
+
+	useMemo(async () => {
+		if (!duckdbLoaded) return;
+		if (myDuckDB) {
+			const getColumns = await myDuckDB.c.query(
+				'SELECT "transaction-type" from report;',
+			);
+			console.log('Columns:', getColumns);
+		}
+	}, [duckdbLoaded]);
 
 	const [period, setPeriod] = useState<Period>('monthly');
 	const [date, setDate] = useState<{ start: Date; end: Date }>({
@@ -111,7 +170,7 @@ export function PlbsTableFilter() {
 				/>
 			</div>
 
-			<Table>
+			<TableComponent>
 				<TableBody>
 					<HeadTableRow>
 						<TableCell>PL</TableCell>
@@ -135,9 +194,9 @@ export function PlbsTableFilter() {
 						),
 					)}
 				</TableBody>
-			</Table>
+			</TableComponent>
 			{withTax && (
-				<Table>
+				<TableComponent>
 					<TableBody>
 						<HeadTableRow>
 							<TableCell>指標</TableCell>
@@ -159,10 +218,10 @@ export function PlbsTableFilter() {
 							</PlbsTableRow>
 						))}
 					</TableBody>
-				</Table>
+				</TableComponent>
 			)}
 
-			<Table>
+			<TableComponent>
 				<TableBody>
 					<HeadTableRow>
 						<TableCell>BS</TableCell>
@@ -186,7 +245,7 @@ export function PlbsTableFilter() {
 						),
 					)}
 				</TableBody>
-			</Table>
+			</TableComponent>
 		</div>
 	);
 }
