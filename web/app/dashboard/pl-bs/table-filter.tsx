@@ -175,8 +175,8 @@ export function PlbsTableFilter() {
 				withTax={withTax}
 				groupedDataIndexes={groupedDataIndexes}
 				filteredReport={filteredData}
-				plbsWithTax={calcDataWithTax.current}
-				plbsWithoutTax={calcDataWithoutTax.current}
+				plbsDataWithTax={calcDataWithTax.current}
+				plbsDataWithoutTax={calcDataWithoutTax.current}
 			/>
 		</div>
 	);

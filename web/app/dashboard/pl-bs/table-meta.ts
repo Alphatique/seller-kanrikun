@@ -6,7 +6,7 @@ type PlbsTableMetaData = {
 	doubleUnderLine?: boolean;
 };
 
-export const plTableWithTax: PlbsTableMetaData[] = [
+export const plTableWithTaxInfo: PlbsTableMetaData[] = [
 	{
 		key: 'sales',
 		head: '売上',
@@ -110,7 +110,7 @@ export const plTableWithTax: PlbsTableMetaData[] = [
 		indent: 1,
 	},
 ];
-export const plTableWithoutTax: PlbsTableMetaData[] = [
+export const plTableWithoutTaxInfo: PlbsTableMetaData[] = [
 	{
 		key: 'sales',
 		head: '売上',
@@ -205,7 +205,7 @@ export const plTableWithoutTax: PlbsTableMetaData[] = [
 	},
 ];
 
-export const indexTable: PlbsTableMetaData[] = [
+export const indexTableInfo: PlbsTableMetaData[] = [
 	{
 		key: 'grossProfitRate',
 		head: '粗利率',
@@ -228,9 +228,9 @@ export const indexTable: PlbsTableMetaData[] = [
 	},
 ];
 
-export const bsTableWithTax: PlbsTableMetaData[] = [
+export const bsTableWithTaxInfo: PlbsTableMetaData[] = [
 	{
-		key: 'unpaidBalance',
+		key: 'accountsReceivable',
 		head: '売掛金(未入金額)',
 		indent: 1,
 	},
@@ -253,7 +253,7 @@ export const bsTableWithoutTax: PlbsTableMetaData[] = [
 		indent: 1,
 	},
 	{
-		key: 'temporarilyReceivedConsumptionTax',
+		key: 'outputConsumptionTax',
 		head: '未収消費税',
 		indent: 1,
 	},

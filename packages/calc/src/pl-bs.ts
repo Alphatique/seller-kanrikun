@@ -95,6 +95,7 @@ export function calcPlbs(
 		sga: rows.map(r => r.sga),
 		amazonOther: rows.map(r => r.amazonOther),
 		amazonAds: rows.map(r => amazonAdsData.amazonAds),
+		inventoryAssets: rows.map(r => 0),
 		operatingProfit: rows.map(r => r.operatingProfit),
 		...(withoutTax
 			? {
