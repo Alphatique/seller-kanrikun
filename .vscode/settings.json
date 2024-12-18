@@ -19,6 +19,8 @@
 		"turso",
 		"opfs",
 		"duckdb",
-		"fflate"
+		"fflate",
+		"plbs",
+		"Plbs"
 	]
 }
