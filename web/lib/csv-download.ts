@@ -29,3 +29,21 @@ export function downloadCsv(
 	// リンクを削除
 	document.body.removeChild(link);
 }
+
+export function downloadStr(data: string, fileName: string): void {
+	// Blobを作成
+	const blob = new Blob([data], { type: 'text/plain;charset=utf-8;' });
+
+	// ダウンロードリンクを作成
+	const link = document.createElement('a');
+	link.href = URL.createObjectURL(blob);
+	link.download = fileName;
+	link.style.display = 'none';
+	document.body.appendChild(link);
+
+	// ダウンロードを実行
+	link.click();
+
+	// リンクを削除
+	document.body.removeChild(link);
+}
