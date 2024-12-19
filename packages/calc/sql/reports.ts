@@ -2,7 +2,7 @@ export function getFilterReportSql(): string {
 	return /*sql*/ `
 SELECT
     -- date_truncはduckdbの関数
-    date_trunc('month', "posted-date") AS date,　
+    date_trunc('month', "posted-date") AS date,
     -- 以下は各種フィルターをして各値を合計していってる
     SUM("price-amount") FILTER (WHERE "transaction-type" = 'Order' AND "price-type" = 'Principal') AS principal,
     SUM("price-amount") FILTER (WHERE "transaction-type" = 'Order' AND "price-type" = 'Tax') AS principalTax,

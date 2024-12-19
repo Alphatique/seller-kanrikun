@@ -17,20 +17,11 @@ import {
 interface Props {
 	withTax: boolean;
 	groupedDataIndexes: Record<string, number[]>;
-	filteredReport: arrow.Table | null;
-	plbsDataWithTax: arrow.Table | null;
-	plbsDataWithoutTax: arrow.Table | null;
+	plbsTable: arrow.Table;
 }
 
-export function PlbsTable({
-	withTax,
-	groupedDataIndexes,
-	filteredReport,
-	plbsDataWithTax,
-	plbsDataWithoutTax,
-}: Props) {
+export function PlbsTable({ withTax, groupedDataIndexes, plbsTable }: Props) {
 	// フラグに沿ってplbsDataを選択
-	const plbsData = withTax ? plbsDataWithTax : plbsDataWithoutTax;
 	return (
 		<>
 			<Table>
@@ -60,11 +51,9 @@ export function PlbsTable({
 								</IndentTableCell>
 								{Object.entries(groupedDataIndexes).map(
 									([date, values]) => {
-										// レポートデータかplbsDataかどちらかを取得
-										const child =
-											filteredReport?.getChild(
-												item.key,
-											) ?? plbsData?.getChild(item.key);
+										const child = plbsTable.getChild(
+											item.key,
+										);
 										// グルーピングされたデータの合計を取得
 										const sumValue = values.reduce(
 											(sum, index) =>
@@ -112,10 +101,9 @@ export function PlbsTable({
 								</IndentTableCell>
 								{Object.entries(groupedDataIndexes).map(
 									([date, values]) => {
-										const child =
-											filteredReport?.getChild(
-												item.key,
-											) ?? plbsData?.getChild(item.key);
+										const child = plbsTable.getChild(
+											item.key,
+										);
 										const sumValue = values.reduce(
 											(sum, index) =>
 												sum + child?.get(index),

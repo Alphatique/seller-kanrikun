@@ -1,5 +1,5 @@
 'use client';
-import type * as arrow from 'apache-arrow';
+import * as arrow from 'apache-arrow';
 import { format } from 'date-fns';
 import { useMemo, useRef, useState } from 'react';
 import useSWR from 'swr';
@@ -116,6 +116,10 @@ export function PlbsTableFilter() {
 			// 計算したデータを登録
 			calcDataWithTax.current = withTaxData;
 			calcDataWithoutTax.current = withoutTaxData;
+			if (withTaxData) {
+				const mergedTable = filteredRows.assign(withTaxData);
+				console.log(mergedTable);
+			}
 			// 最後にstateを更新することで再描画を行う
 			setFilteredData(filteredRows);
 		},
@@ -197,9 +201,17 @@ export function PlbsTableFilter() {
 			<PlbsTable
 				withTax={withTax}
 				groupedDataIndexes={groupedDataIndexes}
-				filteredReport={filteredData}
-				plbsDataWithTax={calcDataWithTax.current}
-				plbsDataWithoutTax={calcDataWithoutTax.current}
+				plbsTable={
+					filteredData &&
+					calcDataWithTax.current &&
+					calcDataWithoutTax.current
+						? filteredData.assign(
+								withTax
+									? calcDataWithTax.current
+									: calcDataWithoutTax.current,
+							)
+						: new arrow.Table()
+				}
 			/>
 		</div>
 	);

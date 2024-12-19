@@ -106,6 +106,11 @@ export function calcPlbs(
 	};
 
 	const calcTable = tableFromArrays(calcData);
+	console.log(calcTable, reportData);
+	const tableB = tableFromArrays({ b: [3, 4, 5, 6], c: [5, 7, 6, 7] });
+	const tableC = calcTable.assign(tableB);
+	console.log(tableC.toString());
+
 	// 元データと計算結果を結合
 	return calcTable;
 }
