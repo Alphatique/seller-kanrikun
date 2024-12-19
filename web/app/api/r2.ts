@@ -1,5 +1,6 @@
 import {
 	GetObjectCommand,
+	HeadObjectCommand,
 	PutObjectCommand,
 	S3Client,
 } from '@aws-sdk/client-s3';
@@ -18,11 +19,13 @@ export const R2 = new S3Client({
 		secretAccessKey: process.env.CLOUDFLARE_R2_SECRET_KEY!,
 	},
 });
+
+const bucketName = 'seller-kanrikun';
+
 // 読み込み専用ダウンロード用url取得関数
 export async function getReadOnlySignedUrl(
 	userId: string,
 	dataName: string,
-	bucket = 'seller-kanrikun',
 	expiresIn = 60 * 60,
 ) {
 	const key = await generateR2Hash(userId, dataName);
@@ -32,7 +35,7 @@ export async function getReadOnlySignedUrl(
 	return await getSignedUrl(
 		R2,
 		new GetObjectCommand({
-			Bucket: bucket,
+			Bucket: bucketName,
 			Key: key,
 		}),
 		{ expiresIn },
@@ -50,11 +53,27 @@ export async function getWriteOnlySignedUrl(
 	return await getSignedUrl(
 		R2,
 		new PutObjectCommand({
-			Bucket: 'seller-kanrikun',
+			Bucket: bucketName,
 			Key: key,
 		}),
 		{ expiresIn },
 	);
+}
+
+// ファイル存在チェック関数
+export async function doesFileExist(
+	userId: string,
+	dataName: string,
+): Promise<boolean> {
+	const key = await generateR2Hash(userId, dataName);
+
+	await R2.send(
+		new HeadObjectCommand({
+			Bucket: bucketName,
+			Key: key,
+		}),
+	);
+	return true; // 存在する場合
 }
 
 export async function getApi(
@@ -72,6 +91,11 @@ export async function getApi(
 	const getRes = await fetch(getUrl);
 
 	if (!getRes.ok) {
+		if (getRes.status === 404) {
+			return new Response('Request file was not found', {
+				status: 500,
+			});
+		}
 		return new Response('Server Error', {
 			status: 500,
 		});
@@ -89,6 +113,7 @@ export async function getApi(
 export async function putApi(
 	request: Request,
 	fileName: string,
+	getPutData: (userId: string) => Promise<ArrayBuffer | null>,
 ): Promise<Response> {
 	const auth = await authorizeSession(request);
 	if (request.body === null) {
@@ -107,9 +132,16 @@ export async function putApi(
 	// 読み込み専用の署名付きURLを取得
 	const putUrl = await getWriteOnlySignedUrl(auth, fileName);
 
+	const putData = await getPutData(auth);
+	if (putData === null) {
+		return new Response('Missing or malformed data', {
+			status: 403,
+		});
+	}
+
 	const putRes = await fetch(putUrl, {
 		method: 'PUT',
-		body: request.body,
+		body: putData,
 	});
 
 	if (!putRes.ok) {
@@ -117,13 +149,7 @@ export async function putApi(
 			status: 500,
 		});
 	}
-	return new Response(putRes.body, {
-		status: 200,
-		statusText: 'OK',
-		headers: {
-			'Content-Type': 'application/octet-stream',
-		},
-	});
+	return new Response('ok');
 }
 
 export async function authorizeSession(

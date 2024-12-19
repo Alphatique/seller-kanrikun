@@ -184,8 +184,13 @@ export async function GET(request: Request) {
 			.map(row => finalColumns.map(col => row[col]).join('\t'))
 			.join('\n')}`;
 
+		const tsvStr = Papa.unparse(finalColumns, {
+			delimiter: '\t',
+			header: true,
+		});
+
 		const encoder = new TextEncoder();
-		const csvUint8 = encoder.encode(csvContent);
+		const csvUint8 = encoder.encode(tsvStr);
 
 		const gzipped = gzipSync(csvUint8);
 
