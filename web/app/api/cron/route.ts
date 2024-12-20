@@ -110,7 +110,7 @@ export async function GET(request: Request) {
 		const tsvGzip = await tsvObjToTsvGzip(putSummaries);
 
 		const url = await getWriteOnlySignedUrl(
-			account.id,
+			account.userId,
 			'inventory-summaries.tsv.gz',
 		);
 
