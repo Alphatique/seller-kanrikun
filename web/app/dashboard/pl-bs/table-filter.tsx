@@ -41,6 +41,8 @@ export function PlbsTableFilter() {
 		SWRLoadFile,
 	);
 
+	console.log(reportData);
+
 	// db関連のロードフラグ
 	const reportLoaded = useRef(false);
 

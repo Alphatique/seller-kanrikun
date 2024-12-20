@@ -66,14 +66,24 @@ export async function doesFileExist(
 	dataName: string,
 ): Promise<boolean> {
 	const key = await generateR2Hash(userId, dataName);
+	const result = new Promise<boolean>(resolve => {
+		R2.send(
+			new HeadObjectCommand({
+				Bucket: bucketName,
+				Key: key,
+			}),
+		)
+			.then(response => {
+				console.log(response);
+				resolve(true);
+			})
+			.catch(error => {
+				console.log(error);
+				resolve(false);
+			});
+	});
 
-	await R2.send(
-		new HeadObjectCommand({
-			Bucket: bucketName,
-			Key: key,
-		}),
-	);
-	return true; // 存在する場合
+	return result;
 }
 
 export async function getApi(

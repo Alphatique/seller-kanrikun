@@ -76,19 +76,23 @@ export function InputPriceUpload() {
 	const [xlsxData, setXlsxData] = useState<CostPrice[] | undefined>();
 
 	const handleUpload = async () => {
-		if (!session || !xlsxData || !date) return;
+		if (!session || !xlsxData || !date || !date.from || !date.to) return;
+		const utcFrom = new Date(date.from.toISOString());
+		const lastTimeOfTo = date.to.setHours(23, 59, 59, 999);
+		const utcTo = new Date(lastTimeOfTo);
 		const response = await fetch('/api/cost-price', {
 			method: 'POST',
 			headers: {
 				'x-seller-kanrikun-session-id': session.session.id.toString(),
 			},
 			body: JSON.stringify({
-				start: date.from,
-				end: date.to,
+				start: utcFrom,
+				end: utcTo,
 				values: xlsxData,
 			}),
 		});
 		console.log(response);
+		console.log(await response.text());
 	};
 	const handleFileChanged = async (file: File | null) => {
 		if (!file) {

@@ -1,5 +1,3 @@
-import { gunzipSync } from 'fflate';
-import Papa from 'papaparse';
 import { z } from 'zod';
 
 import {
@@ -7,6 +5,10 @@ import {
 	type CostPriceTsv,
 } from '@seller-kanrikun/calc/types/cost';
 
+import {
+	tsvGzipToTsvObj,
+	tsvObjToTsvGzip,
+} from '@seller-kanrikun/calc/tsv-gzip';
 import { getApi, getReadOnlySignedUrl, putApi } from '../r2';
 
 const UploadCostPriceSchema = z.object({
@@ -21,35 +23,96 @@ export async function GET(request: Request): Promise<Response> {
 
 export async function POST(request: Request): Promise<Response> {
 	return putApi(request, fileName, async userId => {
-		const data = await request.json();
-		const requestParse = UploadCostPriceSchema.safeParse(data);
+		const requestJson = await request.json();
+		const requestParse = UploadCostPriceSchema.safeParse(requestJson);
 
-		if (requestParse.success) {
-			const url = await getReadOnlySignedUrl(userId, fileName);
-			const fileResponse = await fetch(url);
-			if (fileResponse.ok) {
-				const data = await fileResponse.arrayBuffer();
-				const uint8Array = new Uint8Array(data);
-				const decompressed = gunzipSync(uint8Array);
-				const decoder = new TextDecoder();
-				const tsvText: string = decoder.decode(decompressed);
-				const tsvData = tsvText.trim();
-				console.log('parcing...');
-				const existDataParse = Papa.parse<CostPriceTsv[]>(tsvData, {
-					header: true,
-					delimiter: '\t',
-					skipEmptyLines: true,
-				});
+		console.log(requestParse.data);
+		if (!requestParse.success) return null;
+		if (requestParse.data.values.length === 0) return null;
+		const reqStart = requestParse.data.start.getTime();
+		const reqEnd = requestParse.data.end.getTime();
+		if (reqStart >= reqEnd) return null;
 
-				console.log(existDataParse);
+		const url = await getReadOnlySignedUrl(userId, fileName);
+		const fileResponse = await fetch(url);
+		if (!fileResponse.ok) return null;
+		const existArray = await fileResponse.arrayBuffer();
+		const existData = tsvGzipToTsvObj<CostPriceTsv>(
+			new Uint8Array(existArray),
+		);
 
-				for (const row of existDataParse.data) {
-					console.log(row);
+		const resultArray: CostPriceTsv[] = [];
+
+		for (const row of existData.data) {
+			const rowStart = new Date(row.startDate).getTime();
+			const rowEnd = new Date(row.endDate).getTime();
+
+			if (rowEnd <= reqStart || rowStart >= reqEnd) {
+				resultArray.push(row);
+			} else {
+				if (rowStart < reqStart) {
+					resultArray.push({
+						asin: row.asin,
+						startDate: row.startDate,
+						endDate: requestParse.data.start,
+						price: row.price,
+					});
+				}
+				if (rowEnd > reqEnd) {
+					resultArray.push({
+						asin: row.asin,
+						startDate: requestParse.data.end,
+						endDate: row.endDate,
+						price: row.price,
+					});
 				}
 			}
-
-			return null;
 		}
-		return null;
+
+		for (const row of requestParse.data.values) {
+			resultArray.push({
+				asin: row.ASIN,
+				startDate: requestParse.data.start,
+				endDate: requestParse.data.end,
+				price: row.Price,
+			});
+		}
+
+		// ASIN, 価格, 開始日時でソート
+		resultArray.sort((a, b) => {
+			if (a.asin !== b.asin) return a.asin.localeCompare(b.asin);
+			if (a.price !== b.price) return a.price - b.price;
+			return (
+				new Date(a.startDate).getTime() -
+				new Date(b.startDate).getTime()
+			);
+		});
+
+		const mergedArray: CostPriceTsv[] = [];
+
+		for (const current of resultArray) {
+			const last = mergedArray[mergedArray.length - 1];
+			if (
+				last &&
+				last.asin === current.asin &&
+				last.price === current.price &&
+				// オーバーラップまたは連続しているかチェック
+				last.endDate >= current.startDate
+			) {
+				// マージ: 終了日を最大の方へ拡張
+				if (current.endDate > last.endDate) {
+					last.endDate = current.endDate;
+				}
+			} else {
+				// 新規として追加
+				mergedArray.push({ ...current });
+			}
+		}
+
+		console.log(mergedArray);
+
+		const resultTsv = tsvObjToTsvGzip(mergedArray);
+
+		return resultTsv.slice().buffer;
 	});
 }
