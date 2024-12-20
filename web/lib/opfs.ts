@@ -1,5 +1,5 @@
 'use client';
-import { gunzipSync } from 'fflate';
+import { tsvGzipToTsvStr } from '@seller-kanrikun/calc/tsv-gzip';
 import type { Fetcher } from 'swr';
 
 // opfsのルートディレクトリを取得
@@ -54,14 +54,10 @@ export const SWRLoadFile: Fetcher<
 	if (fileData === null) return null;
 
 	// データを解凍
-	const decompressed = gunzipSync(fileData);
-
-	// デコード
-	const decoder = new TextDecoder();
-	const csvContent: string = decoder.decode(decompressed);
+	const tsvStr = tsvGzipToTsvStr(fileData);
 
 	// データを返す
-	return csvContent;
+	return tsvStr;
 };
 
 // ファイルが存在するか確認

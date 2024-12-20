@@ -1,9 +1,10 @@
 'use client';
-
 import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
+import useSWR from 'swr';
 import * as XLSX from 'xlsx';
 
+import { useSession } from '@seller-kanrikun/auth/client';
 import type { CostPrice } from '@seller-kanrikun/calc/types/cost';
 import { Button } from '@seller-kanrikun/ui/components/button';
 import {
@@ -17,6 +18,7 @@ import {
 
 import { DatePickerWithRange } from '~/components/date-range';
 import { InputExcel } from '~/components/input-excel';
+import { SWRLoadFile } from '~/lib/opfs';
 
 const fileToBinaryString = (file: File): Promise<ArrayBuffer> => {
 	return new Promise((resolve, reject) => {
@@ -53,6 +55,19 @@ const parseXlsxData = (binaryStr: ArrayBuffer): CostPrice[] => {
 };
 
 export function InputPriceUpload() {
+	const { data: session } = useSession();
+	const { data: existCostPrice } = useSWR(
+		session === null
+			? null
+			: {
+					fileName: 'cost-price.tsv.gz',
+					fetchUrl: '/api/cost-price',
+					sessionId: session.session.id.toString(),
+					updateTime: 1000,
+				},
+		SWRLoadFile,
+	);
+	console.log(existCostPrice);
 	const [date, setDate] = useState<DateRange | undefined>({
 		from: new Date(),
 		to: new Date(),
@@ -61,7 +76,23 @@ export function InputPriceUpload() {
 	const [xlsxData, setXlsxData] = useState<CostPrice[] | undefined>();
 
 	const handleUpload = async () => {
-		console.log('handleFileUpload');
+		if (!session || !xlsxData || !date || !date.from || !date.to) return;
+		const utcFrom = new Date(date.from.toISOString());
+		const lastTimeOfTo = date.to.setHours(23, 59, 59, 999);
+		const utcTo = new Date(lastTimeOfTo);
+		const response = await fetch('/api/cost-price', {
+			method: 'POST',
+			headers: {
+				'x-seller-kanrikun-session-id': session.session.id.toString(),
+			},
+			body: JSON.stringify({
+				start: utcFrom,
+				end: utcTo,
+				values: xlsxData,
+			}),
+		});
+		console.log(response);
+		console.log(await response.text());
 	};
 	const handleFileChanged = async (file: File | null) => {
 		if (!file) {
