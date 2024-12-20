@@ -51,6 +51,19 @@ export function PlbsTableFilter() {
 				},
 		SWRLoadFile,
 	);
+	const { data: inventoryData } = useSWR(
+		session === null
+			? null
+			: {
+					fileName: 'inventory-summaries.tsv.gz',
+					fetchUrl: '/api/inventory',
+					sessionId: session.session.id.toString(),
+					updateTime: 1000,
+				},
+		SWRLoadFile,
+	);
+
+	console.log(inventoryData);
 
 	console.log(reportData);
 
