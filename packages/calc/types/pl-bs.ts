@@ -1,5 +1,6 @@
 /**
  * settlement-reportをフィルタリングしたデータ
+ * @property costPrice 商品原価
  * @property principal 商品代金
  * @property principalTax 商品代金に対する税金
  * @property shipping 配送料
@@ -15,6 +16,8 @@
  * @property accountsReceivable 売掛金
  */
 export interface FilteredSettlementReport {
+	/** 商品原価 */
+	costPrice: number;
 	/** 商品代金 */
 	principal: number;
 	/** 商品代金に対する税金 */
@@ -65,7 +68,6 @@ export interface Inventory {
  * 損益計算書データ
  * @property sales 売上
  * @property netSales 純売上
- * @property cost 原価
  * @property grossProfit 粗利益
  * @property sga 販売費および一般管理費
  * @property amazonOther アマゾンその他
@@ -77,8 +79,6 @@ export interface PlData {
 	sales: number;
 	/** 純売上 */
 	netSales: number;
-	/** 原価 */
-	cost: number;
 	/** 粗利益 */
 	grossProfit: number;
 	/** 販売費および一般管理費 */

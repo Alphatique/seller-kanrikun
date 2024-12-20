@@ -13,6 +13,7 @@ export function calcPlbs(
 ): Table | null {
 	// スキーマ定義してそれが等しいならとかでできそう
 	const numRows = reportData.numRows;
+	const costPrice = reportData.getChild('costPrice');
 	const principalCol = reportData.getChild('principal');
 	const principalTaxCol = reportData.getChild('principalTax');
 	const shippingCol = reportData.getChild('shipping');
@@ -27,6 +28,7 @@ export function calcPlbs(
 	const subscriptionFeeCol = reportData.getChild('accountSubscriptionFee');
 	const accountsReceivableCol = reportData.getChild('accountsReceivable');
 	if (
+		!costPrice ||
 		!principalCol ||
 		!principalTaxCol ||
 		!shippingCol ||
@@ -45,9 +47,12 @@ export function calcPlbs(
 		return null;
 	}
 
+	console.log('costprice:', costPrice.toString());
+
 	// 行ごとに計算
 	const rows = Array.from({ length: numRows }, (_, i) => {
 		const rowData: FilteredSettlementReport = {
+			costPrice: costPrice.get(i),
 			principal: principalCol.get(i),
 			principalTax: principalTaxCol.get(i),
 			shipping: shippingCol.get(i),
@@ -90,7 +95,6 @@ export function calcPlbs(
 	const calcData = {
 		sales: rows.map(r => r.sales),
 		netSales: rows.map(r => r.netSales),
-		costPrice: rows.map(r => r.cost),
 		grossProfit: rows.map(r => r.grossProfit),
 		sga: rows.map(r => r.sga),
 		amazonOther: rows.map(r => r.amazonOther),
@@ -118,10 +122,8 @@ export function calcPlData(
 ): PlData {
 	// 純売上 = 売上 - 返品額
 	const netSales = sales - reportData.refund;
-	// 原価
-	const cost = 0;
 	// 粗利益 = 純売上 - 原価
-	const grossProfit = netSales - cost;
+	const grossProfit = netSales - reportData.costPrice;
 	// 販売費および一般管理費
 	const sga = calcSellingGeneralAndAdministrativeExpenses(
 		reportData,
@@ -137,7 +139,6 @@ export function calcPlData(
 	return {
 		sales,
 		netSales,
-		cost,
 		grossProfit,
 		sga,
 		amazonOther,

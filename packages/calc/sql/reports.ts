@@ -40,7 +40,7 @@ GROUP BY date_trunc('month', "posted-date")
 export const filterCostReportSql = /*sql*/ `
 SELECT
     coalesce(p.date, c.date) AS date,
-    coalesce(cp.costPrice, 0) AS costPrice,
+    coalesce(c.costPrice, 0) AS costPrice,
     p.principal,
     p.principalTax,
     p.shipping,
@@ -93,16 +93,16 @@ WHERE "posted-date" IS NOT NULL
 GROUP BY date_trunc('month', "posted-date")
 ) AS p
 FULL OUTER JOIN (
-SELECT
-    date_trunc('month', "date") AS date,
-    SUM("cost-price") AS costPrice
-FROM report AS reason
-JOIN cost_price AS cp
-    -- todo: 実装
-     ON r."sku" = cp."asin"
-    AND r."posted-date" >= cp.startDate
-    AND r."posted-date" <= cp.endDate
-WHERE "posted-date" IS NOT NULL
-GROUP BY date_trunc('month', r."posted-date")
-) AS cp ON p.date = cp.date
+    SELECT
+        date_trunc('month', r."posted-date") AS date,
+        SUM(cp."price") AS costPrice
+    FROM report AS r
+    JOIN inventory_summaries AS inv ON r.sku = inv.sellerSku
+    JOIN cost_price AS cp ON inv.asin = cp.asin
+        AND r."posted-date" >= cp.startDate
+        AND r."posted-date" <= cp.endDate
+    WHERE "posted-date" IS NOT NULL
+    GROUP BY date_trunc('month', r."posted-date")
+) AS c
+ON p.date = c.date
 `;

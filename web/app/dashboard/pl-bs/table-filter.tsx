@@ -6,7 +6,7 @@ import useSWR from 'swr';
 
 import { useSession } from '@seller-kanrikun/auth/client';
 import { calcPlbs } from '@seller-kanrikun/calc/pl-bs';
-import { filterReportSql } from '@seller-kanrikun/calc/sql/reports';
+import { filterCostReportSql } from '@seller-kanrikun/calc/sql/reports';
 import { Label } from '@seller-kanrikun/ui/components/label';
 import {
 	Select,
@@ -63,13 +63,10 @@ export function PlbsTableFilter() {
 		SWRLoadFile,
 	);
 
-	console.log(inventoryData);
-
-	console.log(reportData);
-
 	// db関連のロードフラグ
 	const reportLoaded = useRef(false);
 	const costPriceLoaded = useRef(false);
+	const inventoryLoaded = useRef(false);
 
 	// グルーピングの期間
 	const [period, setPeriod] = useState<Period>('monthly');
@@ -132,36 +129,50 @@ export function PlbsTableFilter() {
 						CREATE TABLE cost_price AS SELECT * FROM "cost-price.csv";
 					`,
 				);
-
-				const results = await myDuckDB.c.query(
+				const sampleSql = await myDuckDB.c.query(
 					/*sql*/ `
 						SELECT * FROM cost_price;
 					`,
 				);
-				console.log(results.toString());
-				console.log(results);
+
+				console.log(sampleSql.toString());
+				console.log(sampleSql);
 			}
 
-			if (reportLoaded.current && costPriceLoaded.current) {
-				// フィルターしたデータを取得
-				const filteredRows = (await myDuckDB.c.query(
-					filterReportSql,
-				)) as unknown as arrow.Table;
-
-				const filteredCost = await myDuckDB.c.query(
+			// インベントリデータがロードされていて、ロードフラグがオフの場合
+			if (inventoryData && !inventoryLoaded.current) {
+				inventoryLoaded.current = true;
+				await myDuckDB.db.registerFileText(
+					'inventory-summaries.csv',
+					inventoryData,
+				);
+				await myDuckDB.c.query(
 					/*sql*/ `
-						SELECT
-							date_trunc('month', r."posted-date") AS date,
-							SUM(cp.price) AS costPrice
-						FROM report r
-						JOIN cost_price cp
-							ON r."posted-date" >= cp.startDate
-							AND r."posted-date" <= cp.endDate
-						WHERE r."posted-date" IS NOT NULL
-						GROUP BY date_trunc('month', r."posted-date");
+						CREATE TABLE inventory_summaries AS SELECT * FROM "inventory-summaries.csv";
 					`,
 				);
+				const sampleSql = await myDuckDB.c.query(
+					/*sql*/ `
+						SELECT * FROM inventory_summaries;
+					`,
+				);
+
+				console.log(sampleSql.toString());
+				console.log(sampleSql);
+			}
+
+			if (
+				reportLoaded.current &&
+				costPriceLoaded.current &&
+				inventoryLoaded.current
+			) {
+				// フィルターしたデータを取得
+				const filteredRows = (await myDuckDB.c.query(
+					filterCostReportSql,
+				)) as unknown as arrow.Table;
+
 				console.log(filteredRows.toString());
+				console.log(filteredRows);
 
 				// PLBSデータを計算
 				const withTaxData = calcPlbs(
@@ -186,7 +197,7 @@ export function PlbsTableFilter() {
 				setFilteredData(filteredRows);
 			}
 		},
-		[myDuckDB, reportData], // duckdbかreportDataが更新された場合に反応する
+		[myDuckDB, reportData, costPriceData, inventoryData], // duckdbかreportDataが更新された場合に反応する
 	);
 
 	// データのグルーピング処理
