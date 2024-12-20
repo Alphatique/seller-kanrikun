@@ -6,7 +6,7 @@ import useSWR from 'swr';
 
 import { useSession } from '@seller-kanrikun/auth/client';
 import { calcPlbs } from '@seller-kanrikun/calc/pl-bs';
-import { getFilterReportSql } from '@seller-kanrikun/calc/sql/reports';
+import { filterReportSql } from '@seller-kanrikun/calc/sql/reports';
 import { Label } from '@seller-kanrikun/ui/components/label';
 import {
 	Select,
@@ -40,11 +40,21 @@ export function PlbsTableFilter() {
 				},
 		SWRLoadFile,
 	);
-
-	console.log(reportData);
+	const { data: costPriceData } = useSWR(
+		session === null
+			? null
+			: {
+					fileName: 'cost-price.tsv.gz',
+					fetchUrl: '/api/cost-price',
+					sessionId: session.session.id.toString(),
+					updateTime: 1000,
+				},
+		SWRLoadFile,
+	);
 
 	// db関連のロードフラグ
 	const reportLoaded = useRef(false);
+	const costPriceLoaded = useRef(false);
 
 	// グルーピングの期間
 	const [period, setPeriod] = useState<Period>('monthly');
@@ -72,54 +82,94 @@ export function PlbsTableFilter() {
 		async () => {
 			// duckdbがロードされていない場合は何もしない
 			if (!myDuckDB) return;
-			// レポートデータがない場合は何もしない
-			if (!reportData) return;
-			// レポートデータがロードされていたら何もしない
-			if (reportLoaded.current) return;
-			// ロードフラグをオン
-			reportLoaded.current = true;
-			// ロードしたデータを登録
-			await myDuckDB.db.registerFileText('report.csv', reportData);
-			// レポートテーブルを初期化
-			await myDuckDB.c.query(
-				/*sql*/ `
-					-- データからレポートテーブルを作成
-					CREATE TABLE report AS SELECT * FROM report.csv;
-					-- -の値がある場合VARCHARになるので一部DOUBLEに変換。Int系でもかも
-					ALTER TABLE report ALTER COLUMN "shipment-fee-amount" SET DATA TYPE DOUBLE;
-					ALTER TABLE report ALTER COLUMN "order-fee-amount" SET DATA TYPE DOUBLE;
-					ALTER TABLE report ALTER COLUMN "misc-fee-amount" SET DATA TYPE DOUBLE;
-					ALTER TABLE report ALTER COLUMN "other-amount" SET DATA TYPE DOUBLE;
-					ALTER TABLE report ALTER COLUMN "direct-payment-amount" SET DATA TYPE DOUBLE;
+			// レポートデータがロードされていて、ロードフラグがオフの場合
+			if (reportData && !reportLoaded.current) {
+				// ロードフラグをオン
+				reportLoaded.current = true;
+				// ロードしたデータを登録
+				await myDuckDB.db.registerFileText('report.csv', reportData);
+
+				// レポートテーブルを初期化
+				await myDuckDB.c.query(
+					/*sql*/ `
+						-- データからレポートテーブルを作成
+						CREATE TABLE report AS SELECT * FROM report.csv;
+						-- とりあえずposted-dateにインデックスはっとく
+						CREATE UNIQUE INDEX report_id ON report ("posted-date");
+						-- -の値がある場合VARCHARになるので一部DOUBLEに変換。Int系でもかも
+						ALTER TABLE report ALTER COLUMN "shipment-fee-amount" SET DATA TYPE DOUBLE;
+						ALTER TABLE report ALTER COLUMN "order-fee-amount" SET DATA TYPE DOUBLE;
+						ALTER TABLE report ALTER COLUMN "misc-fee-amount" SET DATA TYPE DOUBLE;
+						ALTER TABLE report ALTER COLUMN "other-amount" SET DATA TYPE DOUBLE;
+						ALTER TABLE report ALTER COLUMN "direct-payment-amount" SET DATA TYPE DOUBLE;
+						`,
+				);
+			}
+			// 原価データがロードされていて、ロードフラグがオフの場合
+			if (costPriceData && !costPriceLoaded.current) {
+				costPriceLoaded.current = true;
+				await myDuckDB.db.registerFileText(
+					'cost-price.csv',
+					costPriceData,
+				);
+				await myDuckDB.c.query(
+					/*sql*/ `
+						CREATE TABLE cost_price AS SELECT * FROM "cost-price.csv";
 					`,
-			);
+				);
 
-			// フィルターしたデータを取得
-			const filteredRows = (await myDuckDB.c.query(
-				getFilterReportSql(),
-			)) as unknown as arrow.Table;
+				const results = await myDuckDB.c.query(
+					/*sql*/ `
+						SELECT * FROM cost_price;
+					`,
+				);
+				console.log(results.toString());
+				console.log(results);
+			}
 
-			// PLBSデータを計算
-			const withTaxData = calcPlbs(
-				filteredRows,
-				{
-					amazonAds: 0,
-				},
-				false,
-			);
-			const withoutTaxData = calcPlbs(
-				filteredRows,
-				{
-					amazonAds: 0,
-				},
-				true,
-			);
+			if (reportLoaded.current && costPriceLoaded.current) {
+				// フィルターしたデータを取得
+				const filteredRows = (await myDuckDB.c.query(
+					filterReportSql,
+				)) as unknown as arrow.Table;
 
-			// 計算したデータを登録
-			calcDataWithTax.current = withTaxData;
-			calcDataWithoutTax.current = withoutTaxData;
-			// 最後にstateを更新することで再描画を行う
-			setFilteredData(filteredRows);
+				const filteredCost = await myDuckDB.c.query(
+					/*sql*/ `
+						SELECT
+							date_trunc('month', r."posted-date") AS date,
+							SUM(cp.price) AS costPrice
+						FROM report r
+						JOIN cost_price cp
+							ON r."posted-date" >= cp.startDate
+							AND r."posted-date" <= cp.endDate
+						WHERE r."posted-date" IS NOT NULL
+						GROUP BY date_trunc('month', r."posted-date");
+					`,
+				);
+				console.log(filteredRows.toString());
+
+				// PLBSデータを計算
+				const withTaxData = calcPlbs(
+					filteredRows,
+					{
+						amazonAds: 0,
+					},
+					false,
+				);
+				const withoutTaxData = calcPlbs(
+					filteredRows,
+					{
+						amazonAds: 0,
+					},
+					true,
+				);
+
+				// 計算したデータを登録
+				calcDataWithTax.current = withTaxData;
+				calcDataWithoutTax.current = withoutTaxData;
+				// 最後にstateを更新することで再描画を行う
+				setFilteredData(filteredRows);
+			}
 		},
 		[myDuckDB, reportData], // duckdbかreportDataが更新された場合に反応する
 	);
