@@ -6,11 +6,11 @@ import type {
 } from '../types/pl-bs';
 
 // 損益計算書データ
-export function calcPlbs(
-	reportData: Table,
-	amazonAdsData: AmazonAdsAmount,
-	withoutTax: boolean,
-): Table | null {
+export function calcPlbs(reportData: Table, withoutTax: boolean): Table | null {
+	const amazonAdsData: AmazonAdsAmount = {
+		amazonAds: 0,
+	};
+
 	// スキーマ定義してそれが等しいならとかでできそう
 	const numRows = reportData.numRows;
 	const costPrice = reportData.getChild('costPrice');
@@ -46,8 +46,6 @@ export function calcPlbs(
 		console.error('Missing columns in reportData');
 		return null;
 	}
-
-	console.log('costprice:', costPrice.toString());
 
 	// 行ごとに計算
 	const rows = Array.from({ length: numRows }, (_, i) => {

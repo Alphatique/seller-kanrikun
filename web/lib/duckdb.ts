@@ -29,11 +29,14 @@ const MANUAL_BUNDLES: duckdb.DuckDBBundles = {
 export async function initDuckDB(): Promise<{
 	db: duckdb.AsyncDuckDB;
 	c: duckdb.AsyncDuckDBConnection;
-} | null> {
+}> {
 	// バンドルの読み込み
 	const bundle = await duckdb.selectBundle(MANUAL_BUNDLES);
 	const worker = new Worker(bundle.mainWorker!);
 	const logger = new duckdb.ConsoleLogger();
+
+	console.log('initDuckDB');
+
 	// DuckDBの初期化
 	const db = new duckdb.AsyncDuckDB(logger, worker);
 	// ワーカースレッドの初期化

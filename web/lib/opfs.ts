@@ -1,6 +1,5 @@
 'use client';
 import { tsvGzipToTsvStr } from '@seller-kanrikun/calc/tsv-gzip';
-import type { Fetcher } from 'swr';
 
 // opfsのルートディレクトリを取得
 const opfsRoot = await global?.navigator?.storage?.getDirectory();
@@ -13,22 +12,17 @@ export const projectRoot = await opfsRoot?.getDirectoryHandle(
 );
 
 // swr経由でopfsなどからファイルを取得
-export const SWRLoadFile: Fetcher<
-	string | null,
-	{
-		fileName: string;
-		fetchUrl: string;
-		sessionId: string;
-		updateTime: number;
-	}
-> = async key => {
-	// ファイル名、取得URL、セッションID、更新時間を取得
-	const { fileName, fetchUrl, sessionId, updateTime } = key;
-
+export async function SWRLoadFile(
+	fileName: string,
+	fetchUrl: string,
+	sessionId: string,
+	cacheTime: number = 7 * 24 * 60 * 60 * 1000, // 1週間
+): Promise<string | null> {
+	console.log('SWRLoadFile');
 	// ファイルを取得
 	const fileData = await loadFile(
 		fileName,
-		updateTime,
+		cacheTime,
 		// データがないなどの場合にfetchして取得する関数
 		async () => {
 			// fetch
@@ -58,12 +52,12 @@ export const SWRLoadFile: Fetcher<
 
 	// データを返す
 	return tsvStr;
-};
+}
 
 // ファイルが存在するか確認
 export async function loadFile(
 	fileName: string,
-	updateTime: number,
+	cacheTime: number,
 	fetchFunc: () => Promise<Uint8Array | null>,
 ): Promise<Uint8Array | null> {
 	// プロジェクトルートがない(サーバー上の場合)nullで終了
@@ -89,7 +83,7 @@ export async function loadFile(
 			const fileHandle = value as FileSystemFileHandle;
 			// 対象ファイルを取得
 			const file = await fileHandle.getFile();
-			if (new Date().getTime() < file.lastModified + updateTime) {
+			if (new Date().getTime() < file.lastModified + cacheTime) {
 				// 更新時間以内の場合はデータを保存
 				existData = new Uint8Array(await file.arrayBuffer());
 			}
