@@ -1,5 +1,5 @@
 'use client';
-import { tsvGzipToTsvStr } from '@seller-kanrikun/calc/tsv-gzip';
+import { tsvGzipToTsvStr } from '@seller-kanrikun/data-operation/tsv-gzip';
 
 // opfsのルートディレクトリを取得
 const opfsRoot = await global?.navigator?.storage?.getDirectory();

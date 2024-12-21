@@ -2,7 +2,7 @@ import type {
 	FilteredSettlementReport,
 	PlBsWithTax,
 	PlBsWithoutTax,
-} from '@seller-kanrikun/calc/types/pl-bs';
+} from '@seller-kanrikun/data-operation/types/pl-bs';
 
 export type PlbsTableMetaData = {
 	key:

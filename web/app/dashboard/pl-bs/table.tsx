@@ -8,7 +8,7 @@ import type {
 	FilteredSettlementReport,
 	PlBsWithTax,
 	PlBsWithoutTax,
-} from '@seller-kanrikun/calc/types/pl-bs';
+} from '@seller-kanrikun/data-operation/types/pl-bs';
 import { HeadTableRow, IndentTableCell, PlbsTableRow } from './table-component';
 import type { PlbsTableMetaData } from './table-meta';
 

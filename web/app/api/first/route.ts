@@ -1,6 +1,6 @@
-import type { CostPriceTsv } from '@seller-kanrikun/calc/types/cost';
+import type { CostPriceTsv } from '@seller-kanrikun/data-operation/types/cost';
 
-import { tsvObjToTsvGzip } from '@seller-kanrikun/calc/tsv-gzip';
+import { tsvObjToTsvGzip } from '@seller-kanrikun/data-operation/tsv-gzip';
 import { authorizeSession, doesFileExist, getWriteOnlySignedUrl } from '../r2';
 
 export async function POST(request: Request): Promise<Response> {

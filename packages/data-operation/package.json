@@ -1,5 +1,5 @@
 {
-	"name": "@seller-kanrikun/calc",
+	"name": "@seller-kanrikun/data-operation",
 	"private": true,
 	"type": "module",
 	"exports": {

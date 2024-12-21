@@ -1,8 +1,8 @@
 import type { Middleware } from 'openapi-fetch';
 import createApiClient from 'openapi-fetch';
 
-import { tsvObjToTsvGzip } from '@seller-kanrikun/calc/tsv-gzip';
-import type { InventorySummary } from '@seller-kanrikun/calc/types/inventory';
+import { tsvObjToTsvGzip } from '@seller-kanrikun/data-operation/tsv-gzip';
+import type { InventorySummary } from '@seller-kanrikun/data-operation/types/inventory';
 import { createClient as createDBClient } from '@seller-kanrikun/db';
 import {
 	getAccountsByProviderId,

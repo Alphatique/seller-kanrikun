@@ -3,12 +3,12 @@ import { z } from 'zod';
 import {
 	CostPriceSchema,
 	type CostPriceTsv,
-} from '@seller-kanrikun/calc/types/cost';
+} from '@seller-kanrikun/data-operation/types/cost';
 
 import {
 	tsvGzipToTsvObj,
 	tsvObjToTsvGzip,
-} from '@seller-kanrikun/calc/tsv-gzip';
+} from '@seller-kanrikun/data-operation/tsv-gzip';
 import { getApi, getReadOnlySignedUrl, putApi } from '../r2';
 
 const UploadCostPriceSchema = z.object({

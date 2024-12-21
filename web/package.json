@@ -15,7 +15,7 @@
 		"@hookform/resolvers": "^3.9.1",
 		"@seller-kanrikun/api-fetch": "workspace:*",
 		"@seller-kanrikun/auth": "workspace:*",
-		"@seller-kanrikun/calc": "workspace:*",
+		"@seller-kanrikun/data-operation": "workspace:*",
 		"@seller-kanrikun/db": "workspace:*",
 		"@seller-kanrikun/ui": "workspace:*",
 		"@types/papaparse": "^5.3.15",

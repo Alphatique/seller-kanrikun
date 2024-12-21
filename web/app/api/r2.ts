@@ -7,7 +7,7 @@ import {
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { eq } from 'drizzle-orm';
 
-import { generateR2Hash } from '@seller-kanrikun/calc/r2';
+import { generateR2Hash } from '@seller-kanrikun/data-operation/r2';
 import { createClient } from '@seller-kanrikun/db';
 import { session } from '@seller-kanrikun/db/schema';
 
