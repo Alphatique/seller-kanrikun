@@ -13,33 +13,25 @@ export function reportArrowTableToArrays(
 	reportData: Table,
 ): FilteredSettlementReport[] | null {
 	const dateCol: string[] = reportData.getChild('date')?.toArray();
-	const costPrice: number[] = reportData.getChild('costPrice')?.toArray();
-	const principalCol: number[] = reportData.getChild('principal')?.toArray();
-	const principalTaxCol: number[] = reportData
-		.getChild('principalTax')
-		?.toArray();
-	const shippingCol: number[] = reportData.getChild('shipping')?.toArray();
-	const shippingTaxCol: number[] = reportData
-		.getChild('shippingTax')
-		?.toArray();
-	const refundCol: number[] = reportData.getChild('refund')?.toArray();
-	const promotionCol: number[] = reportData.getChild('promotion')?.toArray();
-	const commissionFeeCol: number[] = reportData
-		.getChild('commissionFee')
-		?.toArray();
-	const fbaShippingFeeCol: number[] = reportData
-		.getChild('fbaShippingFee')
-		?.toArray();
-	const inventoryStorageFeeCol: number[] = reportData
+	const costPrice = reportData.getChild('costPrice')?.toArray();
+	const principalCol = reportData.getChild('principal')?.toArray();
+	const principalTaxCol = reportData.getChild('principalTax')?.toArray();
+	const shippingCol = reportData.getChild('shipping')?.toArray();
+	const shippingTaxCol = reportData.getChild('shippingTax')?.toArray();
+	const refundCol = reportData.getChild('refund')?.toArray();
+	const promotionCol = reportData.getChild('promotion')?.toArray();
+	const commissionFeeCol = reportData.getChild('commissionFee')?.toArray();
+	const fbaShippingFeeCol = reportData.getChild('fbaShippingFee')?.toArray();
+	const inventoryStorageFeeCol = reportData
 		.getChild('inventoryStorageFee')
 		?.toArray();
-	const inventoryUpdateFeeCol: number[] = reportData
+	const inventoryUpdateFeeCol = reportData
 		.getChild('inventoryUpdateFee')
 		?.toArray();
-	const shippingReturnFeeCol: number[] = reportData
+	const shippingReturnFeeCol = reportData
 		.getChild('shippingReturnFee')
 		?.toArray();
-	const subscriptionFeeCol: number[] = reportData
+	const subscriptionFeeCol = reportData
 		.getChild('accountSubscriptionFee')
 		?.toArray();
 	const accountsReceivableCol = reportData
@@ -66,6 +58,11 @@ export function reportArrowTableToArrays(
 		return null;
 	}
 
+	// TODO: 型変換ミスを直す
+	console.log('reportData', refundCol);
+	console.log('reportData', reportData.getChild('costPrice')?.toString());
+	console.log('reportData', reportData.getChild('costPrice'));
+
 	const result: FilteredSettlementReport[] = dateCol.map((date, i) => ({
 		date: date,
 		costPrice: costPrice[i],
@@ -83,6 +80,8 @@ export function reportArrowTableToArrays(
 		accountSubscriptionFee: subscriptionFeeCol[i],
 		accountsReceivable: accountsReceivableCol[i],
 	}));
+
+	console.log('reportData', result);
 
 	return result;
 }
