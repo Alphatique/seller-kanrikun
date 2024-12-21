@@ -10,8 +10,8 @@ import {
 	calcPlbsWithTax,
 	calcPlbsWithoutTax,
 	reportArrowTableToArrays,
-} from '@seller-kanrikun/data-operation/pl-bs';
-import { filterCostReportSql } from '@seller-kanrikun/data-operation/sql/reports';
+} from '@seller-kanrikun/data-operation/calc-pl-bs';
+import { filterCostReportSql } from '@seller-kanrikun/data-operation/sql';
 import type {
 	FilteredSettlementReport,
 	PlBsWithTax,

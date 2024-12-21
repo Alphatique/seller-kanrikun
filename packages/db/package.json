@@ -12,8 +12,7 @@
 		"typecheck": "tsc"
 	},
 	"devDependencies": {
-		"drizzle-kit": "^0.28.0",
-		"@seller-kanrikun/api-fetch": "workspace:*"
+		"drizzle-kit": "^0.28.0"
 	},
 	"dependencies": {
 		"@libsql/client": "^0.14.0",

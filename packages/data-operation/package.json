@@ -4,8 +4,7 @@
 	"type": "module",
 	"exports": {
 		"./*": "./src/*.ts",
-		"./types/*": "./types/*.ts",
-		"./sql/*": "./sql/*.ts"
+		"./types/*": "./types/*.ts"
 	},
 	"scripts": {
 		"typecheck": "tsc"

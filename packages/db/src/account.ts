@@ -1,7 +1,4 @@
 import { eq } from 'drizzle-orm';
-
-import { getAccessTokenFromRefreshToken } from '@seller-kanrikun/api-fetch';
-
 import type { ClientType } from './index';
 import { type Account, account } from './schema';
 
@@ -97,3 +94,39 @@ export async function refreshAccountsToken(
 	}
 	return accounts;
 }
+
+export async function getAccessTokenFromRefreshToken(
+	url: string,
+	refreshToken: string,
+	clientId: string,
+	clientSecret: string,
+): Promise<{ accessToken: string; expiresAt: Date }> {
+	const getAccessToken = await fetch(url, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/x-www-form-urlencoded',
+		},
+		body: new URLSearchParams({
+			grant_type: 'refresh_token',
+			refresh_token: refreshToken, // TODO: check if refreshToken is null
+			client_id: clientId,
+			client_secret: clientSecret,
+		}),
+	});
+
+	const accessTokenJson: AuthTokenResponse =
+		(await getAccessToken.json()) as AuthTokenResponse;
+
+	const expiresAt = new Date(Date.now() + accessTokenJson.expires_in * 1000);
+
+	return {
+		accessToken: accessTokenJson.access_token,
+		expiresAt,
+	};
+}
+export type AuthTokenResponse = {
+	access_token: string;
+	refresh_token: string;
+	token_type: string;
+	expires_in: number;
+};
