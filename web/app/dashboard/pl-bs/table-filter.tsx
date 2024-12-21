@@ -34,6 +34,7 @@ export function PlbsTableFilter() {
 		myDuckDB === null ? 'initDuckdb' : null,
 		initDuckDB,
 	);
+	// データのロード
 	const { data: reportData } = useSWR(
 		session === null || fileLoaded.report ? null : '/api/reports',
 		key =>
@@ -69,6 +70,7 @@ export function PlbsTableFilter() {
 	>({});
 
 	const createReportTable = async () => {
+		// dbがあるかつ、レポートデータがあるかつ、ロードされている。でない場合は何もしない
 		if (!(myDuckDB && reportData && !fileLoaded.report)) return;
 		console.log('createReportTable');
 		await myDuckDB.db.registerFileText('settlement-report.tsv', reportData);
@@ -85,13 +87,11 @@ export function PlbsTableFilter() {
 			ALTER TABLE report ALTER COLUMN "direct-payment-amount" SET DATA TYPE DOUBLE;
 			`);
 		fileLoaded.report = true;
-
-		await filterData();
+		filterData();
 	};
 
 	const createInventoryTable = async () => {
 		if (!(myDuckDB && inventoryData && !fileLoaded.inventory)) return;
-		console.log('createInventoryTable');
 		await myDuckDB.db.registerFileText(
 			'inventory-summaries.tsv',
 			inventoryData,
@@ -102,12 +102,12 @@ export function PlbsTableFilter() {
 			`);
 
 		fileLoaded.inventory = true;
-		await filterData();
+
+		filterData();
 	};
 
 	const createCostPriceTable = async () => {
 		if (!(myDuckDB && costPriceData && !fileLoaded.costPrice)) return;
-		console.log('createCostPriceTable');
 		await myDuckDB.db.registerFileText('cost-price.tsv', costPriceData);
 		await myDuckDB.c.query(/*sql*/ `
 			-- データからコストテーブルを作成
@@ -115,12 +115,14 @@ export function PlbsTableFilter() {
 			`);
 
 		fileLoaded.costPrice = true;
-		await filterData();
+		filterData();
 	};
 
 	const filterData = async () => {
+		// フィルターしたデータがないかつ、DBがあり、すべてのファイルがロードされている。ではない場合は何もしない
 		if (
 			!(
+				!filteredData &&
 				myDuckDB &&
 				fileLoaded.report &&
 				fileLoaded.inventory &&
@@ -128,10 +130,12 @@ export function PlbsTableFilter() {
 			)
 		)
 			return;
+
+		// 全テーブルがあるかチェック。もうちょっといい方法募集
 		const tables = await myDuckDB.c.query('SHOW TABLES;');
-		// もうちょっといい方法募集
 		const tablesStr = tables.toString();
 		if (!tablesStr.includes('report')) {
+			// テーブルがない場合はフラグを切、テーブル作成関数を呼ぶ
 			fileLoaded.report = false;
 			createReportTable();
 			return;
@@ -147,38 +151,46 @@ export function PlbsTableFilter() {
 			return;
 		}
 
-		console.log('filterData');
-		const filteredData = (await myDuckDB.c.query(
+		// フィルターしたデータを取得
+		const filteredResponse = (await myDuckDB.c.query(
 			filterCostReportSql,
 		)) as unknown as arrow.Table;
 
-		const withTaxData = calcPlbs(filteredData, true);
-		const withoutTaxData = calcPlbs(filteredData, false);
+		// PLBS計算
+		const withTaxData = calcPlbs(filteredResponse, true);
+		const withoutTaxData = calcPlbs(filteredResponse, false);
 
+		// 計算したデータを保存
 		calcDataWithTax.current = withTaxData;
 		calcDataWithoutTax.current = withoutTaxData;
-		setFilteredData(filteredData);
+		setFilteredData(filteredResponse);
 	};
 
-	useMemo(() => {
-		if (myDuckDB) {
-			// Promise.allでまとめたいところ
-			if (reportData) {
-				createReportTable();
-			}
-			if (inventoryData) {
-				createInventoryTable();
-			}
-			if (costPriceData) {
-				createCostPriceTable();
-			}
-			if (
-				fileLoaded.report &&
-				fileLoaded.inventory &&
-				fileLoaded.costPrice
-			) {
-				filterData();
-			}
+	// データ/dbが更新されたら
+	useMemo(async () => {
+		// dbがない場合は何もしない
+		if (!myDuckDB) return;
+		const promises = [];
+		// データがある場合はテーブルを作成
+		if (reportData) {
+			promises.push(createReportTable());
+		}
+		if (inventoryData) {
+			await createInventoryTable();
+		}
+		if (costPriceData) {
+			await createCostPriceTable();
+		}
+		// すべてのテーブルが作成が終わるまで待つ
+		await Promise.all(promises);
+		// すべてのテーブルがロードされ、フィルターされたデータがない場合はフィルターを実行
+		if (
+			filteredData &&
+			fileLoaded.report &&
+			fileLoaded.inventory &&
+			fileLoaded.costPrice
+		) {
+			filterData();
 		}
 	}, [myDuckDB, reportData, inventoryData, costPriceData]);
 
