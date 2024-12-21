@@ -6,8 +6,17 @@ import { useMemo, useRef, useState } from 'react';
 import useSWR from 'swr';
 
 import { useSession } from '@seller-kanrikun/auth/client';
-import { calcPlbs } from '@seller-kanrikun/calc/pl-bs';
+import {
+	calcPlbsWithTax,
+	calcPlbsWithoutTax,
+	reportArrowTableToArrays,
+} from '@seller-kanrikun/calc/pl-bs';
 import { filterCostReportSql } from '@seller-kanrikun/calc/sql/reports';
+import type {
+	FilteredSettlementReport,
+	PlBsWithTax,
+	PlBsWithoutTax,
+} from '@seller-kanrikun/calc/types/pl-bs';
 import { Label } from '@seller-kanrikun/ui/components/label';
 import {
 	Select,
@@ -24,6 +33,12 @@ import { SWRLoadFile } from '~/lib/opfs';
 
 import { fileLoadedAtom, myDuckDBAtom } from '../client-provider';
 import { PlbsTable } from './table';
+import {
+	bsTableWithTaxInfo,
+	bsTableWithoutTax,
+	plTableWithTaxInfo,
+	plTableWithoutTaxInfo,
+} from './table-meta';
 
 export function PlbsTableFilter() {
 	const { data: session } = useSession();
@@ -59,10 +74,12 @@ export function PlbsTableFilter() {
 	const [withTax, setWithTax] = useState(true);
 
 	// 計算したデータ
-	const calcDataWithTax = useRef<arrow.Table | null>(null);
-	const calcDataWithoutTax = useRef<arrow.Table | null>(null);
+	const calcDataWithTax = useRef<PlBsWithTax[] | null>(null);
+	const calcDataWithoutTax = useRef<PlBsWithoutTax[] | null>(null);
 	// フィルターしたデータ
-	const [filteredData, setFilteredData] = useState<arrow.Table | null>(null);
+	const [filteredData, setFilteredData] = useState<
+		FilteredSettlementReport[] | null
+	>(null);
 
 	// グルーピングしたデータのインデックス
 	const [groupedDataIndexes, setGroupedDataIndexes] = useState<
@@ -155,15 +172,21 @@ export function PlbsTableFilter() {
 		const filteredResponse = (await myDuckDB.c.query(
 			filterCostReportSql,
 		)) as unknown as arrow.Table;
+		const filteredArray = reportArrowTableToArrays(filteredResponse);
+		if (!filteredArray) {
+			console.error('filteredArray is null');
+			return;
+		}
 
 		// PLBS計算
-		const withTaxData = calcPlbs(filteredResponse, true);
-		const withoutTaxData = calcPlbs(filteredResponse, false);
+		const withTaxData = calcPlbsWithTax(filteredArray);
+		const withoutTaxData = calcPlbsWithoutTax(filteredArray);
 
 		// 計算したデータを保存
 		calcDataWithTax.current = withTaxData;
 		calcDataWithoutTax.current = withoutTaxData;
-		setFilteredData(filteredResponse);
+		console.log('calcDataWithTax', filteredResponse);
+		setFilteredData(filteredArray);
 	};
 
 	// データ/dbが更新されたら
@@ -211,9 +234,9 @@ export function PlbsTableFilter() {
 			// 仮データ
 			const dateIndexes: Record<string, number[]> = {};
 			// データの行数分繰り返す
-			for (let i = 0; i < filteredData.numRows; i++) {
+			for (let i = 0; i < filteredData.length; i++) {
 				// その行の日付を取得
-				const date = new Date(filteredData.getChild('date')!.get(i));
+				const date = new Date(filteredData[i].date);
 				// 日付が範囲内かどうかを判定
 				if (dateRange.start <= date && dateRange.end >= date) {
 					// 日付からグループ化する文字列を作成
@@ -275,7 +298,17 @@ export function PlbsTableFilter() {
 				/>
 			</div>
 			<PlbsTable
-				withTax={withTax}
+				title={'PL'}
+				tableInfo={withTax ? plTableWithTaxInfo : plTableWithoutTaxInfo}
+				groupedDataIndexes={groupedDataIndexes}
+				filteredReport={filteredData}
+				plbsDataWithTax={calcDataWithTax.current}
+				plbsDataWithoutTax={calcDataWithoutTax.current}
+			/>
+
+			<PlbsTable
+				title={'BS'}
+				tableInfo={withTax ? bsTableWithTaxInfo : bsTableWithoutTax}
 				groupedDataIndexes={groupedDataIndexes}
 				filteredReport={filteredData}
 				plbsDataWithTax={calcDataWithTax.current}

@@ -1,5 +1,14 @@
-type PlbsTableMetaData = {
-	key: string;
+import type {
+	FilteredSettlementReport,
+	PlBsWithTax,
+	PlBsWithoutTax,
+} from '@seller-kanrikun/calc/types/pl-bs';
+
+export type PlbsTableMetaData = {
+	key:
+		| keyof FilteredSettlementReport
+		| keyof PlBsWithTax
+		| keyof PlBsWithoutTax;
 	head: string;
 	indent: number;
 	underLine?: boolean;
@@ -204,7 +213,7 @@ export const plTableWithoutTaxInfo: PlbsTableMetaData[] = [
 		indent: 1,
 	},
 ];
-
+/*
 export const indexTableInfo: PlbsTableMetaData[] = [
 	{
 		key: 'grossProfitRate',
@@ -226,7 +235,7 @@ export const indexTableInfo: PlbsTableMetaData[] = [
 		head: 'FBA配送手数料率',
 		indent: 1,
 	},
-];
+];*/
 
 export const bsTableWithTaxInfo: PlbsTableMetaData[] = [
 	{

@@ -97,6 +97,7 @@ FULL OUTER JOIN (
         date_trunc('month', r."posted-date") AS date,
         SUM(cp."price") AS costPrice
     FROM report AS r
+    -- TODO: inventoryを取得した時期のsku/asinを使うように変更
     JOIN inventory_summaries AS inv ON r.sku = inv.sellerSku
     JOIN cost_price AS cp ON inv.asin = cp.asin
         AND r."posted-date" >= cp.startDate

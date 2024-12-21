@@ -16,6 +16,7 @@
  * @property accountsReceivable 売掛金
  */
 export interface FilteredSettlementReport {
+	date: string;
 	/** 商品原価 */
 	costPrice: number;
 	/** 商品代金 */
@@ -61,7 +62,7 @@ export interface AmazonAdsAmount {
  */
 export interface Inventory {
 	/** 棚卸資産 */
-	inventory: number;
+	inventoryAssets: number;
 }
 
 /**
@@ -102,3 +103,11 @@ export interface BsWithoutTax {
 	/** 仮受消費税 */
 	outputConsumptionTax: number;
 }
+
+export interface PlBsWithTax extends PlData, Inventory, AmazonAdsAmount {}
+
+export interface PlBsWithoutTax
+	extends PlData,
+		BsWithoutTax,
+		Inventory,
+		AmazonAdsAmount {}

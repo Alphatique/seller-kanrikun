@@ -1,33 +1,52 @@
-import { type Table, tableFromArrays } from 'apache-arrow';
+import type { Table } from 'apache-arrow';
 import type {
 	AmazonAdsAmount,
 	FilteredSettlementReport,
+	Inventory,
+	PlBsWithTax,
+	PlBsWithoutTax,
 	PlData,
 } from '../types/pl-bs';
 
-// 損益計算書データ
-export function calcPlbs(reportData: Table, withoutTax: boolean): Table | null {
-	const amazonAdsData: AmazonAdsAmount = {
-		amazonAds: 0,
-	};
-
-	// スキーマ定義してそれが等しいならとかでできそう
-	const numRows = reportData.numRows;
-	const costPrice = reportData.getChild('costPrice');
-	const principalCol = reportData.getChild('principal');
-	const principalTaxCol = reportData.getChild('principalTax');
-	const shippingCol = reportData.getChild('shipping');
-	const shippingTaxCol = reportData.getChild('shippingTax');
-	const refundCol = reportData.getChild('refund');
-	const promotionCol = reportData.getChild('promotion');
-	const commissionFeeCol = reportData.getChild('commissionFee');
-	const fbaShippingFeeCol = reportData.getChild('fbaShippingFee');
-	const inventoryStorageFeeCol = reportData.getChild('inventoryStorageFee');
-	const inventoryUpdateFeeCol = reportData.getChild('inventoryUpdateFee');
-	const shippingReturnFeeCol = reportData.getChild('shippingReturnFee');
-	const subscriptionFeeCol = reportData.getChild('accountSubscriptionFee');
-	const accountsReceivableCol = reportData.getChild('accountsReceivable');
+// apache-arrowのまま使いたかったが、schema定義ができなかったので、jsの配列に変換して処理
+export function reportArrowTableToArrays(
+	reportData: Table,
+): FilteredSettlementReport[] | null {
+	const dateCol: string[] = reportData.getChild('date')?.toArray();
+	const costPrice: number[] = reportData.getChild('costPrice')?.toArray();
+	const principalCol: number[] = reportData.getChild('principal')?.toArray();
+	const principalTaxCol: number[] = reportData
+		.getChild('principalTax')
+		?.toArray();
+	const shippingCol: number[] = reportData.getChild('shipping')?.toArray();
+	const shippingTaxCol: number[] = reportData
+		.getChild('shippingTax')
+		?.toArray();
+	const refundCol: number[] = reportData.getChild('refund')?.toArray();
+	const promotionCol: number[] = reportData.getChild('promotion')?.toArray();
+	const commissionFeeCol: number[] = reportData
+		.getChild('commissionFee')
+		?.toArray();
+	const fbaShippingFeeCol: number[] = reportData
+		.getChild('fbaShippingFee')
+		?.toArray();
+	const inventoryStorageFeeCol: number[] = reportData
+		.getChild('inventoryStorageFee')
+		?.toArray();
+	const inventoryUpdateFeeCol: number[] = reportData
+		.getChild('inventoryUpdateFee')
+		?.toArray();
+	const shippingReturnFeeCol: number[] = reportData
+		.getChild('shippingReturnFee')
+		?.toArray();
+	const subscriptionFeeCol: number[] = reportData
+		.getChild('accountSubscriptionFee')
+		?.toArray();
+	const accountsReceivableCol = reportData
+		.getChild('accountsReceivable')
+		?.toArray();
 	if (
+		!dateCol ||
 		!costPrice ||
 		!principalCol ||
 		!principalTaxCol ||
@@ -47,69 +66,72 @@ export function calcPlbs(reportData: Table, withoutTax: boolean): Table | null {
 		return null;
 	}
 
-	// 行ごとに計算
-	const rows = Array.from({ length: numRows }, (_, i) => {
-		const rowData: FilteredSettlementReport = {
-			costPrice: costPrice.get(i),
-			principal: principalCol.get(i),
-			principalTax: principalTaxCol.get(i),
-			shipping: shippingCol.get(i),
-			shippingTax: shippingTaxCol.get(i),
-			refund: refundCol.get(i),
-			promotion: promotionCol.get(i),
-			commissionFee: commissionFeeCol.get(i),
-			fbaShippingFee: fbaShippingFeeCol.get(i),
-			inventoryStorageFee: inventoryStorageFeeCol.get(i),
-			inventoryUpdateFee: inventoryUpdateFeeCol.get(i),
-			shippingReturnFee: shippingReturnFeeCol.get(i),
-			accountSubscriptionFee: subscriptionFeeCol.get(i),
-			accountsReceivable: accountsReceivableCol.get(i),
-		};
+	const result: FilteredSettlementReport[] = dateCol.map((date, i) => ({
+		date: date,
+		costPrice: costPrice[i],
+		principal: principalCol[i],
+		principalTax: principalTaxCol[i],
+		shipping: shippingCol[i],
+		shippingTax: shippingTaxCol[i],
+		refund: refundCol[i],
+		promotion: promotionCol[i],
+		commissionFee: commissionFeeCol[i],
+		fbaShippingFee: fbaShippingFeeCol[i],
+		inventoryStorageFee: inventoryStorageFeeCol[i],
+		inventoryUpdateFee: inventoryUpdateFeeCol[i],
+		shippingReturnFee: shippingReturnFeeCol[i],
+		accountSubscriptionFee: subscriptionFeeCol[i],
+		accountsReceivable: accountsReceivableCol[i],
+	}));
 
-		// 売上 = 商品代金 + 配送料
-		// + 商品代金に対する税金 + 配送料に対する税金(税込みの場合)
+	return result;
+}
+
+// 損益計算書データ
+export function calcPlbsWithTax(
+	reportData: FilteredSettlementReport[],
+	amazonAdsData: AmazonAdsAmount = { amazonAds: 0 }, // todo: ちゃんと実装
+	inventoryData: Inventory = { inventoryAssets: 0 },
+): PlBsWithTax[] {
+	const result: PlBsWithTax[] = reportData.map((rowData, i) => {
 		const sales: number =
 			rowData.principal +
 			rowData.shipping +
-			(withoutTax ? 0 : rowData.principalTax + rowData.shippingTax);
-
+			rowData.principalTax +
+			rowData.shippingTax;
 		const plData = calcPlData(sales, rowData, amazonAdsData);
 
-		if (withoutTax) {
-			const taxes = rowData.principalTax + rowData.shippingTax;
-			return {
-				taxes,
-				...plData,
-			};
-		}
-
 		return {
-			taxes: 0,
+			...rowData,
 			...plData,
+			...inventoryData,
+			...amazonAdsData,
 		};
 	});
 
-	// 各配列にマッピング
-	const calcData = {
-		sales: rows.map(r => r.sales),
-		netSales: rows.map(r => r.netSales),
-		grossProfit: rows.map(r => r.grossProfit),
-		sga: rows.map(r => r.sga),
-		amazonOther: rows.map(r => r.amazonOther),
-		amazonAds: rows.map(r => amazonAdsData.amazonAds),
-		inventoryAssets: rows.map(r => 0),
-		operatingProfit: rows.map(r => r.operatingProfit),
-		...(withoutTax
-			? {
-					accruedConsumptionTax: rows.map(r => r.taxes),
-					outputConsumptionTax: rows.map(r => r.taxes),
-				}
-			: {}),
-	};
+	return result;
+}
 
-	const calcTable = tableFromArrays(calcData);
-	// 元データと計算結果を結合
-	return calcTable;
+export function calcPlbsWithoutTax(
+	reportData: FilteredSettlementReport[],
+	amazonAdsData: AmazonAdsAmount = { amazonAds: 0 },
+	inventoryData: Inventory = { inventoryAssets: 0 },
+): PlBsWithoutTax[] {
+	const result: PlBsWithoutTax[] = reportData.map((rowData, i) => {
+		const sales: number = rowData.principal + rowData.shipping;
+		const plData = calcPlData(sales, rowData, amazonAdsData);
+		const taxes = rowData.principalTax + rowData.shippingTax;
+
+		return {
+			...plData,
+			...inventoryData,
+			...amazonAdsData,
+			accruedConsumptionTax: taxes,
+			outputConsumptionTax: taxes,
+		};
+	});
+
+	return result;
 }
 
 // 損益計算書データ
