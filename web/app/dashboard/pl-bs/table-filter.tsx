@@ -185,7 +185,13 @@ export function PlbsTableFilter() {
 		// 計算したデータを保存
 		calcDataWithTax.current = withTaxData;
 		calcDataWithoutTax.current = withoutTaxData;
-		console.log('calcDataWithTax', filteredResponse);
+
+		console.log(
+			'filteredArray',
+			filteredArray,
+			withTaxData,
+			withoutTaxData,
+		);
 		setFilteredData(filteredArray);
 	};
 

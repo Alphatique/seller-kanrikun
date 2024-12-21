@@ -50,7 +50,7 @@ export function PlbsTable({
 						<TableCell>{title}</TableCell>
 					</HeadTableRow>
 					<PlbsTableRow key='pl_date' underLine={true}>
-						<IndentTableCell />
+						<TableCell />
 						{Object.entries(groupedDataIndexes).map(([key]) => {
 							return (
 								<TableCell key={`pl_date_${key}`}>
@@ -65,6 +65,9 @@ export function PlbsTable({
 							underLine={item.underLine}
 							doubleUnderLine={item.doubleUnderLine}
 						>
+							<IndentTableCell indent={item.indent}>
+								{item.head}
+							</IndentTableCell>
 							{/* 日付ごとのセル */}
 							{Object.entries(groupedDataIndexes).map(
 								([date, indexes]) => {
