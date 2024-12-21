@@ -19,3 +19,31 @@ cl1(opfs)
 cl2(duckdb-wasm)
 end
 ```
+------------
+
+データフロー
+```mermaid
+flowchart LR
+
+getData --> useSWR
+
+subgraph swr
+useSWR --> switchopfs
+
+switchopfs{opfsにあるか}
+switchopfs --いいえ--> fetch
+switchopfs --はい--> opfs
+fetch --保存--> opfs
+
+end
+fetch --> /api
+
+subgraph backend
+direction LR
+/api --データ取得/定期実行etc--> r2
+/api --> amazonApi
+end
+```
+```mermaid
+flowchart
+getData --> registerFile
