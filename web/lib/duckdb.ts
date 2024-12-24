@@ -1,4 +1,5 @@
 'use client';
+
 import * as duckdb from '@duckdb/duckdb-wasm';
 import duckdb_wasm_eh from '@duckdb/duckdb-wasm/dist/duckdb-eh.wasm';
 import duckdb_wasm from '@duckdb/duckdb-wasm/dist/duckdb-mvp.wasm';

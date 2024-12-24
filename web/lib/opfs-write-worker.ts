@@ -1,4 +1,5 @@
 'use client';
+
 import { projectRoot } from './opfs';
 
 const worker = self as unknown as Worker;

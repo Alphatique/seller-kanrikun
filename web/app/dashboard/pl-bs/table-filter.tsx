@@ -1,4 +1,5 @@
 'use client';
+
 import type * as arrow from 'apache-arrow';
 import { format } from 'date-fns';
 import { useAtom } from 'jotai';
