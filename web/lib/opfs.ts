@@ -2,15 +2,15 @@
 
 import { tsvGzipToTsvStr } from '@seller-kanrikun/data-operation/tsv-gzip';
 
-// opfsのルートディレクトリを取得
-const opfsRoot = await global?.navigator?.storage?.getDirectory();
-// /seller-kanrikunをプロジェクトルートとする。要らん気もするけど一応
-export const projectRoot = await opfsRoot?.getDirectoryHandle(
-	'seller-kanrikun',
-	{
+export async function getProjectRoot() {
+	const root = await global?.navigator?.storage?.getDirectory();
+
+	if (!root) return null;
+
+	return await root.getDirectoryHandle('seller-kanrikun', {
 		create: true,
-	},
-);
+	});
+}
 
 // swr経由でopfsなどからファイルを取得
 export async function SWRLoadFile(
@@ -61,6 +61,7 @@ export async function loadFile(
 	cacheTime: number,
 	fetchFunc: () => Promise<Uint8Array | null>,
 ): Promise<Uint8Array | null> {
+	const projectRoot = await getProjectRoot();
 	// プロジェクトルートがない(サーバー上の場合)nullで終了
 	if (!projectRoot) return null;
 

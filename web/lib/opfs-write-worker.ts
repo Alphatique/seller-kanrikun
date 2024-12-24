@@ -1,6 +1,6 @@
 'use client';
 
-import { projectRoot } from './opfs';
+import { getProjectRoot } from './opfs';
 
 const worker = self as unknown as Worker;
 
@@ -8,6 +8,7 @@ const worker = self as unknown as Worker;
 worker.addEventListener('message', async event => {
 	// 保存するファイル名とデータを取得
 	const { fileName, data } = event.data;
+	const projectRoot = (await getProjectRoot())!;
 	// ファイルハンドルを取得
 	const fileHandle = await projectRoot.getFileHandle(fileName, {
 		create: true,
