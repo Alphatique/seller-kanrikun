@@ -3,9 +3,6 @@
 	"editor.formatOnSave": true,
 	"editor.formatOnPaste": true,
 	"editor.tabSize": 4,
-	"editor.codeActionsOnSave": {
-		"source.organizeImports": "explicit"
-	},
 	"[yaml]": {
 		"editor.defaultFormatter": "esbenp.prettier-vscode"
 	},
@@ -22,5 +19,6 @@
 		"fflate",
 		"plbs",
 		"Plbs"
-	]
+	],
+	"typescript.tsdk": "node_modules\\typescript\\lib"
 }
