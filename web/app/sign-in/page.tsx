@@ -32,22 +32,6 @@ export default function Page() {
 			setLoading(false);
 		}
 	}
-	async function signInWithSellerCentral() {
-		setLoading('amazon');
-
-		try {
-			const result = await signIn.oauth2({
-				providerId: 'seller-central',
-				callbackURL: '/dashboard',
-			});
-
-			if (result.error) {
-				throw result.error;
-			}
-		} catch (e) {
-			setLoading(false);
-		}
-	}
 	async function signInWithPasskey() {
 		setLoading('passkey');
 
@@ -142,23 +126,6 @@ export default function Page() {
 						/>
 					)}
 					Amazonでサインイン
-				</Button>
-
-				<Button
-					variant='outline'
-					disabled={Boolean(loading)}
-					onClick={signInWithSellerCentral}
-				>
-					{loading === 'amazon' ? (
-						<Loader2 className='animate-spin' />
-					) : (
-						<Image
-							src={amazonLogo}
-							alt='amazon logo'
-							className='size-4'
-						/>
-					)}
-					SellerCentralでサインイン
 				</Button>
 
 				<div className='relative'>
