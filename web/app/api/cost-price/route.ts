@@ -9,7 +9,7 @@ import {
 	type CostPriceTsv,
 } from '@seller-kanrikun/data-operation/types/cost';
 
-import { getApi, getReadOnlySignedUrl, putApi } from '../r2';
+import { getApi, getReadOnlySignedUrl, putApi } from '~/lib/r2';
 
 const UploadCostPriceSchema = z.object({
 	start: z.coerce.date(),

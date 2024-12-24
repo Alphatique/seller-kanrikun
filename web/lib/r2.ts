@@ -5,11 +5,9 @@ import {
 	S3Client,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { eq } from 'drizzle-orm';
 
+import { auth } from '@seller-kanrikun/auth/server';
 import { generateR2Hash } from '@seller-kanrikun/data-operation/r2';
-import { createClient } from '@seller-kanrikun/db';
-import { session } from '@seller-kanrikun/db/schema';
 
 export const R2 = new S3Client({
 	region: 'auto',
@@ -90,13 +88,11 @@ export async function getApi(
 	request: Request,
 	fileName: string,
 ): Promise<Response> {
-	const auth = await authorizeSession(request);
-	if (auth instanceof Response) {
-		return auth;
-	}
+	const session = await auth.api.getSession(request);
+	if (!session) return returnUnauthorized();
 
 	// 読み込み専用の署名付きURLを取得
-	const getUrl = await getReadOnlySignedUrl(auth, fileName);
+	const getUrl = await getReadOnlySignedUrl(session.user.id, fileName);
 
 	const getRes = await fetch(getUrl);
 
@@ -125,7 +121,9 @@ export async function putApi(
 	fileName: string,
 	getPutData: (userId: string) => Promise<ArrayBuffer | null>,
 ): Promise<Response> {
-	const auth = await authorizeSession(request);
+	const session = await auth.api.getSession(request);
+	if (!session) return returnUnauthorized();
+
 	if (request.body === null) {
 		return new Response('Need data to upload in the request body', {
 			status: 403,
@@ -135,14 +133,11 @@ export async function putApi(
 			},
 		});
 	}
-	if (auth instanceof Response) {
-		return auth;
-	}
 
 	// 読み込み専用の署名付きURLを取得
-	const putUrl = await getWriteOnlySignedUrl(auth, fileName);
+	const putUrl = await getWriteOnlySignedUrl(session.user.id, fileName);
 
-	const putData = await getPutData(auth);
+	const putData = await getPutData(session.user.id);
 	if (putData === null) {
 		return new Response('Missing or malformed data', {
 			status: 403,
@@ -162,30 +157,7 @@ export async function putApi(
 	return new Response('ok');
 }
 
-export async function authorizeSession(
-	request: Request,
-): Promise<Response | string> {
-	// セッションIDを取得
-	const sessionId = request.headers.get('x-seller-kanrikun-session-id');
-	if (!sessionId) return returnUnauthorized(); // セッションIDがない場合はエラー
-	// dbクライアントを作成
-	const db = createClient({
-		url: process.env.TURSO_CONNECTION_URL!,
-		authToken: process.env.TURSO_AUTH_TOKEN!,
-	});
-	// セッションIDからセッションデータを取得
-	const sessionData = await db
-		.select()
-		.from(session)
-		.where(eq(session.id, sessionId))
-		.get();
-	if (!sessionData) return returnUnauthorized(); // セッションデータがない場合はエラー
-	if (sessionData.expiresAt < new Date()) return returnUnauthorized(); // セッションが期限切れの場合はエラー
-
-	return sessionData.userId;
-}
-
-function returnUnauthorized() {
+export function returnUnauthorized() {
 	return new Response('Unauthorized', {
 		status: 401,
 		headers: {

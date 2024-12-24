@@ -12,7 +12,7 @@ import {
 } from '@seller-kanrikun/db/account';
 import type { paths } from '@seller-kanrikun/sp-api/schema/reports';
 
-import { getWriteOnlySignedUrl } from '../r2';
+import { getWriteOnlySignedUrl } from '~/lib/r2';
 
 const japanMarketPlaceId = 'A1VC38T7YXB528';
 
