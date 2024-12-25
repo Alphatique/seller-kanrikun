@@ -33,12 +33,14 @@ export const dbMiddleware = createMiddleware<{
 		db: ClientType;
 	};
 }>(async (c, next) => {
-	const db = createClient({
-		url: process.env.TURSO_CONNECTION_URL!,
-		authToken: process.env.TURSO_AUTH_TOKEN!,
-	});
+	if (!c.var.db) {
+		const db = createClient({
+			url: process.env.TURSO_CONNECTION_URL!,
+			authToken: process.env.TURSO_AUTH_TOKEN!,
+		});
 
-	c.set('db', db);
+		c.set('db', db);
+	}
 
 	await next();
 });
