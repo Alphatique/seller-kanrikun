@@ -22,8 +22,9 @@ import { uploadCostPriceSchema } from '~/schema/const-price';
 
 import { authMiddleware } from './middleware';
 
-export const app = new Hono()
-	.basePath('/api')
+export const app = new Hono().basePath('/api');
+
+const route = app
 	.use(logger(text => console.log(`[API] ${text}`)))
 	.get('/status', async c => {
 		return c.json({ status: 'ok' });
@@ -178,3 +179,5 @@ export const app = new Hono()
 			);
 		}
 	});
+
+export type RouteType = typeof route;
