@@ -101,6 +101,9 @@ export const app = new Hono()
 			}
 
 			const now = new Date();
+			const expiresAt = new Date(
+				now.getTime() + tokens.expires_in * 1000,
+			);
 
 			await c.var.db
 				.delete(account)
@@ -117,9 +120,7 @@ export const app = new Hono()
 				providerId: 'seller-central',
 				userId: c.var.user.id,
 				accessToken: tokens.access_token,
-				accessTokenExpiresAt: new Date(
-					now.getTime() + tokens.expires_in,
-				),
+				accessTokenExpiresAt: expiresAt,
 				refreshToken: tokens.refresh_token,
 				createdAt: now,
 				updatedAt: now,
