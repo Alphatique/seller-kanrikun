@@ -1,6 +1,6 @@
 import { handle } from 'hono/vercel';
 
-import { app } from '~/api';
+import { app } from '~/server';
 
 const handler = handle(app);
 
