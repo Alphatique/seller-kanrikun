@@ -29,7 +29,7 @@ export default async function Layout({ children }: LayoutProps) {
 			}}
 		>
 			<div className='flex h-screen flex-col'>
-				<Header user={session.user as User} />
+				<Header user={session.user} />
 				<ScrollArea className='min-h-0 grow'>
 					<main className='container mx-auto p-6'>
 						<ClientProvider>{children}</ClientProvider>
