@@ -1,10 +1,14 @@
+import { betterFetch } from '@better-fetch/fetch';
 import { zValidator } from '@hono/zod-validator';
 import { eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
 
-import { accountLinkingVerification } from '@seller-kanrikun/db/schema';
+import {
+	account,
+	accountLinkingVerification,
+} from '@seller-kanrikun/db/schema';
 
 import { authMiddleware, dbMiddleware } from './middleware';
 
@@ -58,7 +62,7 @@ export const app = new Hono()
 				});
 			if (!verification)
 				return c.json({
-					error: 'failed to link account',
+					error: 'invalid verification token',
 				});
 
 			await c.var.db
@@ -72,17 +76,45 @@ export const app = new Hono()
 			body.set('client_id', process.env.SP_API_CLIENT_ID!);
 			body.set('client_secret', process.env.SP_API_CLIENT_SECRET!);
 
-			const data = await (
-				await fetch(tokenEndpoint, {
+			const { data: tokens, error: tokensError } = await betterFetch(
+				tokenEndpoint,
+				{
 					method: 'POST',
 					headers: {
 						'content-type': 'application/x-www-form-urlencoded',
 						accept: 'application/json',
 					},
 					body,
-				})
-			).json();
+					output: z.object({
+						access_token: z.string(),
+						refresh_token: z.string(),
+						expires_in: z.number(),
+					}),
+				},
+			);
+			if (tokensError) {
+				console.error(tokensError);
+				return c.json({
+					error: 'failed to fetch token',
+				});
+			}
 
-			console.log(data);
+			const now = new Date();
+
+			await c.var.db.insert(account).values({
+				id: nanoid(),
+				accountId: selling_partner_id,
+				providerId: 'seller-central',
+				userId: c.var.user.id,
+				accessToken: tokens.access_token,
+				accessTokenExpiresAt: new Date(
+					now.getTime() + tokens.expires_in,
+				),
+				refreshToken: tokens.refresh_token,
+				createdAt: now,
+				updatedAt: now,
+			});
+
+			return c.redirect('/dashboard');
 		},
 	);
