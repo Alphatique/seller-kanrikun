@@ -4,6 +4,7 @@ import { auth } from '@seller-kanrikun/auth/server';
 import { tsvObjToTsvGzip } from '@seller-kanrikun/data-operation/tsv-gzip';
 
 import {
+	costPriceFileName,
 	doesFileExist,
 	getWriteOnlySignedUrl,
 	returnUnauthorized,
@@ -17,10 +18,12 @@ export async function POST(request: Request): Promise<Response> {
 		return auth;
 	}
 
-	const costFileName = 'cost-price.tsv.gz';
-	const hasFile = await doesFileExist(session.user.id, costFileName);
+	const hasFile = await doesFileExist(session.user.id, costPriceFileName);
 	if (!hasFile) {
-		const url = await getWriteOnlySignedUrl(session.user.id, costFileName);
+		const url = await getWriteOnlySignedUrl(
+			session.user.id,
+			costPriceFileName,
+		);
 		const emptyCostPrice: CostPriceTsv[] = [];
 		// papaparseの無駄遣い
 		const tsvArray = tsvObjToTsvGzip(emptyCostPrice);

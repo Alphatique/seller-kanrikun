@@ -10,9 +10,11 @@ import {
 } from '@seller-kanrikun/db/account';
 import type { paths } from '@seller-kanrikun/sp-api/schema/fba-inventory';
 
-import { getWriteOnlySignedUrl } from '~/lib/r2';
-
-const japanMarketPlaceId = 'A1VC38T7YXB528';
+import {
+	getWriteOnlySignedUrl,
+	inventorySummariesFileName,
+	japanMarketPlaceId,
+} from '~/lib/r2';
 
 export async function GET(request: Request) {
 	// DBクライアントを作成
@@ -112,7 +114,7 @@ export async function GET(request: Request) {
 
 		const url = await getWriteOnlySignedUrl(
 			account.userId,
-			'inventory-summaries.tsv.gz',
+			inventorySummariesFileName,
 		);
 
 		const putResponse = await fetch(url, {

@@ -12,9 +12,11 @@ import {
 } from '@seller-kanrikun/db/account';
 import type { paths } from '@seller-kanrikun/sp-api/schema/reports';
 
-import { getWriteOnlySignedUrl } from '~/lib/r2';
-
-const japanMarketPlaceId = 'A1VC38T7YXB528';
+import {
+	getWriteOnlySignedUrl,
+	japanMarketPlaceId,
+	settlementReportFileName,
+} from '~/lib/r2';
 
 export async function GET(request: Request) {
 	// DBクライアントを作成
@@ -202,7 +204,7 @@ export async function GET(request: Request) {
 
 		const url = await getWriteOnlySignedUrl(
 			account.userId,
-			'settlement-report.tsv.gz',
+			settlementReportFileName,
 		);
 
 		const response = await fetch(url, {

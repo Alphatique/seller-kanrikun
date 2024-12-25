@@ -9,6 +9,12 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { auth } from '@seller-kanrikun/auth/server';
 import { generateR2Hash } from '@seller-kanrikun/data-operation/r2';
 
+const bucketName = 'seller-kanrikun';
+export const japanMarketPlaceId = 'A1VC38T7YXB528';
+export const settlementReportFileName = 'settlement-report.tsv.gz';
+export const inventorySummariesFileName = 'inventory-summaries.tsv.gz';
+export const costPriceFileName = 'cost-price.tsv.gz';
+
 export const R2 = new S3Client({
 	region: 'auto',
 	endpoint: process.env.CLOUDFLARE_R2_ENDPOINT!,
@@ -17,8 +23,6 @@ export const R2 = new S3Client({
 		secretAccessKey: process.env.CLOUDFLARE_R2_SECRET_KEY!,
 	},
 });
-
-const bucketName = 'seller-kanrikun';
 
 // 読み込み専用ダウンロード用url取得関数
 export async function getReadOnlySignedUrl(
