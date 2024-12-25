@@ -69,12 +69,13 @@ export const app = new Hono()
 				.delete(accountLinkingVerification)
 				.where(eq(accountLinkingVerification.id, state));
 
-			const body = new URLSearchParams();
-			body.set('grant_type', 'authorization_code');
-			body.set('code', spapi_oauth_code);
-			body.set('redirect_uri', redirectURI);
-			body.set('client_id', process.env.SP_API_CLIENT_ID!);
-			body.set('client_secret', process.env.SP_API_CLIENT_SECRET!);
+			const body = new URLSearchParams({
+				grant_type: 'authorization_code',
+				code: spapi_oauth_code,
+				redirect_uri: redirectURI,
+				client_id: process.env.SP_API_CLIENT_ID!,
+				client_secret: process.env.SP_API_CLIENT_SECRET!,
+			});
 
 			const { data: tokens, error: tokensError } = await betterFetch(
 				tokenEndpoint,
