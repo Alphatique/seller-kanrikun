@@ -1,6 +1,8 @@
 import { createMiddleware } from 'hono/factory';
+import { HTTPException } from 'hono/http-exception';
 
 import { auth } from '@seller-kanrikun/auth/server';
+import { type ClientType, createClient } from '@seller-kanrikun/db/index';
 
 export const authMiddleware = createMiddleware<{
 	Variables: {
@@ -23,6 +25,21 @@ export const authMiddleware = createMiddleware<{
 
 	c.set('session', session);
 	c.set('user', session.user);
+
+	await next();
+});
+
+export const dbMiddleware = createMiddleware<{
+	Variables: {
+		db: ClientType;
+	};
+}>(async (c, next) => {
+	const db = createClient({
+		url: process.env.TURSO_CONNECTION_URL!,
+		authToken: process.env.TURSO_AUTH_TOKEN!,
+	});
+
+	c.set('db', db);
 
 	await next();
 });

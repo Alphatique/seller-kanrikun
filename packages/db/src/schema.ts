@@ -70,6 +70,16 @@ export const passkey = sqliteTable('passkey', {
 	createdAt: integer('createdAt', { mode: 'timestamp' }),
 });
 
+export const accountLinkingVerification = sqliteTable(
+	'accountLinkingVerification',
+	{
+		id: text('id').primaryKey(),
+		userId: text('userId')
+			.notNull()
+			.references(() => user.id),
+	},
+);
+
 export const plbsData = sqliteTable('plbsData', {
 	id: text('id').primaryKey(),
 	year_month: integer('year_month', {

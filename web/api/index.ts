@@ -20,6 +20,7 @@ import {
 } from '~/lib/r2';
 import { uploadCostPriceSchema } from '~/schema/const-price';
 
+import { app as linkAccount } from './link-account';
 import { authMiddleware } from './middleware';
 
 export const app = new Hono().basePath('/api');
@@ -32,6 +33,7 @@ const route = app
 	.on(['POST', 'GET'], '/auth/*', c => {
 		return auth.handler(c.req.raw);
 	})
+	.route('/link-account', linkAccount)
 	.get('/:slug{reports|cost|inventory}', authMiddleware, async c => {
 		const slug = c.req.param('slug');
 		console.log({ slug });

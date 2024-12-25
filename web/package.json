@@ -25,6 +25,7 @@
 		"jotai": "^2.11.0",
 		"jotai-immer": "^0.4.1",
 		"lucide-react": "^0.469.0",
+		"nanoid": "^5.0.9",
 		"next": "15.1.2",
 		"openapi-typescript": "^7.4.4",
 		"papaparse": "^5.4.1",

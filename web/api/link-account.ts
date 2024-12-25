@@ -1,0 +1,88 @@
+import { zValidator } from '@hono/zod-validator';
+import { eq } from 'drizzle-orm';
+import { Hono } from 'hono';
+import { nanoid } from 'nanoid';
+import { z } from 'zod';
+
+import { accountLinkingVerification } from '@seller-kanrikun/db/schema';
+
+import { authMiddleware, dbMiddleware } from './middleware';
+
+const redirectURI = `${process.env.BETTER_AUTH_URL}/api/link-account/callback`;
+const tokenEndpoint = 'https://api.amazon.co.jp/auth/o2/token';
+
+export const app = new Hono()
+	.use(authMiddleware)
+	.get('/', dbMiddleware, async c => {
+		const verification = (
+			await c.var.db
+				.insert(accountLinkingVerification)
+				.values({
+					id: nanoid(),
+					userId: c.var.user.id,
+				})
+				.returning()
+		)[0];
+
+		const url = new URL(
+			'https://sellercentral.amazon.co.jp/apps/authorize/consent',
+		);
+		url.searchParams.set('version', 'beta');
+		url.searchParams.set(
+			'application_id',
+			process.env.SP_API_APPLICATION_ID!,
+		);
+		url.searchParams.set('state', verification.id);
+		url.searchParams.set('redirect_uri', redirectURI);
+
+		return c.redirect(url);
+	})
+	.get(
+		'/callback',
+		dbMiddleware,
+		zValidator(
+			'query',
+			z.object({
+				state: z.string(),
+				selling_partner_id: z.string(),
+				spapi_oauth_code: z.string(),
+			}),
+		),
+		async c => {
+			const { state, selling_partner_id, spapi_oauth_code } =
+				c.req.valid('query');
+
+			const verification =
+				await c.var.db.query.accountLinkingVerification.findFirst({
+					where: (t, { eq }) => eq(t.id, state),
+				});
+			if (!verification)
+				return c.json({
+					error: 'failed to link account',
+				});
+
+			await c.var.db
+				.delete(accountLinkingVerification)
+				.where(eq(accountLinkingVerification.id, state));
+
+			const body = new URLSearchParams();
+			body.set('grant_type', 'authorization_code');
+			body.set('code', spapi_oauth_code);
+			body.set('redirect_uri', redirectURI);
+			body.set('client_id', process.env.SP_API_CLIENT_ID!);
+			body.set('client_secret', process.env.SP_API_CLIENT_SECRET!);
+
+			const data = await (
+				await fetch(tokenEndpoint, {
+					method: 'POST',
+					headers: {
+						'content-type': 'application/x-www-form-urlencoded',
+						accept: 'application/json',
+					},
+					body,
+				})
+			).json();
+
+			console.log(data);
+		},
+	);
