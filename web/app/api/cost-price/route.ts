@@ -9,21 +9,16 @@ import {
 	type CostPriceTsv,
 } from '@seller-kanrikun/data-operation/types/cost';
 
-import { getApi, getReadOnlySignedUrl, putApi } from '~/lib/r2';
+import { costPriceFileName, getReadOnlySignedUrl, putApi } from '~/lib/r2';
 
 const UploadCostPriceSchema = z.object({
 	start: z.coerce.date(),
 	end: z.coerce.date(),
 	values: z.array(CostPriceSchema),
 });
-const fileName = 'cost-price.tsv.gz';
-
-export async function GET(request: Request): Promise<Response> {
-	return getApi(request, fileName);
-}
 
 export async function POST(request: Request): Promise<Response> {
-	return putApi(request, fileName, async userId => {
+	return putApi(request, costPriceFileName, async userId => {
 		const requestJson = await request.json();
 		const requestParse = UploadCostPriceSchema.safeParse(requestJson);
 
@@ -34,7 +29,7 @@ export async function POST(request: Request): Promise<Response> {
 		const reqEnd = requestParse.data.end.getTime();
 		if (reqStart >= reqEnd) return null;
 
-		const url = await getReadOnlySignedUrl(userId, fileName);
+		const url = await getReadOnlySignedUrl(userId, costPriceFileName);
 		const fileResponse = await fetch(url);
 		if (!fileResponse.ok) return null;
 		const existArray = await fileResponse.arrayBuffer();

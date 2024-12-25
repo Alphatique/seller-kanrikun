@@ -1,21 +1,19 @@
-import { Readable } from 'node:stream';
-import type { ReadableStream as WebReadableStream } from 'node:stream/web';
-import { gzipSync } from 'fflate';
 import type { Middleware } from 'openapi-fetch';
 import createApiClient from 'openapi-fetch';
-import Papa from 'papaparse';
 
+import { tsvObjToTsvGzip } from '@seller-kanrikun/data-operation/tsv-gzip';
+import type { InventorySummary } from '@seller-kanrikun/data-operation/types/inventory';
 import { createClient as createDBClient } from '@seller-kanrikun/db';
 import {
 	getAccountsByProviderId,
 	refreshAccessToken,
 } from '@seller-kanrikun/db/account';
-import type { paths } from '@seller-kanrikun/sp-api/schema/reports';
+import type { paths } from '@seller-kanrikun/sp-api/schema/fba-inventory';
 
 import {
 	getWriteOnlySignedUrl,
+	inventorySummariesFileName,
 	japanMarketPlaceId,
-	settlementReportFileName,
 } from '~/lib/r2';
 
 export async function GET(request: Request) {
@@ -30,12 +28,11 @@ export async function GET(request: Request) {
 
 	// アカウントごとにループ
 	for (let account of accounts) {
-		// アクセストークンを追加するミドルウェアを作成
-
 		const api = createApiClient<paths>({
 			baseUrl: 'https://sellingpartnerapi-fe.amazon.com',
 		});
 
+		// アクセストークンを追加するミドルウェアを作成
 		const tokenMiddleware: Middleware = {
 			async onRequest({ request, options }) {
 				// アクセストークンを更新
@@ -61,161 +58,75 @@ export async function GET(request: Request) {
 		api.use(tokenMiddleware);
 
 		// レポートの一覧を取得
-		const reportsResponses = await fetchWithRetryNextToken(nextToken => {
+		const inventorySummaries = await fetchWithRetryRateLimit(() => {
 			// ネクストトークン次第でパラメータを変更
-			const params =
-				nextToken === null
-					? {
-							// 初回取得
-							query: {
-								reportTypes: [
-									'GET_V2_SETTLEMENT_REPORT_DATA_FLAT_FILE',
-								],
-								pageSize: 100, // 最大を指定
-							},
-						}
-					: {
-							// ネクストトークンがある場合
-							query: {
-								nextToken: nextToken,
-							},
-						};
+			const params = {
+				query: {
+					granularityType: 'Marketplace' as const,
+					granularityId: japanMarketPlaceId,
+					marketplaceIds: [japanMarketPlaceId],
+				},
+			};
 			// リトライ付きfetchを実行
 			return fetchWithRetryRateLimit(
 				() =>
-					api.GET('/reports/2021-06-30/reports', {
+					api.GET('/fba/inventory/v1/summaries', {
 						params,
 					}),
 				[2, 2, 2],
 			);
 		});
 
-		let lastResponse: Response | undefined;
-		const allColumns = new Set<string>();
-		const documentsData: Record<string, string>[] = [];
+		console.log('inventorySummaries:', inventorySummaries);
+		console.log('inventorySummaries.data:', inventorySummaries.data);
 
-		// レポートレスポンスごとにループ
-		for (const reportsResponse of reportsResponses) {
-			if (lastResponse) {
-				console.log('response:', lastResponse);
-				await waitRateLimitTime(lastResponse, 50);
-			}
+		logFetchReturn(inventorySummaries, 'get inventory summaries');
 
-			logFetchReturn(reportsResponse, 'fetch reports');
-			if (!reportsResponse.data) continue; // データがない場合はスキップ
-			// レポートメタデータごとにループ
-			for (const reportMeta of reportsResponse.data.reports) {
-				const reportDocumentId = reportMeta.reportDocumentId;
-				// レポートドキュメントIDがない場合はスキップ
-				if (reportDocumentId === undefined) {
-					console.error('reportDocumentId is undefined', reportMeta);
-					continue;
-				}
-				// レポートドキュメントの取得
-				const reportDocument = await fetchWithRetryRateLimit(
-					() =>
-						api.GET(
-							'/reports/2021-06-30/documents/{reportDocumentId}',
-							{
-								params: {
-									path: {
-										reportDocumentId: reportDocumentId,
-									},
-								},
-							},
-						),
-					[60, 5, 60],
-				);
-				logFetchReturn(reportDocument, 'fetch reportDocument');
-				lastResponse = reportDocument.response;
-				if (!reportDocument.data) continue; // データがない場合はスキップ
-
-				// CSV行を貯める配列
-				const newRows: Record<string, string>[] = [];
-
-				// レポートドキュメントの取得
-				const reportDocumentResponse = await fetch(
-					reportDocument.data!.url!,
-					{
-						method: 'GET',
-					},
-				);
-				// レポートドキュメントの取得に失敗した場合はスキップ
-				if (!reportDocumentResponse.ok) {
-					console.error('Failed to fetch report document');
-					continue;
-				}
-
-				// レポートドキュメントのストリームを取得
-				const webReadableStream =
-					reportDocumentResponse.body as unknown as WebReadableStream<Uint8Array>;
-				const nodeStream = Readable.fromWeb(webReadableStream);
-
-				// パース用のPapaparseストリームを作成
-				const papaStream = Papa.parse(Papa.NODE_STREAM_INPUT, {
-					header: true, // CSVヘッダーの有無
-					delimiter: '\t', // 必要に応じて区切り文字を設定
-				});
-
-				// パース時のイベントハンドラ
-				papaStream.on('data', (row: Record<string, string>) => {
-					for (const key of Object.keys(row)) {
-						allColumns.add(key);
-					}
-					newRows.push(row);
-				});
-
-				// パース完了時
-				papaStream.on('end', () => {
-					console.log('Parsing complete.');
-					console.log('New rows:', newRows.length);
-					documentsData.push(...newRows);
-				});
-
-				// エラーハンドリング
-				papaStream.on('error', error => {
-					console.error('Error parsing CSV:', error);
-				});
-
-				// ストリームにパイプしてパース開始
-				nodeStream.pipe(papaStream);
-			}
+		const summaries = inventorySummaries?.data?.payload?.inventorySummaries;
+		if (!summaries) {
+			console.log('no payload:', inventorySummaries.response);
+			continue;
 		}
 
-		const finalColumns = Array.from(allColumns);
-		const joinData = documentsData.map(row =>
-			Object.fromEntries(finalColumns.map(col => [col, row[col] ?? ''])),
-		);
+		const putSummaries: InventorySummary[] = [];
+		const saveTime = new Date();
+		for (const inventorySummary of summaries) {
+			const summary: InventorySummary = {
+				asin: inventorySummary.asin ?? null,
+				function: inventorySummary.fnSku ?? null,
+				sellerSku: inventorySummary.sellerSku ?? null,
+				condition: inventorySummary.condition ?? null,
+				inventoryDetails: inventorySummary.inventoryDetails
+					? JSON.stringify(inventorySummary.inventoryDetails)
+					: null,
+				lastUpdatedTime: inventorySummary.lastUpdatedTime
+					? new Date(inventorySummary.lastUpdatedTime)
+					: null,
+				productName: inventorySummary.productName ?? null,
+				totalQuantity: inventorySummary.totalQuantity ?? null,
+				stores: inventorySummary.stores ?? null,
+				sellerKanrikunSaveTime: saveTime,
+			};
+			putSummaries.push(summary);
+		}
 
-		// テキスト→Uint8Arrayエンコード（UTF-8想定）
-		const csvContent = `${finalColumns.join('\t')}\n${joinData
-			.map(row => finalColumns.map(col => row[col]).join('\t'))
-			.join('\n')}`;
-
-		const tsvStr = Papa.unparse(finalColumns, {
-			delimiter: '\t',
-			header: true,
-		});
-
-		const encoder = new TextEncoder();
-		const csvUint8 = encoder.encode(tsvStr);
-
-		const gzipped = gzipSync(csvUint8);
+		const tsvGzip = await tsvObjToTsvGzip(putSummaries);
 
 		const url = await getWriteOnlySignedUrl(
 			account.userId,
-			settlementReportFileName,
+			inventorySummariesFileName,
 		);
 
-		const response = await fetch(url, {
+		const putResponse = await fetch(url, {
 			method: 'PUT',
-			headers: {
-				'Content-Type': 'application/gzip',
-			},
-			body: gzipped,
+			body: tsvGzip,
 		});
 
-		console.log('response:', response);
+		if (!putResponse.ok) {
+			console.error('putResponse:', putResponse);
+		}
+
+		console.log('putResponse:', putResponse);
 	}
 
 	return new Response('henohenomoheji', {
