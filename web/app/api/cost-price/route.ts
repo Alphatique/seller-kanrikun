@@ -9,13 +9,22 @@ import {
 	type CostPriceTsv,
 } from '@seller-kanrikun/data-operation/types/cost';
 
-import { costPriceFileName, getReadOnlySignedUrl, putApi } from '~/lib/r2';
+import {
+	costPriceFileName,
+	getApi,
+	getReadOnlySignedUrl,
+	putApi,
+} from '~/lib/r2';
 
 const UploadCostPriceSchema = z.object({
 	start: z.coerce.date(),
 	end: z.coerce.date(),
 	values: z.array(CostPriceSchema),
 });
+
+export async function GET(request: Request): Promise<Response> {
+	return getApi(request, costPriceFileName);
+}
 
 export async function POST(request: Request): Promise<Response> {
 	return putApi(request, costPriceFileName, async userId => {
