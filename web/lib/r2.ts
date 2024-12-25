@@ -92,7 +92,9 @@ export async function getApi(
 	request: Request,
 	fileName: string,
 ): Promise<Response> {
-	const session = await auth.api.getSession(request);
+	const session = await auth.api.getSession({
+		headers: request.headers,
+	});
 	if (!session) return returnUnauthorized();
 
 	// 読み込み専用の署名付きURLを取得
@@ -125,7 +127,9 @@ export async function putApi(
 	fileName: string,
 	getPutData: (userId: string) => Promise<ArrayBuffer | null>,
 ): Promise<Response> {
-	const session = await auth.api.getSession(request);
+	const session = await auth.api.getSession({
+		headers: request.headers,
+	});
 	if (!session) return returnUnauthorized();
 
 	if (request.body === null) {
