@@ -1,5 +1,4 @@
 import { createMiddleware } from 'hono/factory';
-import { HTTPException } from 'hono/http-exception';
 
 import { auth } from '@seller-kanrikun/auth/server';
 import { type ClientType, createClient } from '@seller-kanrikun/db/index';
