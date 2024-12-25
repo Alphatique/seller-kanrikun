@@ -1,6 +1,6 @@
 import { betterFetch } from '@better-fetch/fetch';
 import { zValidator } from '@hono/zod-validator';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
@@ -100,6 +100,15 @@ export const app = new Hono()
 			}
 
 			const now = new Date();
+
+			await c.var.db
+				.delete(account)
+				.where(
+					and(
+						eq(account.userId, c.var.user.id),
+						eq(account.providerId, 'seller-central'),
+					),
+				);
 
 			await c.var.db.insert(account).values({
 				id: nanoid(),
