@@ -7,7 +7,7 @@ import { account } from '@seller-kanrikun/db/schema';
 
 const tokenEndpoint = 'https://api.amazon.co.jp/auth/o2/token';
 
-export async function getSPAPIAccessToken(userId: string, db: ClientType) {
+export async function getSpApiAccessToken(userId: string, db: ClientType) {
 	const account = await db.query.account.findFirst({
 		where: (t, { and, eq }) =>
 			and(eq(t.userId, userId), eq(t.providerId, 'seller-central')),
