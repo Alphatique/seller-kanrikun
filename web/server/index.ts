@@ -37,7 +37,7 @@ const route = app
 	})
 	.route('/link-account', linkAccount)
 	.get(
-		'/:slug{reports/settlement|reports/sales-traffic|cost|inventory}',
+		'/:slug{reports/settlement|reports/sales-traffic|cost-price|inventory|catalog}',
 		authMiddleware,
 		async c => {
 			const slug = c.req.param('slug');
@@ -46,7 +46,7 @@ const route = app
 			const fileName = {
 				'reports/settlement': settlementReportFileName,
 				'reports/sales-traffic': salesTrafficReportFileName,
-				cost: costPriceFileName,
+				'cost-price': costPriceFileName,
 				inventory: inventorySummariesFileName,
 				catalog: catalogItemsFileName,
 			}[slug];
@@ -55,9 +55,6 @@ const route = app
 			return await getApi(c.req.raw, fileName);
 		},
 	)
-	.get('/cost-price', authMiddleware, async c => {
-		return await getApi(c.req.raw, costPriceFileName);
-	})
 	.post('/cost-price', authMiddleware, async c => {
 		return await putApi(c.req.raw, costPriceFileName, async userId => {
 			const requestJson = await c.req.raw.json();
