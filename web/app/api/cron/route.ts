@@ -95,7 +95,7 @@ export async function GET(request: Request) {
 
 		console.log('existData:', existData);
 
-		let currentDate = new Date('2024-01-01T00:00:00Z');
+		let currentDate = new Date('2024-10-01T00:00:00Z');
 		// 終了日を2日前に設定
 		const endDate = addDays(new Date(), -2);
 
@@ -287,7 +287,7 @@ export async function GET(request: Request) {
 		const resultTsv = tsvObjToTsvGzip(allColData);
 
 		const putResponse = await putFile(
-			account.id,
+			account.userId,
 			salesTrafficReportFileName,
 			resultTsv,
 		);

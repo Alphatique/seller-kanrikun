@@ -287,7 +287,7 @@ export async function GET(request: Request) {
 		const resultTsv = tsvObjToTsvGzip(allColData);
 
 		const putResponse = await putFile(
-			account.id,
+			account.userId,
 			salesTrafficReportFileName,
 			resultTsv,
 		);
