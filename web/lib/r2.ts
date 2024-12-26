@@ -19,6 +19,7 @@ import { generateR2Hash } from '@seller-kanrikun/data-operation/r2';
 const bucketName = 'seller-kanrikun';
 export const japanMarketPlaceId = 'A1VC38T7YXB528';
 export const settlementReportFileName = 'settlement-report.tsv.gz';
+export const salesTrafficReportFileName = 'sales-traffic-report.tsv.gz';
 export const inventorySummariesFileName = 'inventory-summaries.tsv.gz';
 export const costPriceFileName = 'cost-price.tsv.gz';
 
