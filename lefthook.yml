@@ -1,3 +1,7 @@
+post-checkout:
+    commands:
+        install_dependencies:
+            run: bun install --frozen-lockfile
 pre-commit:
     parallel: true
     commands:
