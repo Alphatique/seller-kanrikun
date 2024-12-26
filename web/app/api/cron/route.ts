@@ -76,7 +76,7 @@ export async function GET(request: Request) {
 		api.use(tokenMiddleware);
 
 		const existMetaDataResponse = await getFile(
-			account.id,
+			account.userId,
 			salesTrafficReportFileName,
 		);
 		if (existMetaDataResponse === undefined) {
