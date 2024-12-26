@@ -1,28 +1,37 @@
 import type { Readable } from 'node:stream';
-import { fetchServerResponse } from 'next/dist/client/components/router-reducer/fetch-server-response';
+import { addDays } from 'date-fns';
+import { gunzipSync, gzipSync } from 'fflate';
 import type { Middleware } from 'openapi-fetch';
 import createApiClient from 'openapi-fetch';
+import Papa from 'papaparse';
 
 import {
 	tsvGzipToTsvObj,
+	tsvGzipToTsvStr,
 	tsvObjToTsvGzip,
 } from '@seller-kanrikun/data-operation/tsv-gzip';
-import type { InventorySummary } from '@seller-kanrikun/data-operation/types/inventory';
 import { createClient as createDBClient } from '@seller-kanrikun/db';
 import {
 	getAccountsByProviderId,
 	refreshAccessToken,
 } from '@seller-kanrikun/db/account';
-import type { paths } from '@seller-kanrikun/sp-api/schema/catalog-items';
+import { user } from '@seller-kanrikun/db/schema';
+import type { paths } from '@seller-kanrikun/sp-api/schema/reports';
 
 import {
-	catalogItemsFileName,
 	getFile,
 	getWriteOnlySignedUrl,
-	inventorySummariesFileName,
 	japanMarketPlaceId,
 	putFile,
+	salesTrafficReportFileName,
 } from '~/lib/r2';
+
+type salesTrafficReportMeta = {
+	start: Date;
+	end: Date;
+	sellerKanrikunSaveTime: Date;
+	reportId: string;
+};
 
 export async function GET(request: Request) {
 	// DBクライアントを作成
@@ -36,11 +45,12 @@ export async function GET(request: Request) {
 
 	// アカウントごとにループ
 	for (let account of accounts) {
+		// アクセストークンを追加するミドルウェアを作成
+
 		const api = createApiClient<paths>({
 			baseUrl: 'https://sellingpartnerapi-fe.amazon.com',
 		});
 
-		// アクセストークンを追加するミドルウェアを作成
 		const tokenMiddleware: Middleware = {
 			async onRequest({ request, options }) {
 				// アクセストークンを更新
@@ -65,84 +75,221 @@ export async function GET(request: Request) {
 		};
 		api.use(tokenMiddleware);
 
-		const inventoryDataResponse = await getFile(
-			account.userId,
-			inventorySummariesFileName,
+		const existMetaDataResponse = await getFile(
+			account.id,
+			salesTrafficReportFileName,
 		);
-		if (inventoryDataResponse === undefined) {
+		if (existMetaDataResponse === undefined) {
 			console.log('existMetaDataResponse is undefined');
 			continue;
 		}
 
-		const stream = inventoryDataResponse.Body as Readable;
+		const stream = existMetaDataResponse.Body as Readable;
 
 		const chunks: Buffer[] = [];
 		for await (const chunk of stream) {
 			chunks.push(chunk);
 		}
 		const buffer = Buffer.concat(chunks);
-		const inventoryData = tsvGzipToTsvObj<InventorySummary>(buffer);
-		if (!inventoryData.data) {
-			console.error('inventoryData.data is undefined');
-			continue;
-		}
+		const existData = tsvGzipToTsvObj(buffer);
+
+		console.log('existData:', existData);
+
+		let currentDate = new Date('2024-01-01T00:00:00Z');
+		// 終了日を2日前に設定
+		const endDate = addDays(new Date(), -2);
 
 		const result: Record<string, string>[] = [];
-		const saveTime = new Date();
-		for (const inventory of inventoryData.data) {
-			const asin = inventory.asin;
-			if (!asin) {
-				console.error('asin is undefined');
-				continue;
-			}
+		const columns: Set<string> = new Set([
+			'asin',
+			'startDate',
+			'endDate',
+			'sellerKanrikunSaveTime',
+		]);
 
-			const params = {
-				path: {
-					asin: asin,
+		while (currentDate < endDate) {
+			// 次の日
+			const nextDate = addDays(currentDate, 1);
+			const createReportParams = {
+				reportType: 'GET_SALES_AND_TRAFFIC_REPORT',
+				marketplaceIds: [japanMarketPlaceId],
+				reportOptions: {
+					asinGranularity: 'CHILD',
 				},
-				query: {
-					marketplaceIds: [japanMarketPlaceId],
-				},
+				dataStartTime: currentDate.toISOString(),
+				dataEndTime: nextDate.toISOString(),
 			};
-			// レポートの一覧を取得
-			const catalogItems = await fetchWithRetryRateLimit(() => {
-				return api.GET('/catalog/2022-04-01/items/{asin}', {
-					params,
+
+			const promises = [];
+
+			const createReportResponse = await fetchWithRetryRateLimit(() => {
+				return api.POST('/reports/2021-06-30/reports', {
+					body: createReportParams,
 				});
-			}, [2, 2, 2]);
-			logFetchReturn(catalogItems, 'catalogItems');
+			}, [60, 5, 60]);
 
-			const summaries = catalogItems.data?.summaries;
-			if (!summaries) {
-				console.error('summaries is undefined');
-				continue;
-			}
-			if (!asin) {
-				console.error('asin is undefined');
-				continue;
-			}
+			console.log('createReportResponse:', createReportResponse);
 
-			for (const summary of summaries) {
-				const summaryRecord: Record<string, string> = {
-					sellerKanrikunSaveTime: saveTime.toISOString(),
-					asin: asin,
-				};
-				for (const [key, value] of Object.entries(summary)) {
-					summaryRecord[key] = String(value);
+			if (createReportResponse.data !== undefined) {
+				const reportId: string = createReportResponse.data.reportId;
+				const reportResponse = await fetchWithRetryStatusDone(() => {
+					return fetchWithRetryRateLimit(() => {
+						return api.GET(
+							'/reports/2021-06-30/reports/{reportId}',
+							{
+								params: {
+									path: {
+										reportId: reportId,
+									},
+								},
+							},
+						);
+					}, [60, 5, 60]);
+				});
+
+				if (
+					reportResponse.data !== undefined &&
+					reportResponse.data.processingStatus === 'DONE'
+				) {
+					const reportDocumentId =
+						reportResponse.data.reportDocumentId;
+					if (reportDocumentId === undefined) {
+						console.error(
+							'reportDocumentId is undefined',
+							reportResponse,
+						);
+						continue;
+					}
+					const reportDocument = await fetchWithRetryRateLimit(() => {
+						return api.GET(
+							'/reports/2021-06-30/documents/{reportDocumentId}',
+							{
+								params: {
+									path: {
+										reportDocumentId: reportDocumentId,
+									},
+								},
+							},
+						);
+					});
+					logFetchReturn(reportDocument, 'fetch reportDocument');
+
+					if (reportDocument.data === undefined) {
+						console.error('reportDocument.data is undefined');
+						continue;
+					}
+
+					// レポートドキュメントの取得
+					const reportDocumentResponse = await fetch(
+						reportDocument.data.url,
+						{
+							method: 'GET',
+						},
+					);
+					if (
+						reportDocument.data.compressionAlgorithm &&
+						reportDocument.data.compressionAlgorithm === 'GZIP'
+					) {
+						const gzipData =
+							await reportDocumentResponse.arrayBuffer();
+						console.log('gzipData:', gzipData);
+						const decompressed = gunzipSync(
+							new Uint8Array(gzipData),
+						);
+						const decoder = new TextDecoder();
+						const jsonStr = decoder.decode(decompressed);
+						const trimStr = jsonStr.trim();
+						const json = JSON.parse(trimStr);
+
+						try {
+							const salesAndTrafficByAsin =
+								json.salesAndTrafficByAsin;
+							for (const eachData of salesAndTrafficByAsin) {
+								const asin = eachData.parentAsin;
+								const salesData = eachData.salesByAsin;
+								const salesAmount = salesData.salesAmount;
+								const trafficData = eachData.trafficByAsin;
+
+								const newData: Record<string, string> = {
+									asin: asin,
+									startDate: currentDate.toISOString(),
+									endDate: nextDate.toISOString(),
+									sellerKanrikunSaveTime:
+										new Date().toISOString(),
+									salesAmount: '',
+								};
+
+								for (const [key, value] of Object.entries(
+									salesData,
+								)) {
+									newData[key] = value as string;
+									columns.add(key);
+									if (
+										typeof value === 'object' &&
+										value &&
+										'amount' in value
+									) {
+										const amountKey = `${key}Amount`;
+										newData[amountKey] =
+											value.amount as string;
+
+										columns.add(amountKey);
+									}
+								}
+								for (const [key, value] of Object.entries(
+									trafficData,
+								)) {
+									newData[key] = value as string;
+									columns.add(key);
+									if (
+										typeof value === 'object' &&
+										value &&
+										'amount' in value
+									) {
+										const amountKey = `${key}Amount`;
+										newData[amountKey] =
+											value.amount as string;
+										columns.add(amountKey);
+									}
+								}
+
+								console.log('newData:', newData);
+
+								result.push(newData);
+							}
+						} catch (error) {
+							console.error('Error:', error);
+						}
+					} else {
+						console.error(
+							'reportDocument.data.compressionAlgorithm is not GZIP',
+						);
+					}
 				}
-
-				result.push(summaryRecord);
 			}
+
+			await waitRateLimitTime(createReportResponse.response, 60);
+			currentDate = nextDate;
 		}
 
-		console.log('result:', result);
+		const finalColumns = Array.from(columns);
 
-		const tsvGzip = await tsvObjToTsvGzip(result);
+		const allColData = result.map(row => {
+			const newRow: Record<string, string> = {};
+			for (const col of finalColumns) {
+				newRow[col] = row[col] ?? '';
+			}
+			return newRow;
+		});
+
+		console.log('allColData:', allColData);
+
+		const resultTsv = tsvObjToTsvGzip(allColData);
 
 		const putResponse = await putFile(
-			account.userId,
-			catalogItemsFileName,
-			tsvGzip,
+			account.id,
+			salesTrafficReportFileName,
+			resultTsv,
 		);
 
 		console.log('putResponse:', putResponse);
@@ -174,6 +321,44 @@ interface fetchReturn<Data, Error> {
 	response: Response;
 	data?: Data;
 	error?: Error;
+}
+
+async function fetchWithRetryStatusDone<
+	Data extends {
+		processingStatus:
+			| 'CANCELLED'
+			| 'DONE'
+			| 'FATAL'
+			| 'IN_PROGRESS'
+			| 'IN_QUEUE';
+	},
+	Error,
+>(
+	func: () => Promise<fetchReturn<Data, Error>>,
+	waitTime = 30,
+): Promise<fetchReturn<Data, Error>> {
+	const result = await func();
+	logFetchReturn(result, 'fetch with retryStatusDone');
+	if (result.error) {
+		return result;
+	}
+	if (
+		result.data &&
+		(result.data.processingStatus === 'DONE' ||
+			result.data.processingStatus === 'CANCELLED')
+	) {
+		return result;
+	}
+	if (
+		result.data &&
+		(result.data.processingStatus === 'IN_PROGRESS' ||
+			result.data.processingStatus === 'IN_QUEUE')
+	) {
+		await waitRateLimitTime(result.response, waitTime);
+		return await fetchWithRetryStatusDone(func);
+	}
+	console.error('processingStatus is not DONE:', result.data);
+	return { response: result.response };
 }
 
 async function fetchWithRetryNextToken<
@@ -213,7 +398,7 @@ async function fetchWithRetryNextToken<
 // レート制限のリトライ付きfetchを実行
 async function fetchWithRetryRateLimit<Data, Error>(
 	func: () => Promise<fetchReturn<Data, Error>>,
-	waitTimes: number[] = [0.5, 0.5, 0.5],
+	waitTimes: number[] = [30, 5, 30],
 	count = 0,
 ): Promise<fetchReturn<Data, Error>> {
 	const result = await func();
