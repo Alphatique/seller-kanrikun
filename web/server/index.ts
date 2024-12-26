@@ -9,6 +9,7 @@ import {
 import type { CostPriceTsv } from '@seller-kanrikun/data-operation/types/cost';
 
 import {
+	catalogItemsFileName,
 	costPriceFileName,
 	doesFileExist,
 	getApi,
@@ -16,6 +17,7 @@ import {
 	getWriteOnlySignedUrl,
 	inventorySummariesFileName,
 	putApi,
+	salesTrafficReportFileName,
 	settlementReportFileName,
 } from '~/lib/r2';
 import { uploadCostPriceSchema } from '~/schema/const-price';
@@ -34,19 +36,25 @@ const route = app
 		return auth.handler(c.req.raw);
 	})
 	.route('/link-account', linkAccount)
-	.get('/:slug{reports|cost|inventory}', authMiddleware, async c => {
-		const slug = c.req.param('slug');
-		console.log({ slug });
+	.get(
+		'/:slug{reports/settlement|reports/sales-traffic|cost|inventory}',
+		authMiddleware,
+		async c => {
+			const slug = c.req.param('slug');
+			console.log({ slug });
 
-		const fileName = {
-			reports: settlementReportFileName,
-			cost: costPriceFileName,
-			inventory: inventorySummariesFileName,
-		}[slug];
-		if (!fileName) throw new Error();
+			const fileName = {
+				'reports/settlement': settlementReportFileName,
+				'reports/sales-traffic': salesTrafficReportFileName,
+				cost: costPriceFileName,
+				inventory: inventorySummariesFileName,
+				catalog: catalogItemsFileName,
+			}[slug];
+			if (!fileName) throw new Error();
 
-		return await getApi(c.req.raw, fileName);
-	})
+			return await getApi(c.req.raw, fileName);
+		},
+	)
 	.get('/cost-price', authMiddleware, async c => {
 		return await getApi(c.req.raw, costPriceFileName);
 	})
@@ -55,7 +63,6 @@ const route = app
 			const requestJson = await c.req.raw.json();
 			const requestParse = uploadCostPriceSchema.safeParse(requestJson);
 
-			console.log(requestParse.data);
 			if (!requestParse.success) return null;
 			if (requestParse.data.values.length === 0) return null;
 			const reqStart = requestParse.data.start.getTime();
