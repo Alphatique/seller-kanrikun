@@ -1,3 +1,10 @@
+import type {
+	GetObjectCommandInput,
+	GetObjectCommandOutput,
+	PutObjectAclCommandInput,
+	PutObjectCommandInput,
+	PutObjectCommandOutput,
+} from '@aws-sdk/client-s3';
 import {
 	GetObjectCommand,
 	HeadObjectCommand,
@@ -172,4 +179,53 @@ export function returnUnauthorized() {
 			'Content-Type': 'text/plain; charset=utf-8',
 		},
 	});
+}
+
+// データを一時urlなしで取得
+export async function getFile(
+	fileName: string,
+): Promise<GetObjectCommandOutput | undefined> {
+	try {
+		const getParams: GetObjectCommandInput = {
+			Bucket: bucketName,
+			Key: fileName,
+		};
+
+		const command = new GetObjectCommand(getParams);
+		const response = await R2.send(command);
+
+		if (response.Body === undefined) {
+			return undefined;
+		}
+
+		return response;
+	} catch (error) {
+		console.error(error);
+		return undefined;
+	}
+}
+
+// データを一時urlなしでアップロード
+export async function putFile(
+	fileName: string,
+	data: Uint8Array | undefined,
+): Promise<PutObjectCommandOutput | undefined> {
+	try {
+		const putParams: PutObjectCommandInput = {
+			Bucket: bucketName,
+			Key: fileName,
+			Body: data,
+			ContentType: 'application/gzip',
+		};
+
+		const command = new PutObjectCommand(putParams);
+		const response = await R2.send(command);
+
+		console.log(response);
+
+		return response;
+	} catch (error) {
+		console.error(error);
+		return undefined;
+	}
 }
