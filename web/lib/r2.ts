@@ -21,6 +21,7 @@ export const japanMarketPlaceId = 'A1VC38T7YXB528';
 export const settlementReportFileName = 'settlement-report.tsv.gz';
 export const salesTrafficReportFileName = 'sales-traffic-report.tsv.gz';
 export const inventorySummariesFileName = 'inventory-summaries.tsv.gz';
+export const catalogItemsFileName = 'catalog-items.tsv.gz';
 export const costPriceFileName = 'cost-price.tsv.gz';
 
 export const R2 = new S3Client({
@@ -184,11 +185,11 @@ export function returnUnauthorized() {
 
 // データを一時urlなしで取得
 export async function getFile(
-	accountId: string,
+	userId: string,
 	fileName: string,
 ): Promise<GetObjectCommandOutput | undefined> {
 	try {
-		const key = await generateR2Hash(accountId, fileName);
+		const key = await generateR2Hash(userId, fileName);
 
 		const getParams: GetObjectCommandInput = {
 			Bucket: bucketName,
@@ -211,12 +212,12 @@ export async function getFile(
 
 // データを一時urlなしでアップロード
 export async function putFile(
-	accountId: string,
+	userId: string,
 	fileName: string,
 	data: Uint8Array | undefined,
 ): Promise<PutObjectCommandOutput | undefined> {
 	try {
-		const key = await generateR2Hash(accountId, fileName);
+		const key = await generateR2Hash(userId, fileName);
 		const putParams: PutObjectCommandInput = {
 			Bucket: bucketName,
 			Key: key,
