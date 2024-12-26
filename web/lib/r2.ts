@@ -183,12 +183,15 @@ export function returnUnauthorized() {
 
 // データを一時urlなしで取得
 export async function getFile(
+	accountId: string,
 	fileName: string,
 ): Promise<GetObjectCommandOutput | undefined> {
 	try {
+		const key = await generateR2Hash(accountId, fileName);
+
 		const getParams: GetObjectCommandInput = {
 			Bucket: bucketName,
-			Key: fileName,
+			Key: key,
 		};
 
 		const command = new GetObjectCommand(getParams);
@@ -207,13 +210,15 @@ export async function getFile(
 
 // データを一時urlなしでアップロード
 export async function putFile(
+	accountId: string,
 	fileName: string,
 	data: Uint8Array | undefined,
 ): Promise<PutObjectCommandOutput | undefined> {
 	try {
+		const key = await generateR2Hash(accountId, fileName);
 		const putParams: PutObjectCommandInput = {
 			Bucket: bucketName,
-			Key: fileName,
+			Key: key,
 			Body: data,
 			ContentType: 'application/gzip',
 		};

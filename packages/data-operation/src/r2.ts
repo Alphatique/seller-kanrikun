@@ -1,10 +1,10 @@
 import { gunzipSync, gzipSync } from 'fflate';
 
 export async function generateR2Hash(
-	userId: string,
+	accountId: string,
 	dataName: string,
 ): Promise<string> {
-	const rawString = `${userId}/${dataName}`;
+	const rawString = `${accountId}/${dataName}`;
 	const encoder = new TextEncoder();
 	const data = encoder.encode(rawString);
 	// SHA-256 でハッシュ化
