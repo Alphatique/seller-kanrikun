@@ -52,7 +52,9 @@ export function PlbsTableFilter() {
 	);
 	// データのロード
 	const { data: reportData } = useSWR(
-		session === null || fileLoaded.report ? null : '/api/reports',
+		session === null || fileLoaded.report
+			? null
+			: '/api/reports/settlement',
 		key =>
 			SWRLoadFile('settlement-report.tsv.gz', key, session!.session.id),
 	);
