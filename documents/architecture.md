@@ -4,26 +4,26 @@
 flowchart LR
 
 D[Developer]
-G[<a href='https://github.com' style='color:inherit'>GitHub</a>]
-TF[<a href='https://www.terraform.io/' style='color:inherit'>Terraform</a>]
+G[GitHub]
+TF[Terraform]
 C[Client]
 
-subgraph V[<a href='https://vercel.com' style='color:inherit'>Vercel</a>]
-    CDN[<a href='https://vercel.com/docs/edge-network/overview' style='color:inherit'>CDN</a>]
-    subgraph F[<a href='https://vercel.com/docs/functions' style='color:inherit'>Functions</a>]
-        subgraph N[<a href='https://nextjs.org/' style='color:inherit'>Next.js</a>]
-            B(<a href='https://www.better-auth.com/' style='color:inherit'>BetterAuth</a>)
-            H(<a href='https://hono.dev/' style='color:inherit'>Hono</a>)
+subgraph V[Vercel]
+    CDN
+    subgraph F[Functions]
+        subgraph N[Next.js]
+            B(BetterAuth)
+            H(Hono)
         end
     end
 end
 
-subgraph T[<a href='https://turso.tech/' style='color:inherit'>Turso</a>]
+subgraph T[Turso]
     DB[(Database)]
 end
 
-subgraph CF[<a href='https://www.cloudflare.com/' style='color:inherit'>Cloudflare</a>]
-    R[(<a href='https://developers.cloudflare.com/r2/' style='color:inherit'>R2</a>)]
+subgraph CF[Cloudflare]
+    R[(R2)]
 end
 
 D -- git push --> G
