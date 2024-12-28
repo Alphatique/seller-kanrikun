@@ -10,11 +10,8 @@ import {
 } from '@seller-kanrikun/db/account';
 import type { paths } from '@seller-kanrikun/sp-api/schema/fba-inventory';
 
-import {
-	getWriteOnlySignedUrl,
-	inventorySummariesFileName,
-	japanMarketPlaceId,
-} from '~/lib/r2';
+import { FILE_NAMES, JAPAN_MARKET_PLACE_ID } from '~/lib/constants';
+import { getWriteOnlySignedUrl } from '~/lib/r2';
 
 export async function GET(request: Request) {
 	// DBクライアントを作成
@@ -63,8 +60,8 @@ export async function GET(request: Request) {
 			const params = {
 				query: {
 					granularityType: 'Marketplace' as const,
-					granularityId: japanMarketPlaceId,
-					marketplaceIds: [japanMarketPlaceId],
+					granularityId: JAPAN_MARKET_PLACE_ID,
+					marketplaceIds: [JAPAN_MARKET_PLACE_ID],
 				},
 			};
 			// リトライ付きfetchを実行
@@ -114,7 +111,7 @@ export async function GET(request: Request) {
 
 		const url = await getWriteOnlySignedUrl(
 			account.userId,
-			inventorySummariesFileName,
+			FILE_NAMES.INVENTORY_SUMMARIES,
 		);
 
 		const putResponse = await fetch(url, {

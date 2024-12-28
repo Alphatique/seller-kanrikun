@@ -8,17 +8,13 @@ import {
 } from '@seller-kanrikun/data-operation/tsv-gzip';
 import type { CostPriceTsv } from '@seller-kanrikun/data-operation/types/cost';
 
+import { FILE_NAMES } from '~/lib/constants';
 import {
-	catalogItemsFileName,
-	costPriceFileName,
 	doesFileExist,
 	getApi,
 	getReadOnlySignedUrl,
 	getWriteOnlySignedUrl,
-	inventorySummariesFileName,
 	putApi,
-	salesTrafficReportFileName,
-	settlementReportFileName,
 } from '~/lib/r2';
 import { uploadCostPriceSchema } from '~/schema/const-price';
 
@@ -44,11 +40,11 @@ const route = app
 			console.log({ slug });
 
 			const fileName = {
-				'reports/settlement': settlementReportFileName,
-				'reports/sales-traffic': salesTrafficReportFileName,
-				'cost-price': costPriceFileName,
-				inventory: inventorySummariesFileName,
-				catalog: catalogItemsFileName,
+				'reports/settlement': FILE_NAMES.SETTLEMENT_REPORT,
+				'reports/sales-traffic': FILE_NAMES.SALES_TRAFFIC,
+				'cost-price': FILE_NAMES.COST_PRICE,
+				inventory: FILE_NAMES.INVENTORY_SUMMARIES,
+				catalog: FILE_NAMES.CATALOG_ITEMS,
 			}[slug];
 			if (!fileName) throw new Error();
 
@@ -56,7 +52,7 @@ const route = app
 		},
 	)
 	.post('/cost-price', authMiddleware, async c => {
-		return await putApi(c.req.raw, costPriceFileName, async userId => {
+		return await putApi(c.req.raw, FILE_NAMES.COST_PRICE, async userId => {
 			const requestJson = await c.req.raw.json();
 			const requestParse = uploadCostPriceSchema.safeParse(requestJson);
 
@@ -66,7 +62,10 @@ const route = app
 			const reqEnd = requestParse.data.end.getTime();
 			if (reqStart >= reqEnd) return null;
 
-			const url = await getReadOnlySignedUrl(userId, costPriceFileName);
+			const url = await getReadOnlySignedUrl(
+				userId,
+				FILE_NAMES.COST_PRICE,
+			);
 			const fileResponse = await fetch(url);
 			if (!fileResponse.ok) return null;
 			const existArray = await fileResponse.arrayBuffer();
@@ -152,11 +151,14 @@ const route = app
 	.post('/first', authMiddleware, async c => {
 		const session = c.var.session;
 
-		const hasFile = await doesFileExist(session.user.id, costPriceFileName);
+		const hasFile = await doesFileExist(
+			session.user.id,
+			FILE_NAMES.COST_PRICE,
+		);
 		if (!hasFile) {
 			const url = await getWriteOnlySignedUrl(
 				session.user.id,
-				costPriceFileName,
+				FILE_NAMES.COST_PRICE,
 			);
 			const emptyCostPrice: CostPriceTsv[] = [];
 			// papaparseの無駄遣い
