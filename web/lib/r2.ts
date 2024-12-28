@@ -214,7 +214,7 @@ export async function getFile(
 export async function putFile(
 	userId: string,
 	fileName: string,
-	data: Uint8Array | undefined,
+	data: Uint8Array,
 ): Promise<PutObjectCommandOutput | undefined> {
 	try {
 		const key = await generateR2Hash(userId, fileName);
