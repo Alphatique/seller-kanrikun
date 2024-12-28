@@ -18,13 +18,8 @@ import {
 import { user } from '@seller-kanrikun/db/schema';
 import type { paths } from '@seller-kanrikun/sp-api/schema/reports';
 
-import {
-	getFile,
-	getWriteOnlySignedUrl,
-	japanMarketPlaceId,
-	putFile,
-	salesTrafficReportFileName,
-} from '~/lib/r2';
+import { FILE_NAMES, JAPAN_MARKET_PLACE_ID } from '~/lib/constants';
+import { getFile, getWriteOnlySignedUrl, putFile } from '~/lib/r2';
 
 type salesTrafficReportMeta = {
 	start: Date;
@@ -77,7 +72,7 @@ export async function GET(request: Request) {
 
 		const existMetaDataResponse = await getFile(
 			account.id,
-			salesTrafficReportFileName,
+			FILE_NAMES.SALES_TRAFFIC,
 		);
 		if (existMetaDataResponse === undefined) {
 			console.log('existMetaDataResponse is undefined');
@@ -112,7 +107,7 @@ export async function GET(request: Request) {
 			const nextDate = addDays(currentDate, 1);
 			const createReportParams = {
 				reportType: 'GET_SALES_AND_TRAFFIC_REPORT',
-				marketplaceIds: [japanMarketPlaceId],
+				marketplaceIds: [JAPAN_MARKET_PLACE_ID],
 				reportOptions: {
 					asinGranularity: 'CHILD',
 				},
@@ -288,7 +283,7 @@ export async function GET(request: Request) {
 
 		const putResponse = await putFile(
 			account.userId,
-			salesTrafficReportFileName,
+			FILE_NAMES.SALES_TRAFFIC,
 			resultTsv,
 		);
 

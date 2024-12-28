@@ -16,13 +16,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { auth } from '@seller-kanrikun/auth/server';
 import { generateR2Hash } from '@seller-kanrikun/data-operation/r2';
 
-const bucketName = 'seller-kanrikun';
-export const japanMarketPlaceId = 'A1VC38T7YXB528';
-export const settlementReportFileName = 'settlement-report.tsv.gz';
-export const salesTrafficReportFileName = 'sales-traffic-report.tsv.gz';
-export const inventorySummariesFileName = 'inventory-summaries.tsv.gz';
-export const catalogItemsFileName = 'catalog-items.tsv.gz';
-export const costPriceFileName = 'cost-price.tsv.gz';
+import { R2_BUCKET_NAME } from './constants';
 
 export const R2 = new S3Client({
 	region: 'auto',
@@ -46,7 +40,7 @@ export async function getReadOnlySignedUrl(
 	return await getSignedUrl(
 		R2,
 		new GetObjectCommand({
-			Bucket: bucketName,
+			Bucket: R2_BUCKET_NAME,
 			Key: key,
 		}),
 		{ expiresIn },
@@ -64,7 +58,7 @@ export async function getWriteOnlySignedUrl(
 	return await getSignedUrl(
 		R2,
 		new PutObjectCommand({
-			Bucket: bucketName,
+			Bucket: R2_BUCKET_NAME,
 			Key: key,
 		}),
 		{ expiresIn },
@@ -80,7 +74,7 @@ export async function doesFileExist(
 	const result = new Promise<boolean>(resolve => {
 		R2.send(
 			new HeadObjectCommand({
-				Bucket: bucketName,
+				Bucket: R2_BUCKET_NAME,
 				Key: key,
 			}),
 		)
@@ -192,7 +186,7 @@ export async function getFile(
 		const key = await generateR2Hash(userId, fileName);
 
 		const getParams: GetObjectCommandInput = {
-			Bucket: bucketName,
+			Bucket: R2_BUCKET_NAME,
 			Key: key,
 		};
 
@@ -219,7 +213,7 @@ export async function putFile(
 	try {
 		const key = await generateR2Hash(userId, fileName);
 		const putParams: PutObjectCommandInput = {
-			Bucket: bucketName,
+			Bucket: R2_BUCKET_NAME,
 			Key: key,
 			Body: data,
 			ContentType: 'application/gzip',

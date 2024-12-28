@@ -7,7 +7,10 @@ import type { Middleware } from 'openapi-fetch';
 import Papa from 'papaparse';
 
 import { tsvObjToTsvGzip } from '@seller-kanrikun/data-operation/tsv-gzip';
-import { putFile, settlementReportFileName } from '~/lib/r2';
+
+import { FILE_NAMES } from '~/lib/constants';
+import { putFile } from '~/lib/r2';
+
 import {
 	accessTokenMiddleware,
 	authMiddleware,
@@ -155,6 +158,6 @@ export const app = new Hono()
 
 			const gzippedReports = tsvObjToTsvGzip(documentRows);
 			const userId = c.var.user.id;
-			putFile(userId, settlementReportFileName, gzippedReports);
+			putFile(userId, FILE_NAMES.SETTLEMENT_REPORT, gzippedReports);
 		}
 	});

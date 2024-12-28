@@ -15,14 +15,8 @@ import {
 } from '@seller-kanrikun/db/account';
 import type { paths } from '@seller-kanrikun/sp-api/schema/catalog-items';
 
-import {
-	catalogItemsFileName,
-	getFile,
-	getWriteOnlySignedUrl,
-	inventorySummariesFileName,
-	japanMarketPlaceId,
-	putFile,
-} from '~/lib/r2';
+import { FILE_NAMES, JAPAN_MARKET_PLACE_ID } from '~/lib/constants';
+import { getFile, getWriteOnlySignedUrl, putFile } from '~/lib/r2';
 
 export async function GET(request: Request) {
 	// DBクライアントを作成
@@ -67,7 +61,7 @@ export async function GET(request: Request) {
 
 		const inventoryDataResponse = await getFile(
 			account.userId,
-			inventorySummariesFileName,
+			FILE_NAMES.INVENTORY_SUMMARIES,
 		);
 		if (inventoryDataResponse === undefined) {
 			console.log('existMetaDataResponse is undefined');
@@ -101,7 +95,7 @@ export async function GET(request: Request) {
 					asin: asin,
 				},
 				query: {
-					marketplaceIds: [japanMarketPlaceId],
+					marketplaceIds: [JAPAN_MARKET_PLACE_ID],
 				},
 			};
 			// レポートの一覧を取得
@@ -141,7 +135,7 @@ export async function GET(request: Request) {
 
 		const putResponse = await putFile(
 			account.userId,
-			catalogItemsFileName,
+			FILE_NAMES.CATALOG_ITEMS,
 			tsvGzip,
 		);
 
