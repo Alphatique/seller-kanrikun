@@ -73,86 +73,63 @@ export const app = new Hono()
 
 			const documentRows: Record<string, string>[] = [];
 
-			const documentsPromises: Promise<void>[] = [];
-			for (const { reports } of reportsData) {
-				for (const report of reports) {
-					const getParseDocument = new Promise<void>(
-						(resolve, reject) => {
-							(async () => {
-								// 多分頭悪い
-								if (report.reportDocumentId) {
-									const reportDocumentResponse =
-										await reportsApi.GET(
-											'/reports/2021-06-30/documents/{reportDocumentId}',
-											{
-												params: {
-													path: {
-														reportDocumentId:
-															report.reportDocumentId,
-													},
-												},
-											},
-										);
+			const documentsPromises = reportsData.map(({ reports }) =>
+				reports.map(async report => {
+					if (!report.reportDocumentId) throw new Error();
 
-									if (reportDocumentResponse.data) {
-										const documentDataResponse =
-											await fetch(
-												reportDocumentResponse.data.url,
-											);
-										// レポートドキュメントのストリームを取得
-										const webReadableStream =
-											documentDataResponse.body as unknown as WebReadableStream<Uint8Array>;
-										const nodeStream =
-											Readable.fromWeb(webReadableStream);
-
-										// パース用のPapaparseストリームを作成
-										const papaStream = Papa.parse(
-											Papa.NODE_STREAM_INPUT,
-											{
-												header: true, // CSVヘッダーの有無
-												delimiter: '\t', // 必要に応じて区切り文字を設定
-											},
-										);
-
-										// パース時のイベントハンドラ
-										papaStream.on(
-											'data',
-											(row: Record<string, string>) => {
-												documentRows.push(row);
-											},
-										);
-
-										// パース完了時
-										papaStream.on('end', () => {
-											console.log('Parsing complete.');
-											console.log(
-												'New rows:',
-												documentRows.length,
-											);
-
-											resolve();
-										});
-
-										// エラーハンドリング
-										papaStream.on('error', error => {
-											console.error(
-												'Error parsing CSV:',
-												error,
-											);
-											reject();
-										});
-
-										// ストリームにパイプしてパース開始
-										nodeStream.pipe(papaStream);
-									}
-								}
-								reject();
-							})();
+					const reportDocumentResponse = await reportsApi.GET(
+						'/reports/2021-06-30/documents/{reportDocumentId}',
+						{
+							params: {
+								path: {
+									reportDocumentId: report.reportDocumentId,
+								},
+							},
 						},
 					);
-					documentsPromises.push(getParseDocument);
-				}
-			}
+					if (!reportDocumentResponse.data) return;
+
+					const documentDataResponse = await fetch(
+						reportDocumentResponse.data.url,
+					);
+					// レポートドキュメントのストリームを取得
+					const webReadableStream =
+						documentDataResponse.body as unknown as WebReadableStream<Uint8Array>;
+					const nodeStream = Readable.fromWeb(webReadableStream);
+
+					// パース用のPapaparseストリームを作成
+					const papaStream = Papa.parse(Papa.NODE_STREAM_INPUT, {
+						header: true, // CSVヘッダーの有無
+						delimiter: '\t', // 必要に応じて区切り文字を設定
+					});
+
+					// パース時のイベントハンドラ
+					papaStream.on('data', (row: Record<string, string>) => {
+						documentRows.push(row);
+					});
+
+					// パース完了時
+					const endPromise = new Promise<void>(resolve =>
+						papaStream.on('end', () => {
+							console.log('Parsing complete.');
+							console.log('New rows:', documentRows.length);
+
+							resolve();
+						}),
+					);
+
+					// エラーハンドリング
+					papaStream.on('error', error => {
+						console.error('Error parsing CSV:', error);
+						throw new Error();
+					});
+
+					// ストリームにパイプしてパース開始
+					nodeStream.pipe(papaStream);
+
+					return endPromise;
+				}),
+			);
 
 			await Promise.all(documentsPromises);
 
