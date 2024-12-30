@@ -67,8 +67,7 @@ export const app = new Hono()
 
 			await c.var.db
 				.delete(accountLinkingVerification)
-				.where(eq(accountLinkingVerification.id, state))
-				.execute();
+				.where(eq(accountLinkingVerification.id, state));
 
 			const body = new URLSearchParams({
 				grant_type: 'authorization_code',
@@ -113,8 +112,7 @@ export const app = new Hono()
 						eq(account.userId, c.var.user.id),
 						eq(account.providerId, 'seller-central'),
 					),
-				)
-				.execute();
+				);
 
 			console.log('inserting account:', tokens);
 
@@ -124,20 +122,17 @@ export const app = new Hono()
 				tokens.refresh_token,
 			);
 
-			await c.var.db
-				.insert(account)
-				.values({
-					id: nanoid(),
-					accountId: selling_partner_id,
-					providerId: 'seller-central',
-					userId: c.var.user.id,
-					accessToken: tokens.access_token,
-					accessTokenExpiresAt: expiresAt,
-					refreshToken: tokens.refresh_token,
-					createdAt: now,
-					updatedAt: now,
-				})
-				.execute();
+			await c.var.db.insert(account).values({
+				id: nanoid(),
+				accountId: selling_partner_id,
+				providerId: 'seller-central',
+				userId: c.var.user.id,
+				accessToken: tokens.access_token,
+				accessTokenExpiresAt: expiresAt,
+				refreshToken: tokens.refresh_token,
+				createdAt: now,
+				updatedAt: now,
+			});
 
 			return c.redirect('/dashboard');
 		},
