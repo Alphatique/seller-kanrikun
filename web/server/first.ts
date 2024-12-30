@@ -33,6 +33,7 @@ export const app = new Hono()
 				return request;
 			},
 		};
+		reportsApi.use(tokenMiddleware);
 
 		// レポートの一覧を取得
 		let reportsResponse = await reportsApi.GET(
@@ -51,6 +52,7 @@ export const app = new Hono()
 
 		if (reportsResponse.data !== undefined) {
 			const reportsData = [reportsResponse.data];
+			// nextTokenがあるかぎり続けて取得
 			while (reportsResponse.data.nextToken) {
 				const nextToken: string = reportsResponse.data.nextToken;
 				reportsResponse = await reportsApi.GET(
@@ -58,25 +60,30 @@ export const app = new Hono()
 					{
 						params: {
 							query: {
-								nextToken,
+								nextToken, // nextTokenのときはnextTokenのみでよい
 							},
 						},
 					},
 				);
 
+				// レスポンスがある場合は追加
 				if (reportsResponse.data) {
 					reportsData.push(reportsResponse.data);
 				} else {
+					// レスポンスがない場合は終了
 					break;
 				}
 			}
 
+			// レポートドキュメント保存用のデータ
 			const documentRows: Record<string, string>[] = [];
 
+			// レポートドキュメントの取得
 			const documentsPromises = reportsData.map(({ reports }) =>
 				reports.map(async report => {
 					if (!report.reportDocumentId) throw new Error();
 
+					// レポートドキュメントの取得
 					const reportDocumentResponse = await reportsApi.GET(
 						'/reports/2021-06-30/documents/{reportDocumentId}',
 						{
@@ -87,8 +94,10 @@ export const app = new Hono()
 							},
 						},
 					);
+					// データがない場合は終了
 					if (!reportDocumentResponse.data) return;
 
+					// レポートドキュメントのデータ取得
 					const documentDataResponse = await fetch(
 						reportDocumentResponse.data.url,
 					);
@@ -108,20 +117,20 @@ export const app = new Hono()
 						documentRows.push(row);
 					});
 
-					// パース完了時
-					const endPromise = new Promise<void>(resolve =>
+					// パース終了時
+					const endPromise = new Promise<void>((resolve, reject) => {
+						// パース完了時
 						papaStream.on('end', () => {
 							console.log('Parsing complete.');
 							console.log('New rows:', documentRows.length);
 
 							resolve();
-						}),
-					);
-
-					// エラーハンドリング
-					papaStream.on('error', error => {
-						console.error('Error parsing CSV:', error);
-						throw new Error();
+						});
+						// エラーハンドリング
+						papaStream.on('error', error => {
+							console.error('Error parsing CSV:', error);
+							reject(error);
+						});
 					});
 
 					// ストリームにパイプしてパース開始
@@ -132,6 +141,8 @@ export const app = new Hono()
 			);
 
 			await Promise.all(documentsPromises);
+
+			console.log('All parsing complete.', documentRows);
 
 			const gzippedReports = tsvObjToTsvGzip(documentRows);
 			const userId = c.var.user.id;
