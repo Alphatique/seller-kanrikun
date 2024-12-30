@@ -114,7 +114,13 @@ export const app = new Hono()
 					),
 				);
 
-			console.log('inserting account:', tokens, tokens.refresh_token);
+			console.log('inserting account:', tokens);
+
+			console.log(
+				'userId, refresh_token:',
+				account.userId,
+				tokens.refresh_token,
+			);
 
 			await c.var.db.insert(account).values({
 				id: nanoid(),
