@@ -10,6 +10,7 @@ export function createClient(config: {
 	const client = createLibsqlClient(config);
 	const db = drizzle(client, {
 		schema,
+		logger: true,
 	});
 
 	return db;
