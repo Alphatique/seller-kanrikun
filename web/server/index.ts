@@ -43,11 +43,12 @@ const route = app
 			if (!fileName) throw new Error();
 
 			const url = await getReadOnlySignedUrl(c.var.user.id, fileName);
+			console.log({ url });
 
 			return new Response(null, {
 				status: 302,
 				headers: {
-					location: url,
+					Location: url,
 				},
 			});
 		},

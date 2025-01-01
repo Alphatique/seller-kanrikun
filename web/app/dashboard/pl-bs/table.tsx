@@ -16,13 +16,13 @@ interface Props {
 	title: string;
 	tableInfo: PlbsTableMetaData[];
 	groupedDataIndexes: Record<string, number[]>;
-	filteredReport: FilteredSettlementReport[] | null;
-	plbsDataWithTax: PlBsWithTax[] | null;
-	plbsDataWithoutTax: PlBsWithoutTax[] | null;
+	filteredReport: FilteredSettlementReport[] | undefined;
+	plbsDataWithTax: PlBsWithTax[] | undefined;
+	plbsDataWithoutTax: PlBsWithoutTax[] | undefined;
 }
 
 function getNumericValue<T extends object>(
-	data: T[] | null,
+	data: T[] | undefined,
 	index: number,
 	key: keyof T,
 ): number {
