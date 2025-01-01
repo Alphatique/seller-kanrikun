@@ -9,13 +9,7 @@ import {
 import type { CostPriceTsv } from '@seller-kanrikun/data-operation/types/cost';
 
 import { FILE_NAMES } from '~/lib/constants';
-import {
-	doesFileExist,
-	getApi,
-	getReadOnlySignedUrl,
-	getWriteOnlySignedUrl,
-	putApi,
-} from '~/lib/r2';
+import { getReadOnlySignedUrl, getWriteOnlySignedUrl } from '~/lib/r2';
 
 import { app as costPrice } from './cost-price';
 import { app as linkAccount } from './link-account';
@@ -48,48 +42,22 @@ const route = app
 			}[slug];
 			if (!fileName) throw new Error();
 
-			return await getApi(c.req.raw, fileName);
+			const url = await getReadOnlySignedUrl(c.var.user.id, fileName);
+
+			return new Response(null, {
+				status: 302,
+				headers: {
+					location: url,
+				},
+			});
 		},
 	)
-	.route('/cost-price', costPrice)
-	.post('/first', authMiddleware, async c => {
-		const session = c.var.session;
-
-		const hasFile = await doesFileExist(
-			session.user.id,
+	.post('/cost-price', authMiddleware, async c => {
+		const url = await getWriteOnlySignedUrl(
+			c.var.user.id,
 			FILE_NAMES.COST_PRICE,
 		);
-		if (!hasFile) {
-			const url = await getWriteOnlySignedUrl(
-				session.user.id,
-				FILE_NAMES.COST_PRICE,
-			);
-			const emptyCostPrice: CostPriceTsv[] = [];
-			// papaparseの無駄遣い
-			const tsvArray = tsvObjToTsvGzip(emptyCostPrice);
-
-			const response = await fetch(url, {
-				method: 'PUT',
-				body: tsvArray,
-			});
-
-			if (!response.ok)
-				return c.json(
-					{
-						error: 'failed to upload',
-					},
-					500,
-				);
-
-			return c.json({});
-		} else {
-			return c.json(
-				{
-					error: 'file already exists',
-				},
-				403,
-			);
-		}
+		return new Response('ok');
 	});
 
 export type RouteType = typeof route;

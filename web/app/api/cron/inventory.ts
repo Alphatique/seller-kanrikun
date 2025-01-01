@@ -114,16 +114,18 @@ export async function GET(request: Request) {
 			FILE_NAMES.INVENTORY_SUMMARIES,
 		);
 
+		/*
 		const putResponse = await fetch(url, {
 			method: 'PUT',
 			body: tsvGzip,
 		});
-
+		
 		if (!putResponse.ok) {
 			console.error('putResponse:', putResponse);
 		}
-
+		
 		console.log('putResponse:', putResponse);
+		*/
 	}
 
 	return new Response('henohenomoheji', {

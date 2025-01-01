@@ -203,7 +203,7 @@ export async function GET(request: Request) {
 			account.userId,
 			FILE_NAMES.SETTLEMENT_REPORT,
 		);
-
+		/*
 		const response = await fetch(url, {
 			method: 'PUT',
 			headers: {
@@ -211,8 +211,8 @@ export async function GET(request: Request) {
 			},
 			body: gzipped,
 		});
-
 		console.log('response:', response);
+		*/
 	}
 
 	return new Response('henohenomoheji', {
