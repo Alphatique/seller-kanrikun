@@ -27,7 +27,8 @@
 		"types.d.ts",
 		"**/*.ts",
 		"**/*.tsx",
-		".next/types/**/*.ts"
+		".next/types/**/*.ts",
+		"../packages/data-operation/src/r2-copy.ts"
 	],
 	"exclude": ["node_modules"]
 }

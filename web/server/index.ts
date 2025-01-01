@@ -3,13 +3,11 @@ import { logger } from 'hono/logger';
 
 import { auth } from '@seller-kanrikun/auth/server';
 import {
-	tsvGzipToTsvObj,
-	tsvObjToTsvGzip,
-} from '@seller-kanrikun/data-operation/tsv-gzip';
-import type { CostPriceTsv } from '@seller-kanrikun/data-operation/types/cost';
+	getReadOnlySignedUrl,
+	getWriteOnlySignedUrl,
+} from '@seller-kanrikun/data-operation/r2';
 
-import { FILE_NAMES } from '~/lib/constants';
-import { getReadOnlySignedUrl, getWriteOnlySignedUrl } from '~/lib/r2';
+import { FILE_NAMES, R2_BUCKET_NAME } from '~/lib/constants';
 
 import { app as costPrice } from './cost-price';
 import { app as linkAccount } from './link-account';
@@ -41,7 +39,11 @@ const route = app
 			}[slug];
 			if (!fileName) throw new Error();
 
-			const url = await getReadOnlySignedUrl(c.var.user.id, fileName);
+			const url = await getReadOnlySignedUrl(
+				R2_BUCKET_NAME,
+				c.var.user.id,
+				fileName,
+			);
 
 			return new Response(null, {
 				status: 302,
@@ -52,11 +54,24 @@ const route = app
 		},
 	)
 	.post('/cost-price', authMiddleware, async c => {
-		const url = await getWriteOnlySignedUrl(
+		const result = await getWriteOnlySignedUrl(
+			R2_BUCKET_NAME,
 			c.var.user.id,
 			FILE_NAMES.COST_PRICE,
 		);
-		return new Response('ok');
+		if (result.isErr())
+			return new Response('Internal Server Error', {
+				status: 500,
+				statusText: `Error: ${result.error?.message ?? 'Unknown'}`,
+			});
+
+		const url = result.value;
+		return new Response(null, {
+			status: 302,
+			headers: {
+				Location: url,
+			},
+		});
 	});
 
 export type RouteType = typeof route;

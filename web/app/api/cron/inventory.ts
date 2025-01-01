@@ -1,6 +1,7 @@
 import type { Middleware } from 'openapi-fetch';
 import createApiClient from 'openapi-fetch';
 
+import { getWriteOnlySignedUrl } from '@seller-kanrikun/data-operation/r2';
 import { tsvObjToTsvGzip } from '@seller-kanrikun/data-operation/tsv-gzip';
 import type { InventorySummary } from '@seller-kanrikun/data-operation/types/inventory';
 import { createClient as createDBClient } from '@seller-kanrikun/db';
@@ -10,8 +11,11 @@ import {
 } from '@seller-kanrikun/db/account';
 import type { paths } from '@seller-kanrikun/sp-api/schema/fba-inventory';
 
-import { FILE_NAMES, JAPAN_MARKET_PLACE_ID } from '~/lib/constants';
-import { getWriteOnlySignedUrl } from '~/lib/r2';
+import {
+	FILE_NAMES,
+	JAPAN_MARKET_PLACE_ID,
+	R2_BUCKET_NAME,
+} from '~/lib/constants';
 
 export async function GET(request: Request) {
 	// DBクライアントを作成
@@ -110,6 +114,7 @@ export async function GET(request: Request) {
 		const tsvGzip = await tsvObjToTsvGzip(putSummaries);
 
 		const url = await getWriteOnlySignedUrl(
+			R2_BUCKET_NAME,
 			account.userId,
 			FILE_NAMES.INVENTORY_SUMMARIES,
 		);

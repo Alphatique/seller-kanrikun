@@ -5,6 +5,7 @@ import type { Middleware } from 'openapi-fetch';
 import createApiClient from 'openapi-fetch';
 import Papa from 'papaparse';
 
+import { getWriteOnlySignedUrl } from '@seller-kanrikun/data-operation/r2';
 import { createClient as createDBClient } from '@seller-kanrikun/db';
 import {
 	getAccountsByProviderId,
@@ -12,8 +13,7 @@ import {
 } from '@seller-kanrikun/db/account';
 import type { paths } from '@seller-kanrikun/sp-api/schema/reports';
 
-import { FILE_NAMES } from '~/lib/constants';
-import { getWriteOnlySignedUrl } from '~/lib/r2';
+import { FILE_NAMES, R2_BUCKET_NAME } from '~/lib/constants';
 
 export async function GET(request: Request) {
 	// DBクライアントを作成
@@ -200,6 +200,7 @@ export async function GET(request: Request) {
 		const gzipped = gzipSync(csvUint8);
 
 		const url = await getWriteOnlySignedUrl(
+			R2_BUCKET_NAME,
 			account.userId,
 			FILE_NAMES.SETTLEMENT_REPORT,
 		);

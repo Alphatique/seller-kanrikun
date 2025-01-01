@@ -1,29 +1,28 @@
 import { Readable } from 'node:stream';
 import type { ReadableStream as WebReadableStream } from 'node:stream/web';
-import type { paths as inventoryPaths } from '@seller-kanrikun/sp-api/schema/fba-inventory';
-import type { paths as reportsPaths } from '@seller-kanrikun/sp-api/schema/reports';
 import { Hono } from 'hono';
 import createApiClient from 'openapi-fetch';
 import type { Middleware } from 'openapi-fetch';
 import Papa from 'papaparse';
 
+import { putFile } from '@seller-kanrikun/data-operation/r2';
 import { tsvObjToTsvGzip } from '@seller-kanrikun/data-operation/tsv-gzip';
+import { InventorySummary } from '@seller-kanrikun/data-operation/types/inventory';
+import type { paths as inventoryPaths } from '@seller-kanrikun/sp-api/schema/fba-inventory';
+import type { paths as reportsPaths } from '@seller-kanrikun/sp-api/schema/reports';
 
 import {
 	FILE_NAMES,
 	JAPAN_MARKET_PLACE_ID,
+	R2_BUCKET_NAME,
 	SELLER_API_BASE_URL,
 } from '~/lib/constants';
-import { putFile } from '~/lib/r2';
 
-import { InventorySummary } from '@seller-kanrikun/data-operation/types/inventory';
 import {
 	accessTokenMiddleware,
 	authMiddleware,
 	dbMiddleware,
 } from './middleware';
-
-const baseUrl = 'https://sellingpartnerapi-fe.amazon.com';
 
 export const app = new Hono()
 	.use(authMiddleware)
@@ -155,7 +154,12 @@ export const app = new Hono()
 
 			const gzippedReports = tsvObjToTsvGzip(documentRows);
 			const userId = c.var.user.id;
-			putFile(userId, FILE_NAMES.SETTLEMENT_REPORT, gzippedReports);
+			putFile(
+				R2_BUCKET_NAME,
+				userId,
+				FILE_NAMES.SETTLEMENT_REPORT,
+				gzippedReports,
+			);
 		}
 
 		// 以下inventoryの処理
@@ -229,6 +233,11 @@ export const app = new Hono()
 			// tsvGzipに変換して保存
 			const gzipped = await tsvObjToTsvGzip(summariesRows);
 			const userId = c.var.user.id;
-			putFile(userId, FILE_NAMES.INVENTORY_SUMMARIES, gzipped);
+			putFile(
+				R2_BUCKET_NAME,
+				userId,
+				FILE_NAMES.INVENTORY_SUMMARIES,
+				gzipped,
+			);
 		}
 	});

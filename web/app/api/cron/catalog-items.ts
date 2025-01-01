@@ -3,6 +3,7 @@ import { fetchServerResponse } from 'next/dist/client/components/router-reducer/
 import type { Middleware } from 'openapi-fetch';
 import createApiClient from 'openapi-fetch';
 
+import { getFile, putFile } from '@seller-kanrikun/data-operation/r2';
 import {
 	tsvGzipToTsvObj,
 	tsvObjToTsvGzip,
@@ -15,8 +16,11 @@ import {
 } from '@seller-kanrikun/db/account';
 import type { paths } from '@seller-kanrikun/sp-api/schema/catalog-items';
 
-import { FILE_NAMES, JAPAN_MARKET_PLACE_ID } from '~/lib/constants';
-import { getFile, getWriteOnlySignedUrl, putFile } from '~/lib/r2';
+import {
+	FILE_NAMES,
+	JAPAN_MARKET_PLACE_ID,
+	R2_BUCKET_NAME,
+} from '~/lib/constants';
 
 export async function GET(request: Request) {
 	// DBクライアントを作成
@@ -60,6 +64,7 @@ export async function GET(request: Request) {
 		api.use(tokenMiddleware);
 
 		const inventoryDataResponse = await getFile(
+			R2_BUCKET_NAME,
 			account.userId,
 			FILE_NAMES.INVENTORY_SUMMARIES,
 		);
@@ -134,6 +139,7 @@ export async function GET(request: Request) {
 		const tsvGzip = await tsvObjToTsvGzip(result);
 
 		const putResponse = await putFile(
+			R2_BUCKET_NAME,
 			account.userId,
 			FILE_NAMES.CATALOG_ITEMS,
 			tsvGzip,

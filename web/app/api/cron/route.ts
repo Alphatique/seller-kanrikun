@@ -5,6 +5,7 @@ import type { Middleware } from 'openapi-fetch';
 import createApiClient from 'openapi-fetch';
 import Papa from 'papaparse';
 
+import { R2, getFile, putFile } from '@seller-kanrikun/data-operation/r2';
 import {
 	tsvGzipToTsvObj,
 	tsvGzipToTsvStr,
@@ -18,8 +19,11 @@ import {
 import { user } from '@seller-kanrikun/db/schema';
 import type { paths } from '@seller-kanrikun/sp-api/schema/reports';
 
-import { FILE_NAMES, JAPAN_MARKET_PLACE_ID } from '~/lib/constants';
-import { getFile, getWriteOnlySignedUrl, putFile } from '~/lib/r2';
+import {
+	FILE_NAMES,
+	JAPAN_MARKET_PLACE_ID,
+	R2_BUCKET_NAME,
+} from '~/lib/constants';
 
 type salesTrafficReportMeta = {
 	start: Date;
@@ -71,6 +75,7 @@ export async function GET(request: Request) {
 		api.use(tokenMiddleware);
 
 		const existMetaDataResponse = await getFile(
+			R2_BUCKET_NAME,
 			account.userId,
 			FILE_NAMES.SALES_TRAFFIC,
 		);
@@ -282,6 +287,7 @@ export async function GET(request: Request) {
 		const resultTsv = tsvObjToTsvGzip(allColData);
 
 		const putResponse = await putFile(
+			R2_BUCKET_NAME,
 			account.userId,
 			FILE_NAMES.SALES_TRAFFIC,
 			resultTsv,
