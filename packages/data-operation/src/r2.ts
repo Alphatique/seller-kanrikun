@@ -135,24 +135,3 @@ export async function putFile(
 		return undefined;
 	}
 }
-
-export function JsonToGzip(array: Record<string, unknown>[]): Uint8Array {
-	// json文字列化
-	const jsonString = JSON.stringify(array);
-	// gzip化
-	const compressed = gzipSync(new TextEncoder().encode(jsonString));
-
-	return compressed;
-}
-
-export function GzipToJson<T extends Record<string, unknown>>(
-	gzip: Uint8Array,
-): T[] {
-	// gzip解凍
-	const decompressed = gunzipSync(gzip);
-	// jsonパース
-	const jsonString = new TextDecoder().decode(decompressed);
-	const json = JSON.parse(jsonString);
-
-	return json;
-}
