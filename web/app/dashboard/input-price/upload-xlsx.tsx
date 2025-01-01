@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 import useSWR from 'swr';
 import * as XLSX from 'xlsx';
 
-import { useSession } from '@seller-kanrikun/auth/client';
 import { addCostPrices } from '@seller-kanrikun/data-operation/cost-price';
+import { tsvObjToTsvGzip } from '@seller-kanrikun/data-operation/tsv-gzip';
 import {
 	type CostPrice,
 	type CostPriceTsv,
@@ -23,10 +23,9 @@ import {
 	TableRow,
 } from '@seller-kanrikun/ui/components/table';
 
-import { tsvObjToTsvGzip } from '@seller-kanrikun/data-operation/tsv-gzip';
 import { DatePickerWithRange } from '~/components/date-range';
 import { InputExcel } from '~/components/input-excel';
-import { fetchGunzipObjApi, fetchGunzipStrApi } from '~/lib/fetch-gunzip';
+import { fetchGunzipObjApi } from '~/lib/fetch-gunzip';
 
 const fileToBinaryString = (file: File): Promise<ArrayBuffer> => {
 	return new Promise((resolve, reject) => {
