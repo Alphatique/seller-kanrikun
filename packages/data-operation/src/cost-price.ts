@@ -8,11 +8,14 @@ export function addCostPrices(
 ): CostPriceTsv[] {
 	// リクエストをtsvにする形式に変換
 	const requestTsv = updateRequestToTsv(requestData);
+	// 削除するASINリスト
+	const asinList = requestData.data.map(row => row.ASIN);
 	// 既存のデータからリクエストの期間を削除
 	const existSplit = splitOverlaps(
 		existData,
 		requestData.date.from,
 		requestData.date.to,
+		asinList,
 	);
 
 	// 既存データとリクエストデータを結合
@@ -30,11 +33,18 @@ function splitOverlaps(
 	existData: CostPriceTsv[],
 	reqStart: Date,
 	reqEnd: Date,
+	asinList: string[],
 ): CostPriceTsv[] {
 	const resultArray: CostPriceTsv[] = [];
 
 	for (const row of existData) {
-		// rowの開始・終了がリクエストと全く被らない場合はそのまま
+		// ASINリストに含まれていない場合はそのまま追加
+		if (!asinList.includes(row.asin)) {
+			resultArray.push(row);
+			continue;
+		}
+
+		// rowの開始・終了がリクエストと全く被らない場合はそのまま追加
 		if (isBefore(row.endDate, reqStart) || isAfter(row.startDate, reqEnd)) {
 			resultArray.push(row);
 			continue;
@@ -94,9 +104,7 @@ function sortByAsinPriceDate(data: CostPriceTsv[]): CostPriceTsv[] {
 		}
 
 		// 3) 開始日時 (startDate) の昇順
-		const aTime = new Date(a.startDate).getTime();
-		const bTime = new Date(b.startDate).getTime();
-		return aTime - bTime;
+		return a.startDate.getTime() - b.startDate.getTime();
 	});
 }
 
@@ -105,6 +113,7 @@ function mergeSameData(sortedData: CostPriceTsv[]): CostPriceTsv[] {
 	for (const current of sortedData) {
 		// 直前のデータを取得
 		const last = resultArray[resultArray.length - 1];
+
 		// 直前のデータとasin, price が同じかつ、直前の終了日と今の開始日が被る場合
 		if (
 			last &&

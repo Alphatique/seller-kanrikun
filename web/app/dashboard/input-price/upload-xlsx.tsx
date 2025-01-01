@@ -1,16 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 import useSWR from 'swr';
 import * as XLSX from 'xlsx';
 
 import { useSession } from '@seller-kanrikun/auth/client';
 import { addCostPrices } from '@seller-kanrikun/data-operation/cost-price';
-import type {
-	CostPrice,
-	CostPriceTsv,
-	UpdateCostPriceRequest,
+import {
+	type CostPrice,
+	type CostPriceTsv,
+	CostPriceTsvSchema,
+	type UpdateCostPriceRequest,
 } from '@seller-kanrikun/data-operation/types/cost-price';
 import { Button } from '@seller-kanrikun/ui/components/button';
 import {
@@ -62,10 +63,18 @@ const parseXlsxData = (binaryStr: ArrayBuffer): CostPrice[] => {
 };
 
 export function InputPriceUpload() {
-	const { data: existCostPrice } = useSWR(
-		'/api/cost-price',
-		fetchGunzipObjApi<CostPriceTsv>,
-	);
+	// データ取得
+	const { data: loadedData } = useSWR('/api/cost-price', async url => {
+		const obj = await fetchGunzipObjApi<CostPriceTsv>(url);
+		// dateが文字列でくるのでパース
+		const validatedObj = obj.map(item => {
+			return CostPriceTsvSchema.parse(item);
+		});
+
+		return validatedObj;
+	});
+	// 更新後のデータを保持するためにrefで保持
+	const existData = useRef<CostPriceTsv[] | undefined>(loadedData);
 
 	const [date, setDate] = useState<DateRange | undefined>({
 		from: new Date(),
@@ -75,7 +84,7 @@ export function InputPriceUpload() {
 
 	const handleUpload = async () => {
 		// 既存データ、アップロードデータ、日付があるか確認
-		if (!(existCostPrice && xlsxData && date && date.from && date.to))
+		if (!(existData.current && xlsxData && date && date.from && date.to))
 			return;
 
 		// 日付をUTCに変換
@@ -87,7 +96,7 @@ export function InputPriceUpload() {
 			date: { from: utcFrom, to: utcTo },
 			data: xlsxData,
 		};
-		const addedData = addCostPrices(existCostPrice, updateRequest);
+		const addedData = addCostPrices(existData.current, updateRequest);
 		const tsvGzipped = tsvObjToTsvGzip(addedData);
 
 		console.log('tsvGzipped:', addedData);
@@ -100,7 +109,8 @@ export function InputPriceUpload() {
 		if (!response.ok) {
 			console.error('put Error:', response);
 		} else {
-			console.log('putResponse:', response);
+			// 成功した場合、既存データを更新
+			existData.current = addedData;
 		}
 	};
 	const handleFileChanged = async (file: File | null) => {

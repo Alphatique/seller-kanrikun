@@ -8,8 +8,8 @@ export type CostPrice = z.infer<typeof CostPriceSchema>;
 
 export const CostPriceTsvSchema = z.object({
 	asin: z.string(),
-	startDate: z.date(),
-	endDate: z.date(),
+	startDate: z.coerce.date(),
+	endDate: z.coerce.date(),
 	price: z.preprocess(val => {
 		const num = Number(val);
 		if (Number.isNaN(num)) {
