@@ -5,7 +5,7 @@ import type { DateRange } from 'react-day-picker';
 import * as XLSX from 'xlsx';
 
 import { useSession } from '@seller-kanrikun/auth/client';
-import type { CostPrice } from '@seller-kanrikun/data-operation/types/cost';
+import type { CostPrice } from '@seller-kanrikun/data-operation/types/cost-price';
 import { Button } from '@seller-kanrikun/ui/components/button';
 import {
 	Table,

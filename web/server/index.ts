@@ -9,7 +9,6 @@ import {
 
 import { FILE_NAMES, R2_BUCKET_NAME } from '~/lib/constants';
 
-import { app as costPrice } from './cost-price';
 import { app as linkAccount } from './link-account';
 import { authMiddleware } from './middleware';
 

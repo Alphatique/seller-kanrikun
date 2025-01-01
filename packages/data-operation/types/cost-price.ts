@@ -20,14 +20,17 @@ export const CostPriceTsvSchema = z.object({
 });
 export type CostPriceTsv = z.infer<typeof CostPriceTsvSchema>;
 
-export type UpdateCostPriceRequest = {
-	userId: string;
-	date: {
-		from: Date;
-		to: Date;
-	};
-	data: CostPrice[];
-};
+export const UpdateCostPriceRequestSchema = z.object({
+	date: z.object({
+		from: z.date(),
+		to: z.date(),
+	}),
+	data: z.array(CostPriceSchema),
+});
+
+export type UpdateCostPriceRequest = z.infer<
+	typeof UpdateCostPriceRequestSchema
+>;
 
 export type SkuOrder = {
 	sku: string;
