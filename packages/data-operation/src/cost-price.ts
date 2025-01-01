@@ -94,7 +94,9 @@ function sortByAsinPriceDate(data: CostPriceTsv[]): CostPriceTsv[] {
 		}
 
 		// 3) 開始日時 (startDate) の昇順
-		return a.startDate.getTime() - b.startDate.getTime();
+		const aTime = new Date(a.startDate).getTime();
+		const bTime = new Date(b.startDate).getTime();
+		return aTime - bTime;
 	});
 }
 

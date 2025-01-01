@@ -35,8 +35,8 @@ import {
 	createReportTable,
 	initDuckDB,
 } from '~/lib/duckdb';
+import { fetchGunzipStrApi } from '~/lib/fetch-gunzip';
 
-import { tsvGzipToTsvStr } from '@seller-kanrikun/data-operation/tsv-gzip';
 import { PlbsTable } from './table';
 import {
 	bsTableWithTaxInfo,
@@ -46,20 +46,16 @@ import {
 } from './table-meta';
 
 export function PlbsTableFilter() {
-	// データ取得酔う関数。ドッカに切り離したい
-	async function fetchApi(url: string) {
-		// データ取得
-		const response = await fetch(url);
-		// arrayBuffer(gzip)→uint8Array(gzip)→tsvStr(no gzi)に変換
-		const tsvGzip = await response.arrayBuffer();
-		const uint8Array = new Uint8Array(tsvGzip);
-		const tsvStr = tsvGzipToTsvStr(uint8Array);
-		return tsvStr;
-	}
 	// データ取得
-	const { data: reportData } = useSWR('/api/reports/settlement', fetchApi);
-	const { data: inventoryData } = useSWR('/api/inventory', fetchApi);
-	const { data: costPriceData } = useSWR('/api/cost-price', fetchApi);
+	const { data: reportData } = useSWR(
+		'/api/reports/settlement',
+		fetchGunzipStrApi,
+	);
+	const { data: inventoryData } = useSWR('/api/inventory', fetchGunzipStrApi);
+	const { data: costPriceData } = useSWR(
+		'/api/cost-price',
+		fetchGunzipStrApi,
+	);
 	// duckdb
 	const { data: myDuckDB } = useSWR('/initDuckDB', initDuckDB);
 

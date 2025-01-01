@@ -23,6 +23,27 @@ const route = app
 		return auth.handler(c.req.raw);
 	})
 	.route('/link-account', linkAccount)
+	.put('/cost-price', authMiddleware, async c => {
+		console.log('cost-price put');
+		const result = await getWriteOnlySignedUrl(
+			R2_BUCKET_NAME,
+			c.var.user.id,
+			FILE_NAMES.COST_PRICE,
+		);
+		if (result.isErr())
+			return new Response('Internal Server Error', {
+				status: 500,
+				statusText: `Error: ${result.error?.message ?? 'Unknown'}`,
+			});
+
+		const url = result.value;
+		return new Response(null, {
+			status: 302,
+			headers: {
+				Location: url,
+			},
+		});
+	})
 	.get(
 		'/:slug{reports/settlement|reports/sales-traffic|cost-price|inventory|catalog}',
 		authMiddleware,
@@ -51,26 +72,6 @@ const route = app
 				},
 			});
 		},
-	)
-	.post('/cost-price', authMiddleware, async c => {
-		const result = await getWriteOnlySignedUrl(
-			R2_BUCKET_NAME,
-			c.var.user.id,
-			FILE_NAMES.COST_PRICE,
-		);
-		if (result.isErr())
-			return new Response('Internal Server Error', {
-				status: 500,
-				statusText: `Error: ${result.error?.message ?? 'Unknown'}`,
-			});
-
-		const url = result.value;
-		return new Response(null, {
-			status: 302,
-			headers: {
-				Location: url,
-			},
-		});
-	});
+	);
 
 export type RouteType = typeof route;

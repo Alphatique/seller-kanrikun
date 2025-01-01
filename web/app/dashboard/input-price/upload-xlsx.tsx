@@ -2,10 +2,16 @@
 
 import { useState } from 'react';
 import type { DateRange } from 'react-day-picker';
+import useSWR from 'swr';
 import * as XLSX from 'xlsx';
 
 import { useSession } from '@seller-kanrikun/auth/client';
-import type { CostPrice } from '@seller-kanrikun/data-operation/types/cost-price';
+import { addCostPrices } from '@seller-kanrikun/data-operation/cost-price';
+import type {
+	CostPrice,
+	CostPriceTsv,
+	UpdateCostPriceRequest,
+} from '@seller-kanrikun/data-operation/types/cost-price';
 import { Button } from '@seller-kanrikun/ui/components/button';
 import {
 	Table,
@@ -16,8 +22,10 @@ import {
 	TableRow,
 } from '@seller-kanrikun/ui/components/table';
 
+import { tsvObjToTsvGzip } from '@seller-kanrikun/data-operation/tsv-gzip';
 import { DatePickerWithRange } from '~/components/date-range';
 import { InputExcel } from '~/components/input-excel';
+import { fetchGunzipObjApi, fetchGunzipStrApi } from '~/lib/fetch-gunzip';
 
 const fileToBinaryString = (file: File): Promise<ArrayBuffer> => {
 	return new Promise((resolve, reject) => {
@@ -54,32 +62,46 @@ const parseXlsxData = (binaryStr: ArrayBuffer): CostPrice[] => {
 };
 
 export function InputPriceUpload() {
-	const { data: session } = useSession();
+	const { data: existCostPrice } = useSWR(
+		'/api/cost-price',
+		fetchGunzipObjApi<CostPriceTsv>,
+	);
+
 	const [date, setDate] = useState<DateRange | undefined>({
 		from: new Date(),
 		to: new Date(),
 	});
-
 	const [xlsxData, setXlsxData] = useState<CostPrice[] | undefined>();
 
 	const handleUpload = async () => {
-		if (!session || !xlsxData || !date || !date.from || !date.to) return;
+		// 既存データ、アップロードデータ、日付があるか確認
+		if (!(existCostPrice && xlsxData && date && date.from && date.to))
+			return;
+
+		// 日付をUTCに変換
 		const utcFrom = new Date(date.from.toISOString());
 		const lastTimeOfTo = date.to.setHours(23, 59, 59, 999);
 		const utcTo = new Date(lastTimeOfTo);
+
+		const updateRequest: UpdateCostPriceRequest = {
+			date: { from: utcFrom, to: utcTo },
+			data: xlsxData,
+		};
+		const addedData = addCostPrices(existCostPrice, updateRequest);
+		const tsvGzipped = tsvObjToTsvGzip(addedData);
+
+		console.log('tsvGzipped:', addedData);
+
 		const response = await fetch('/api/cost-price', {
-			method: 'POST',
-			headers: {
-				'x-seller-kanrikun-session-id': session.session.id.toString(),
-			},
-			body: JSON.stringify({
-				start: utcFrom,
-				end: utcTo,
-				values: xlsxData,
-			}),
+			method: 'PUT',
+			body: tsvGzipped,
 		});
-		console.log(response);
-		console.log(await response.text());
+
+		if (!response.ok) {
+			console.error('put Error:', response);
+		} else {
+			console.log('putResponse:', response);
+		}
 	};
 	const handleFileChanged = async (file: File | null) => {
 		if (!file) {
