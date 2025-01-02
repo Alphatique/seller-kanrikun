@@ -72,56 +72,47 @@ export function PlbsTableFilter() {
 		end: new Date(),
 	});
 	// 税込みか税抜きか
-	const [withTax, setWithTax] = useState(true);
+	const [withTax, setWithTax] = useState<boolean>(true);
 
 	// データ/dbが更新されたら
+	// TODO: jotai等を使ってreactから切り離す
 	useEffect(() => {
-		if (myDuckDB) {
+		if (myDuckDB && reportData && inventoryData && costPriceData) {
 			const promises = [];
-			if (reportData) {
-				promises.push(createReportTable(myDuckDB, reportData));
-			}
-			if (inventoryData) {
-				promises.push(createInventoryTable(myDuckDB, inventoryData));
-			}
-			if (costPriceData) {
-				promises.push(createCostPriceTable(myDuckDB, costPriceData));
-			}
-			if (reportData && inventoryData && costPriceData) {
-				Promise.all(promises).then(async () => {
-					// テーブルが作成されているか確認
-					const checkedTable = await checkTables(myDuckDB, [
-						'report',
-						'inventory_summaries',
-						'cost_price',
-					]);
-					if (checkedTable.length !== 3) return;
+			promises.push(createReportTable(myDuckDB, reportData));
+			promises.push(createInventoryTable(myDuckDB, inventoryData));
+			promises.push(createCostPriceTable(myDuckDB, costPriceData));
+			Promise.all(promises).then(async () => {
+				// テーブルが作成されているか確認
+				const checkedTable = await checkTables(myDuckDB, [
+					'report',
+					'inventory_summaries',
+					'cost_price',
+				]);
+				if (checkedTable.length !== 3) return;
 
-					// フィルターしたデータを取得
-					const filteredResponse = (await myDuckDB.c.query(
-						filterCostReportSql,
-					)) as unknown as arrow.Table;
-					const filteredArray =
-						reportArrowTableToArrays(filteredResponse);
-					if (filteredArray) {
-						setFilteredData(filteredArray);
-					} else {
-						console.error('filteredArray is undefined');
-					}
-				});
-			}
+				// フィルターしたデータを取得
+				const filteredResponse = (await myDuckDB.c.query(
+					filterCostReportSql,
+				)) as unknown as arrow.Table;
+				const filteredArray =
+					reportArrowTableToArrays(filteredResponse);
+				if (filteredArray) {
+					setFilteredData(filteredArray);
+				} else {
+					console.error('filteredArray is undefined');
+				}
+			});
 		}
 	}, [myDuckDB, reportData, inventoryData, costPriceData]);
 
-	const plbsWithTax = useMemo(() => {
-		if (!filteredData) return;
+	const { withTax: plbsWithTax, withoutTax: plbsWithoutTax } = useMemo(() => {
+		if (!filteredData) return { withTax: undefined, withoutTax: undefined };
 		// PLBS計算
-		return calcPlbsWithTax(filteredData);
-	}, [filteredData]);
-	const plbsWithoutTax = useMemo(() => {
-		if (!filteredData) return;
-		// PLBS計算
-		return calcPlbsWithoutTax(filteredData);
+		return {
+			withTax: calcPlbsWithTax(filteredData),
+			withoutTax: calcPlbsWithoutTax(filteredData),
+		};
 	}, [filteredData]);
 
 	const groupedDataIndexes: Record<string, number[]> = useMemo(
@@ -137,6 +128,7 @@ export function PlbsTableFilter() {
 				// 日付が範囲内かどうかを判定
 				if (dateRange.start <= date && dateRange.end >= date) {
 					// 日付からグループ化する文字列を作成
+					// TODO: 三項演算子的な
 					let dateStr = '';
 					switch (period) {
 						case 'monthly':
