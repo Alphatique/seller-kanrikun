@@ -24,8 +24,3 @@ type SessionCvrData = {
 	roas: number;
 	acos: number;
 };
-
-type ChartDataBase = {
-	date: Date;
-	[key: string]: number | string | Date;
-};

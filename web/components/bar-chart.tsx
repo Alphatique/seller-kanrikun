@@ -18,7 +18,7 @@ import {
 import { cn } from '@seller-kanrikun/ui/lib/utils';
 
 interface BarChartProps extends React.HTMLAttributes<HTMLElement> {
-	data: ChartDataBase[] | undefined;
+	data: Record<string, number | string>[] | undefined;
 	config: ChartConfig;
 }
 

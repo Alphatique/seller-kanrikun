@@ -23,7 +23,7 @@ import {
 import { cn } from '@seller-kanrikun/ui/lib/utils';
 
 interface LineChartProps extends React.HTMLAttributes<HTMLElement> {
-	data: ChartDataBase[] | undefined;
+	data: Record<string, number | string>[] | undefined;
 	config: ChartConfig;
 }
 

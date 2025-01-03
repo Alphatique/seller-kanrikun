@@ -1,5 +1,6 @@
 'use client';
 
+import { isAfter, isBefore } from 'date-fns';
 import { useEffect, useMemo, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 
@@ -38,19 +39,33 @@ export function SessionCvrTableFilter() {
 	);
 	const { data: myDuckDB } = useSWR('/initDuckDB', initDuckDB);
 
+	const [sessionCvrData, setSessionCvrData] = useState<
+		SessionCvrData[] | undefined
+	>();
+
+	const [selectsItems, setSelects] = useState<string[]>([]);
+	const [selectData, setSelectData] = useState<keyof SessionCvrData>('sales');
+	const [dateRange, setDateRange] = useState<DateRange | undefined>({
+		from: new Date(),
+		to: new Date(),
+	});
+
 	useEffect(() => {
 		if (myDuckDB && reportData) {
 			(async () => {
+				// データからdbのテーブルの作成
 				await createSalesTrafficReportTable(myDuckDB, reportData);
+				// sqlの実行
 				const filteredData = await myDuckDB.c.query(
 					calcSalesTrafficReport,
 				);
-				console.log(filteredData);
+				// データのjs array化
 				const formatData: SessionCvrData[] = [];
 				for (let i = 0; i < filteredData.numRows; i++) {
 					const record = filteredData.get(i);
 					const json = record?.toJSON();
 
+					// TODO: zodでやりたい
 					const data: SessionCvrData = {
 						asin: json?.asin,
 						averagePrice: Number(json?.averagePrice),
@@ -65,62 +80,54 @@ export function SessionCvrTableFilter() {
 					};
 					formatData.push(data);
 				}
-				console.log(formatData);
 				setSessionCvrData(formatData);
 			})();
 		}
 	}, [myDuckDB, reportData]);
 
-	const [selectSessionCvrProp, setSelectSessionCvrProp] =
-		useState<keyof SessionCvrData>('sales');
-	const [dateRange, setDateRange] = useState<DateRange | undefined>({
-		from: new Date(),
-		to: new Date(),
-	});
-	const [sessionCvrData, setSessionCvrData] = useState<
-		SessionCvrData[] | undefined
-	>();
-	const [selects, setSelects] = useState<string[]>([]);
-
-	const { goods, chartData } = useMemo(() => {
-		if (!sessionCvrData) return { goods: {}, chartData: [] };
-		const goods: Record<string, string> = {};
-		const chartData = sessionCvrData.map(data => {
-			console.log(data);
-			if (!goods[data.asin]) {
-				goods[data.asin] = '名前はまだない';
+	// sessionCvrから使うデータを作成
+	const items: Record<string, string> = useMemo(() => {
+		if (!sessionCvrData) return {};
+		const results: Record<string, string> = {};
+		for (const data of sessionCvrData) {
+			if (!results[data.asin]) {
+				results[data.asin] = 'name';
 			}
-			return {
-				date: data.date,
-				[selectSessionCvrProp]: data[selectSessionCvrProp],
-			} as ChartDataBase;
-		});
-
-		console.log(goods, chartData);
-		return {
-			goods,
-			chartData,
-		};
+		}
+		return results;
 	}, [sessionCvrData]);
 
-	const filteredTableData = useMemo(
-		() =>
-			dateRange?.from && dateRange?.to && sessionCvrData
-				? sessionCvrData.filter(data => {
-						console.log(dateRange, data.date);
-						if (
-							dateRange.from! <= data.date &&
-							data.date <= dateRange.to! &&
-							selects.includes(data.asin)
-						) {
-							console.log(true);
-							return true;
-						}
-					})
-				: [],
-		[dateRange, selects, sessionCvrData],
-	);
-	console.log(filteredTableData);
+	const chartData = useMemo(() => {
+		if (!(sessionCvrData && dateRange?.from && dateRange?.to)) return [];
+		if (selectData === 'date') return [];
+		type itemKeys = (typeof items)[number] | 'date';
+		const dateResult: Record<
+			string,
+			Record<itemKeys, number | string>
+		> = {};
+		for (const data of sessionCvrData) {
+			if (!selectsItems.includes(data.asin)) continue;
+			if (
+				isAfter(data.date, dateRange.from) &&
+				isBefore(data.date, dateRange.to)
+			) {
+				const dateStr = data.date.toString();
+				if (!dateResult[dateStr]) {
+					dateResult[dateStr] = { date: dateStr };
+				}
+				console.log(data, selectData, data[selectData]);
+				dateResult[dateStr][data.asin] = data[selectData];
+			}
+		}
+
+		const result = [];
+		for (const data of Object.values(dateResult)) {
+			result.push(data);
+		}
+
+		return result;
+	}, [sessionCvrData, selectData, selectsItems, dateRange]);
+
 	const headers: string[] = [
 		'商品名',
 		'日付',
@@ -135,6 +142,7 @@ export function SessionCvrTableFilter() {
 	];
 
 	const handleDownload = () => {
+		/*
 		const downloadData = filteredTableData.map(data => {
 			return {
 				商品名: data.asin,
@@ -149,45 +157,48 @@ export function SessionCvrTableFilter() {
 				ACOS: data.acos,
 			};
 		});
-		downloadCsv(downloadData, headers, 'session-cvr.csv');
+		downloadCsv(downloadData, headers, 'session-cvr.csv');*/
+	};
+
+	const dataHeader: Record<keyof SessionCvrData, string> = {
+		date: '日付',
+		asin: 'ASIN',
+		sales: '売上',
+		units: '売上個数',
+		averagePrice: '平均単価',
+		pageViews: 'ページビュー',
+		sessionCvr: 'CVRユニットセッション',
+		pageViewCvr: 'CVRユニットページビュー',
+		roas: 'ROAS',
+		acos: 'ACOS',
 	};
 
 	return (
 		<div className='grid gap-3'>
 			<div className='flex gap-2'>
 				<MultiSelect
-					values={goods}
-					selects={selects}
+					values={items}
+					selects={selectsItems}
 					onSelectChange={setSelects}
 				/>
 				<Select
-					value={selectSessionCvrProp}
+					value={selectData}
 					onValueChange={(value: keyof SessionCvrData) => {
-						setSelectSessionCvrProp(value);
+						setSelectData(value);
 					}}
 				>
 					<SelectTrigger className='w-[180px]'>
 						<SelectValue placeholder='period' />
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value='sales'>売上</SelectItem>
-						<SelectItem value='number_of_units_sold'>
-							売上個数
-						</SelectItem>
-						<SelectItem value='average_unit_price'>
-							平均単価
-						</SelectItem>
-						<SelectItem value='number_of_accesses'>
-							アクセス数
-						</SelectItem>
-						<SelectItem value='cvr_unit_session'>
-							CVRユニットセッション
-						</SelectItem>
-						<SelectItem value='cvr_unit_page_view'>
-							CVRユニットページビュー
-						</SelectItem>
-						<SelectItem value='roas'>ROAS</SelectItem>
-						<SelectItem value='acos'>ACOS</SelectItem>
+						{Object.entries(dataHeader).map(([key, value]) => {
+							if (key === 'asin' || key === 'date') return;
+							return (
+								<SelectItem value={key} key={key}>
+									{value}
+								</SelectItem>
+							);
+						})}
 					</SelectContent>
 				</Select>
 				<DatePickerWithRange
@@ -196,11 +207,10 @@ export function SessionCvrTableFilter() {
 				/>
 				<Button onClick={handleDownload}>Download</Button>
 			</div>
-			{selectSessionCvrProp === 'sales' ||
-			selectSessionCvrProp === 'units' ? (
+			{selectData === 'sales' || selectData === 'units' ? (
 				<BarChart
 					data={chartData}
-					config={Object.entries(goods).reduce(
+					config={Object.entries(items).reduce(
 						(acc, [key, label], i) => {
 							acc[key] = {
 								label,
@@ -214,7 +224,7 @@ export function SessionCvrTableFilter() {
 			) : (
 				<LineChart
 					data={chartData}
-					config={Object.entries(goods).reduce(
+					config={Object.entries(items).reduce(
 						(acc, [key, label], i) => {
 							acc[key] = {
 								label,
@@ -226,6 +236,7 @@ export function SessionCvrTableFilter() {
 					)}
 				/>
 			)}
+			{/*
 			<Table>
 				<TableHeader>
 					<TableRow>
@@ -259,6 +270,7 @@ export function SessionCvrTableFilter() {
 					})}
 				</TableBody>
 			</Table>
+			*/}
 		</div>
 	);
 }
