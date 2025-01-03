@@ -115,8 +115,11 @@ export function SessionCvrTableFilter() {
 				if (!dateResult[dateStr]) {
 					dateResult[dateStr] = { date: dateStr };
 				}
-				console.log(data, selectData, data[selectData]);
-				dateResult[dateStr][data.asin] = data[selectData];
+				// Nan, +-infinityを0にしていく
+				const value = Number.isFinite(data[selectData])
+					? data[selectData]
+					: 0;
+				dateResult[dateStr][data.asin] = value;
 			}
 		}
 
