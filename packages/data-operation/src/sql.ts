@@ -30,7 +30,7 @@ SELECT
     + COALESCE(SUM("direct-payment-amount"), 0)
     + COALESCE(SUM("other-amount"), 0)
     AS accountsReceivable
-FROM report
+FROM settlement_report
 -- posted-dateがNULLの行はスキップ
 WHERE "posted-date" IS NOT NULL
 -- 月ごとにグループ化
@@ -86,7 +86,7 @@ SELECT
     + COALESCE(SUM("direct-payment-amount"), 0)
     + COALESCE(SUM("other-amount"), 0)
     AS accountsReceivable
-FROM report
+FROM settlement_report
 -- posted-dateがNULLの行はスキップ
 WHERE "posted-date" IS NOT NULL
 -- 月ごとにグループ化
@@ -96,7 +96,7 @@ FULL OUTER JOIN (
     SELECT
         date_trunc('month', r."posted-date") AS date,
         SUM(cp."price") AS costPrice
-    FROM report AS r
+    FROM settlement_report AS r
     -- TODO: inventoryを取得した時期のsku/asinを使うように変更
     JOIN inventory_summaries AS inv ON r.sku = inv.sellerSku
     JOIN cost_price AS cp ON inv.asin = cp.asin

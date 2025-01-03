@@ -66,22 +66,27 @@ async function createTable(
 	);
 }
 
-export async function createReportTable(
+export async function createSettlementReportTable(
 	myDuckDB: MyDuckDB,
 	reportData: string,
 ) {
 	// dbの作成
-	await createTable(myDuckDB, reportData, 'settlement-report.tsv', 'report');
+	await createTable(
+		myDuckDB,
+		reportData,
+		'settlement-report.tsv',
+		'settlement_report',
+	);
 	// インデックスの作成と型の変更
 	await myDuckDB.c.query(/*sql*/ `
 		-- とりあえずposted-dateにインデックスはっとく
-		CREATE UNIQUE INDEX report_id ON report ("posted-date");
+		CREATE UNIQUE INDEX report_id ON settlement_report ("posted-date");
 		-- -の値がある場合VARCHARになるので一部DOUBLEに変換。Int系でもかも
-		ALTER TABLE report ALTER COLUMN "shipment-fee-amount" SET DATA TYPE DOUBLE;
-		ALTER TABLE report ALTER COLUMN "order-fee-amount" SET DATA TYPE DOUBLE;
-		ALTER TABLE report ALTER COLUMN "misc-fee-amount" SET DATA TYPE DOUBLE;
-		ALTER TABLE report ALTER COLUMN "other-amount" SET DATA TYPE DOUBLE;
-		ALTER TABLE report ALTER COLUMN "direct-payment-amount" SET DATA TYPE DOUBLE;
+		ALTER TABLE settlement_report ALTER COLUMN "shipment-fee-amount" SET DATA TYPE DOUBLE;
+		ALTER TABLE settlement_report ALTER COLUMN "order-fee-amount" SET DATA TYPE DOUBLE;
+		ALTER TABLE settlement_report ALTER COLUMN "misc-fee-amount" SET DATA TYPE DOUBLE;
+		ALTER TABLE settlement_report ALTER COLUMN "other-amount" SET DATA TYPE DOUBLE;
+		ALTER TABLE settlement_report ALTER COLUMN "direct-payment-amount" SET DATA TYPE DOUBLE;
 		`);
 }
 

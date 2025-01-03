@@ -26,9 +26,17 @@ import { DatePickerWithRange } from '~/components/date-range';
 import { LineChart } from '~/components/line-chart';
 import { downloadCsv } from '~/lib/file-downloads';
 
+import useSWR from 'swr';
+import { fetchGunzipStrApi } from '~/lib/fetch-gunzip';
 import tmpData from './tmp-data';
 
 export function SessionCvrTableFilter() {
+	const { data: reportData } = useSWR(
+		'/api/reports/sales-traffic',
+		fetchGunzipStrApi,
+	);
+	console.log(reportData);
+
 	const [selectSessionCvrProp, setSelectSessionCvrProp] =
 		useState<keyof SessionCvrData>('sales');
 	const [dateRange, setDateRange] = useState<DateRange | undefined>({

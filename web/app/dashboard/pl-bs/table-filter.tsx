@@ -32,7 +32,7 @@ import {
 	checkTables,
 	createCostPriceTable,
 	createInventoryTable,
-	createReportTable,
+	createSettlementReportTable,
 	initDuckDB,
 } from '~/lib/duckdb';
 import { fetchGunzipStrApi } from '~/lib/fetch-gunzip';
@@ -79,13 +79,13 @@ export function PlbsTableFilter() {
 	useEffect(() => {
 		if (myDuckDB && reportData && inventoryData && costPriceData) {
 			const promises = [];
-			promises.push(createReportTable(myDuckDB, reportData));
+			promises.push(createSettlementReportTable(myDuckDB, reportData));
 			promises.push(createInventoryTable(myDuckDB, inventoryData));
 			promises.push(createCostPriceTable(myDuckDB, costPriceData));
 			Promise.all(promises).then(async () => {
 				// テーブルが作成されているか確認
 				const checkedTable = await checkTables(myDuckDB, [
-					'report',
+					'settlement_report',
 					'inventory_summaries',
 					'cost_price',
 				]);
