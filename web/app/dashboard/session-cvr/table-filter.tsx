@@ -30,7 +30,6 @@ import { calcSalesTrafficReport } from '@seller-kanrikun/data-operation/sql';
 import useSWR from 'swr';
 import { createSalesTrafficReportTable, initDuckDB } from '~/lib/duckdb';
 import { fetchGunzipStrApi } from '~/lib/fetch-gunzip';
-import tmpData from './tmp-data';
 
 export function SessionCvrTableFilter() {
 	const { data: reportData } = useSWR(
@@ -47,7 +46,27 @@ export function SessionCvrTableFilter() {
 					calcSalesTrafficReport,
 				);
 				console.log(filteredData);
-				console.log(filteredData.toString());
+				const formatedData: SessionCvrData[] = [];
+				for (let i = 0; i < filteredData.numRows; i++) {
+					const record = filteredData.get(i);
+					const json = record?.toJSON();
+
+					const data: SessionCvrData = {
+						asin: json?.asin,
+						averagePrice: Number(json?.averagePrice),
+						date: new Date(json?.date),
+						pageViewCvr: Number(json?.pageViewCvr),
+						pageViews: Number(json?.pageViews),
+						sales: Number(json?.sales),
+						sessionCvr: Number(json?.sessionCvr),
+						units: Number(json?.units),
+						roas: Number.NaN,
+						acos: Number.NaN,
+					};
+					formatedData.push(data);
+
+					setSessionCvrData(formatedData);
+				}
 			})();
 		}
 	}, [myDuckDB, reportData]);
@@ -65,14 +84,12 @@ export function SessionCvrTableFilter() {
 
 	const filteredTableData = useMemo(
 		() =>
-			dateRange?.from && dateRange?.to
-				? tmpData.filter(({ item_id, data }) => {
-						const dataDate = new Date(data.date);
-
+			dateRange?.from && dateRange?.to && sessionCvrData
+				? sessionCvrData.filter(data => {
 						if (
-							dateRange.from! <= dataDate &&
-							dataDate <= dateRange.to! &&
-							selects.includes(item_id)
+							dateRange.from! <= data.date &&
+							data.date <= dateRange.to! &&
+							selects.includes(data.asin)
 						) {
 							return true;
 						}
@@ -81,20 +98,14 @@ export function SessionCvrTableFilter() {
 		[dateRange, selects],
 	);
 
-	const chartData: ChartDataBase[] = [];
-
-	for (const { item_id, data } of filteredTableData) {
-		const { date, sales } = data;
-		// 既存の日付行を取得
-		const row = chartData.find(item => item.date === date);
-		// なければ新規追加
-		if (!row) {
-			chartData.push({ date, [item_id]: sales });
-		} else {
-			// ある場合は既存の行にitem_idをキー、salesを値として追加
-			row[item_id] = sales;
-		}
-	}
+	const chartData: ChartDataBase[] = useMemo(() => {
+		return filteredTableData.map(data => {
+			return {
+				date: data.date,
+				[selectSessionCvrProp]: data[selectSessionCvrProp],
+			} as ChartDataBase;
+		});
+	}, []);
 
 	const headers: string[] = [
 		'商品名',
@@ -110,22 +121,20 @@ export function SessionCvrTableFilter() {
 	];
 
 	const handleDownload = () => {
-		const downloadData = filteredTableData.map(
-			({ item_id, item_name, data }) => {
-				return {
-					商品名: item_name,
-					日付: data.date,
-					売上: data.sales,
-					売上個数: data.number_of_units_sold,
-					平均単価: data.average_unit_price,
-					アクセス数: data.number_of_accesses,
-					CVRユニットセッション: data.cvr_unit_session,
-					CVRユニットページビュー: data.cvr_unit_page_view,
-					ROAS: data.roas,
-					ACOS: data.acos,
-				};
-			},
-		);
+		const downloadData = filteredTableData.map(data => {
+			return {
+				商品名: data.asin,
+				日付: data.date,
+				売上: data.sales,
+				売上個数: data.units,
+				平均単価: data.averagePrice,
+				アクセス数: data.pageViews,
+				CVRユニットセッション: data.sessionCvr,
+				CVRユニットページビュー: data.pageViewCvr,
+				ROAS: data.roas,
+				ACOS: data.acos,
+			};
+		});
 		downloadCsv(downloadData, headers, 'session-cvr.csv');
 	};
 
@@ -180,7 +189,7 @@ export function SessionCvrTableFilter() {
 				<Button onClick={handleDownload}>Download</Button>
 			</div>
 			{selectSessionCvrProp === 'sales' ||
-			selectSessionCvrProp === 'number_of_units_sold' ? (
+			selectSessionCvrProp === 'units' ? (
 				<BarChart
 					data={chartData}
 					config={Object.entries(goods).reduce(
@@ -224,36 +233,22 @@ export function SessionCvrTableFilter() {
 					</TableRow>
 				</TableHeader>
 				<TableBody>
-					{filteredTableData.map(
-						({ item_id, item_name, data }, index) => {
-							return (
-								<TableRow
-									key={`${item_id}-${index.toString()}`}
-								>
-									<TableCell>{item_name}</TableCell>
-									<TableCell>{data.date}</TableCell>
-									<TableCell>{data.sales}</TableCell>
-									<TableCell>
-										{data.number_of_units_sold}
-									</TableCell>
-									<TableCell>
-										{data.average_unit_price}
-									</TableCell>
-									<TableCell>
-										{data.number_of_accesses}
-									</TableCell>
-									<TableCell>
-										{data.cvr_unit_session}
-									</TableCell>
-									<TableCell>
-										{data.cvr_unit_page_view}
-									</TableCell>
-									<TableCell>{data.roas}</TableCell>
-									<TableCell>{data.acos}</TableCell>
-								</TableRow>
-							);
-						},
-					)}
+					{filteredTableData.map((data, index) => {
+						return (
+							<TableRow key={`${data.asin}-${index.toString()}`}>
+								<TableCell>{data.asin}</TableCell>
+								<TableCell>{data.date.toISOString()}</TableCell>
+								<TableCell>{data.sales}</TableCell>
+								<TableCell>{data.units}</TableCell>
+								<TableCell>{data.averagePrice}</TableCell>
+								<TableCell>{data.pageViews}</TableCell>
+								<TableCell>{data.sessionCvr}</TableCell>
+								<TableCell>{data.pageViewCvr}</TableCell>
+								<TableCell>{data.roas}</TableCell>
+								<TableCell>{data.acos}</TableCell>
+							</TableRow>
+						);
+					})}
 				</TableBody>
 			</Table>
 		</div>

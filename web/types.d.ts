@@ -13,18 +13,19 @@ type Metadata = import('next').Metadata;
 type Period = 'monthly' | 'quarterly' | 'yearly';
 
 type SessionCvrData = {
-	date: string;
+	date: Date;
+	asin: string;
 	sales: number;
-	number_of_units_sold: number;
-	average_unit_price: number;
-	number_of_accesses: number;
-	cvr_unit_session: number;
-	cvr_unit_page_view: number;
+	units: number;
+	averagePrice: number;
+	pageViews: number;
+	sessionCvr: number;
+	pageViewCvr: number;
 	roas: number;
 	acos: number;
 };
 
 type ChartDataBase = {
-	date: string;
-	[key: string]: number | string;
+	date: Date;
+	[key: string]: number | string | Date;
 };
