@@ -46,7 +46,7 @@ export function SessionCvrTableFilter() {
 					calcSalesTrafficReport,
 				);
 				console.log(filteredData);
-				const formatedData: SessionCvrData[] = [];
+				const formatData: SessionCvrData[] = [];
 				for (let i = 0; i < filteredData.numRows; i++) {
 					const record = filteredData.get(i);
 					const json = record?.toJSON();
@@ -63,10 +63,10 @@ export function SessionCvrTableFilter() {
 						roas: Number.NaN,
 						acos: Number.NaN,
 					};
-					formatedData.push(data);
-
-					setSessionCvrData(formatedData);
+					formatData.push(data);
 				}
+				console.log(formatData);
+				setSessionCvrData(formatData);
 			})();
 		}
 	}, [myDuckDB, reportData]);
@@ -82,31 +82,45 @@ export function SessionCvrTableFilter() {
 	>();
 	const [selects, setSelects] = useState<string[]>([]);
 
-	const filteredTableData = useMemo(
-		() =>
-			dateRange?.from && dateRange?.to && sessionCvrData
-				? sessionCvrData.filter(data => {
-						if (
-							dateRange.from! <= data.date &&
-							data.date <= dateRange.to! &&
-							selects.includes(data.asin)
-						) {
-							return true;
-						}
-					})
-				: [],
-		[dateRange, selects],
-	);
-
-	const chartData: ChartDataBase[] = useMemo(() => {
-		return filteredTableData.map(data => {
+	const { goods, chartData } = useMemo(() => {
+		if (!sessionCvrData) return { goods: {}, chartData: [] };
+		const goods: Record<string, string> = {};
+		const chartData = sessionCvrData.map(data => {
+			console.log(data);
+			if (!goods[data.asin]) {
+				goods[data.asin] = '名前はまだない';
+			}
 			return {
 				date: data.date,
 				[selectSessionCvrProp]: data[selectSessionCvrProp],
 			} as ChartDataBase;
 		});
-	}, []);
 
+		console.log(goods, chartData);
+		return {
+			goods,
+			chartData,
+		};
+	}, [sessionCvrData]);
+
+	const filteredTableData = useMemo(
+		() =>
+			dateRange?.from && dateRange?.to && sessionCvrData
+				? sessionCvrData.filter(data => {
+						console.log(dateRange, data.date);
+						if (
+							dateRange.from! <= data.date &&
+							data.date <= dateRange.to! &&
+							selects.includes(data.asin)
+						) {
+							console.log(true);
+							return true;
+						}
+					})
+				: [],
+		[dateRange, selects, sessionCvrData],
+	);
+	console.log(filteredTableData);
 	const headers: string[] = [
 		'商品名',
 		'日付',
@@ -136,12 +150,6 @@ export function SessionCvrTableFilter() {
 			};
 		});
 		downloadCsv(downloadData, headers, 'session-cvr.csv');
-	};
-
-	const goods: Record<string, string> = {
-		black: 'トイレタリーバッグ ブラック',
-		navy: 'トイレタリーバッグ ネイビー',
-		olive: 'トイレタリーバッグ オリーブ',
 	};
 
 	return (
