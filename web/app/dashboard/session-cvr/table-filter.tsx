@@ -27,7 +27,7 @@ import { DatePickerWithRange } from '~/components/date-range';
 import { LineChart } from '~/components/line-chart';
 import { downloadCsv } from '~/lib/file-downloads';
 
-import { calcSalesTrafficReport } from '@seller-kanrikun/data-operation/sql';
+import { calcSessionCvrSql } from '@seller-kanrikun/data-operation/sql';
 import useSWR from 'swr';
 import { createSalesTrafficReportTable, initDuckDB } from '~/lib/duckdb';
 import { fetchGunzipStrApi } from '~/lib/fetch-gunzip';
@@ -56,9 +56,7 @@ export function SessionCvrTableFilter() {
 				// データからdbのテーブルの作成
 				await createSalesTrafficReportTable(myDuckDB, reportData);
 				// sqlの実行
-				const filteredData = await myDuckDB.c.query(
-					calcSalesTrafficReport,
-				);
+				const filteredData = await myDuckDB.c.query(calcSessionCvrSql);
 				// データのjs array化
 				const formatData: SessionCvrData[] = [];
 				for (let i = 0; i < filteredData.numRows; i++) {

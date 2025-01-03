@@ -11,7 +11,7 @@ import {
 	calcPlbsWithoutTax,
 	reportArrowTableToArrays,
 } from '@seller-kanrikun/data-operation/calc-pl-bs';
-import { filterCostReportSql } from '@seller-kanrikun/data-operation/sql';
+import { calcPlbsSql } from '@seller-kanrikun/data-operation/sql';
 import type {
 	FilteredSettlementReport,
 	PlBsWithTax,
@@ -93,7 +93,7 @@ export function PlbsTableFilter() {
 
 				// フィルターしたデータを取得
 				const filteredResponse = (await myDuckDB.c.query(
-					filterCostReportSql,
+					calcPlbsSql,
 				)) as unknown as arrow.Table;
 				const filteredArray =
 					reportArrowTableToArrays(filteredResponse);
