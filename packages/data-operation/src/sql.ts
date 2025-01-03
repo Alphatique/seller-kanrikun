@@ -107,3 +107,16 @@ FULL OUTER JOIN (
 ) AS c
 ON p.date = c.date
 `;
+
+export const calcSalesTrafficReport = /*sql*/ `
+SELECT
+    asin,
+    startDate AS date,
+    orderedProductSalesAmount AS sales,
+    unitsOrdered AS units,
+    sales / units AS averagePrice,
+    pageViews,
+    sessions / units AS sessionCvr,
+    pageViews / units AS pageViewCvr
+FROM sales_traffic_report
+`;

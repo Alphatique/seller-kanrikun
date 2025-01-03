@@ -26,6 +26,7 @@ import { DatePickerWithRange } from '~/components/date-range';
 import { LineChart } from '~/components/line-chart';
 import { downloadCsv } from '~/lib/file-downloads';
 
+import { calcSalesTrafficReport } from '@seller-kanrikun/data-operation/sql';
 import useSWR from 'swr';
 import { createSalesTrafficReportTable, initDuckDB } from '~/lib/duckdb';
 import { fetchGunzipStrApi } from '~/lib/fetch-gunzip';
@@ -40,7 +41,14 @@ export function SessionCvrTableFilter() {
 
 	useEffect(() => {
 		if (myDuckDB && reportData) {
-			createSalesTrafficReportTable(myDuckDB, reportData);
+			(async () => {
+				await createSalesTrafficReportTable(myDuckDB, reportData);
+				const filteredData = await myDuckDB.c.query(
+					calcSalesTrafficReport,
+				);
+				console.log(filteredData);
+				console.log(filteredData.toString());
+			})();
 		}
 	}, [myDuckDB, reportData]);
 
