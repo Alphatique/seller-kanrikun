@@ -90,6 +90,22 @@ export async function createSettlementReportTable(
 		`);
 }
 
+export async function createSalesTrafficReportTable(
+	myDuckDB: MyDuckDB,
+	reportData: string,
+) {
+	await createTable(
+		myDuckDB,
+		reportData,
+		'sales-traffic-report.tsv',
+		'sales_traffic_report',
+	);
+
+	const table = await myDuckDB.c.query('SELECT * FROM sales_traffic_report');
+	console.log(table);
+	console.log(table.toString());
+}
+
 export async function createInventoryTable(
 	myDuckDB: MyDuckDB,
 	inventoryData: string,

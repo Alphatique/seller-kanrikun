@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 
 import { Button } from '@seller-kanrikun/ui/components/button';
@@ -27,6 +27,7 @@ import { LineChart } from '~/components/line-chart';
 import { downloadCsv } from '~/lib/file-downloads';
 
 import useSWR from 'swr';
+import { createSalesTrafficReportTable, initDuckDB } from '~/lib/duckdb';
 import { fetchGunzipStrApi } from '~/lib/fetch-gunzip';
 import tmpData from './tmp-data';
 
@@ -35,7 +36,13 @@ export function SessionCvrTableFilter() {
 		'/api/reports/sales-traffic',
 		fetchGunzipStrApi,
 	);
-	console.log(reportData);
+	const { data: myDuckDB } = useSWR('/initDuckDB', initDuckDB);
+
+	useEffect(() => {
+		if (myDuckDB && reportData) {
+			createSalesTrafficReportTable(myDuckDB, reportData);
+		}
+	}, [myDuckDB, reportData]);
 
 	const [selectSessionCvrProp, setSelectSessionCvrProp] =
 		useState<keyof SessionCvrData>('sales');
