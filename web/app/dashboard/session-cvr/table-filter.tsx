@@ -64,14 +64,6 @@ export function SessionCvrTableFilter() {
 				// sqlの実行
 				const filteredData = await myDuckDB.c.query(calcSessionCvrSql);
 
-				const reportAsin = await myDuckDB.c.query(
-					'SELECT DISTINCT asin FROM sales_traffic_report',
-				);
-				const inventoryAsin = await myDuckDB.c.query(
-					'SELECT asin FROM inventory_summaries',
-				);
-				console.log(reportAsin.toString(), inventoryAsin.toString());
-
 				// データのjs array化
 				const formatData: SessionCvrData[] = [];
 				for (let i = 0; i < filteredData.numRows; i++) {
