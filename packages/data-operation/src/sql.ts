@@ -71,6 +71,19 @@ ON p.date = c.date
 
 export const calcSessionCvrSql = /*sql*/ `
 SELECT
+    coalesce(r.asin, i.asin) AS asin,
+    i.asin AS invAsin,
+    r.asin AS rAsin,
+    i.name,
+    r.date,
+    r.sales,
+    r.units,
+    r.averagePrice,
+    r.pageViews,
+    r.sessionCvr,
+    r.pageViewCvr
+FROM (
+SELECT
     asin,
     startDate AS date,
     orderedProductSalesAmount AS sales,
@@ -79,5 +92,12 @@ SELECT
     pageViews,
     sessions / units AS sessionCvr,
     pageViews / units AS pageViewCvr
-FROM sales_traffic_report
+FROM sales_traffic_report) as r
+LEFT OUTER JOIN (
+    SELECT
+        asin,
+        productName AS name
+    FROM inventory_summaries
+) as i
+ON r.asin = i.asin
 `;

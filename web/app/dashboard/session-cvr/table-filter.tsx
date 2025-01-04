@@ -29,7 +29,11 @@ import { downloadCsv } from '~/lib/file-downloads';
 
 import { calcSessionCvrSql } from '@seller-kanrikun/data-operation/sql';
 import useSWR from 'swr';
-import { createSalesTrafficReportTable, initDuckDB } from '~/lib/duckdb';
+import {
+	createInventoryTable,
+	createSalesTrafficReportTable,
+	initDuckDB,
+} from '~/lib/duckdb';
 import { fetchGunzipStrApi } from '~/lib/fetch-gunzip';
 
 export function SessionCvrTableFilter() {
@@ -37,6 +41,7 @@ export function SessionCvrTableFilter() {
 		'/api/reports/sales-traffic',
 		fetchGunzipStrApi,
 	);
+	const { data: inventoryData } = useSWR('/api/inventory', fetchGunzipStrApi);
 	const { data: myDuckDB } = useSWR('/initDuckDB', initDuckDB);
 
 	const [sessionCvrData, setSessionCvrData] = useState<
@@ -51,12 +56,22 @@ export function SessionCvrTableFilter() {
 	});
 
 	useEffect(() => {
-		if (myDuckDB && reportData) {
+		if (myDuckDB && reportData && inventoryData) {
 			(async () => {
 				// データからdbのテーブルの作成
 				await createSalesTrafficReportTable(myDuckDB, reportData);
+				await createInventoryTable(myDuckDB, inventoryData);
 				// sqlの実行
 				const filteredData = await myDuckDB.c.query(calcSessionCvrSql);
+
+				const reportAsin = await myDuckDB.c.query(
+					'SELECT DISTINCT asin FROM sales_traffic_report',
+				);
+				const inventoryAsin = await myDuckDB.c.query(
+					'SELECT asin FROM inventory_summaries',
+				);
+				console.log(reportAsin.toString(), inventoryAsin.toString());
+
 				// データのjs array化
 				const formatData: SessionCvrData[] = [];
 				for (let i = 0; i < filteredData.numRows; i++) {
@@ -66,6 +81,7 @@ export function SessionCvrTableFilter() {
 					// TODO: zodでやりたい
 					const data: SessionCvrData = {
 						asin: json?.asin,
+						name: json?.name,
 						averagePrice: Number(json?.averagePrice),
 						date: new Date(json?.date),
 						pageViewCvr: Number(json?.pageViewCvr),
@@ -89,7 +105,7 @@ export function SessionCvrTableFilter() {
 		const results: Record<string, string> = {};
 		for (const data of sessionCvrData) {
 			if (!results[data.asin]) {
-				results[data.asin] = 'name';
+				results[data.asin] = data.name ? data.name : data.asin;
 			}
 		}
 		return results;
@@ -163,6 +179,7 @@ export function SessionCvrTableFilter() {
 
 	const dataHeader: Record<keyof SessionCvrData, string> = {
 		date: '日付',
+		name: '商品名',
 		asin: 'ASIN',
 		sales: '売上',
 		units: '売上個数',
@@ -193,7 +210,12 @@ export function SessionCvrTableFilter() {
 					</SelectTrigger>
 					<SelectContent>
 						{Object.entries(dataHeader).map(([key, value]) => {
-							if (key === 'asin' || key === 'date') return;
+							if (
+								key === 'asin' ||
+								key === 'date' ||
+								key === 'name'
+							)
+								return;
 							return (
 								<SelectItem value={key} key={key}>
 									{value}

@@ -14,6 +14,7 @@ type Period = 'monthly' | 'quarterly' | 'yearly';
 
 type SessionCvrData = {
 	date: Date;
+	name: string;
 	asin: string;
 	sales: number;
 	units: number;

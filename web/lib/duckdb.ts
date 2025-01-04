@@ -100,6 +100,12 @@ export async function createSalesTrafficReportTable(
 		'sales-traffic-report.tsv',
 		'sales_traffic_report',
 	);
+
+	const salesTraffic = await myDuckDB.c.query(
+		'SELECT * from sales_traffic_report',
+	);
+	console.log(salesTraffic);
+	console.log(salesTraffic.toString());
 }
 
 export async function createInventoryTable(
@@ -112,6 +118,12 @@ export async function createInventoryTable(
 		'inventory-summaries.tsv',
 		'inventory_summaries',
 	);
+
+	const inventory = await myDuckDB.c.query(
+		'SELECT * FROM inventory_summaries',
+	);
+	console.log(inventory);
+	console.log(inventory.toString());
 }
 
 export async function createCostPriceTable(
