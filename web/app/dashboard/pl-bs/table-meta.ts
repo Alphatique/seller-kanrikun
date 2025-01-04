@@ -28,7 +28,7 @@ export const plTableWithTaxInfo: PlbsTableMetaData[] = [
 	},
 	{
 		key: 'principalTax',
-		head: '消費税',
+		head: '商品代金に対する税金',
 		indent: 2,
 	},
 	{
