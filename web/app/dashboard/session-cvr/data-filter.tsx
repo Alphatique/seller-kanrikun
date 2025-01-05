@@ -1,6 +1,6 @@
 'use client';
 
-import { isAfter, isBefore } from 'date-fns';
+import { format, isAfter, isBefore, startOfWeek } from 'date-fns';
 import { useEffect, useMemo, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 
@@ -46,6 +46,7 @@ export function SessionCvrTableFilter() {
 		from: new Date(),
 		to: new Date(),
 	});
+	const [period, setPeriod] = useState<Period>('daily');
 
 	useEffect(() => {
 		if (myDuckDB && reportData && inventoryData) {
@@ -95,39 +96,54 @@ export function SessionCvrTableFilter() {
 		return results;
 	}, [sessionCvrData]);
 
-	const chartData = useMemo(() => {
+	const filteredData = useMemo(() => {
 		if (!(sessionCvrData && dateRange?.from && dateRange?.to)) return [];
 		if (selectData === 'date') return [];
 		type itemKeys = (typeof items)[number] | 'date';
-		const dateResult: Record<
-			string,
-			Record<itemKeys, number | string>
-		> = {};
+		const dateResult: Record<string, Record<itemKeys, number>> = {};
 		for (const data of sessionCvrData) {
 			if (!selectsItems.includes(data.asin)) continue;
 			if (
 				isAfter(data.date, dateRange.from) &&
 				isBefore(data.date, dateRange.to)
 			) {
-				const dateStr = data.date.toString();
+				const dateStr =
+					period === 'daily'
+						? data.date.toString()
+						: period === 'weekly'
+							? startOfWeek(data.date, {
+									weekStartsOn: 1,
+								}).toString()
+							: period === 'monthly'
+								? format(data.date, 'yyyy-MM')
+								: period === 'quarterly'
+									? format(data.date, 'yyyy-Q')
+									: format(data.date, 'yyyy');
 				if (!dateResult[dateStr]) {
-					dateResult[dateStr] = { date: dateStr };
+					dateResult[dateStr] = {};
 				}
 				// Nan, +-infinityを0にしていく
-				const value = Number.isFinite(data[selectData])
-					? data[selectData]
+				const value = Number.isFinite(Number(data[selectData]))
+					? Number(data[selectData])
 					: 0;
-				dateResult[dateStr][data.asin] = value;
+				if (dateResult[dateStr][data.asin]) {
+					const existValue = dateResult[dateStr][data.asin];
+					dateResult[dateStr][data.asin] = existValue + value;
+				} else {
+					dateResult[dateStr][data.asin] = value;
+				}
 			}
 		}
 
+		// 配列に展開
 		const result = [];
-		for (const data of Object.values(dateResult)) {
+		for (const [key, value] of Object.entries(dateResult)) {
+			const data: Record<string, number | string> = value;
+			data.date = key;
 			result.push(data);
 		}
-
 		return result;
-	}, [sessionCvrData, selectData, selectsItems, dateRange]);
+	}, [sessionCvrData, selectData, selectsItems, dateRange, period]);
 
 	const headers: string[] = [
 		'商品名',
@@ -178,6 +194,22 @@ export function SessionCvrTableFilter() {
 	return (
 		<div className='grid gap-3'>
 			<div className='flex gap-2'>
+				<Select
+					value={period}
+					onValueChange={(value: Period) => {
+						setPeriod(value);
+					}}
+				>
+					<SelectTrigger className='w-[180px]'>
+						<SelectValue placeholder='period' />
+					</SelectTrigger>
+					<SelectContent>
+						<SelectItem value='daily'>Daily</SelectItem>
+						<SelectItem value='weekly'>Weekly</SelectItem>
+						<SelectItem value='monthly'>Monthly</SelectItem>
+						<SelectItem value='quarterly'>Quarterly</SelectItem>
+					</SelectContent>
+				</Select>
 				<MultiSelect
 					values={items}
 					selects={selectsItems}
@@ -216,7 +248,7 @@ export function SessionCvrTableFilter() {
 			</div>
 			<Chart
 				selectData={selectData}
-				chartData={chartData}
+				chartData={filteredData}
 				items={items}
 			/>
 			{/*

@@ -10,7 +10,7 @@ type PageProps<ParamKeys extends string = string> = Readonly<{
 
 type Metadata = import('next').Metadata;
 
-type Period = 'monthly' | 'quarterly' | 'yearly';
+type Period = 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly';
 
 type SessionCvrData = {
 	date: Date;
