@@ -92,16 +92,38 @@ export function PlbsTableFilter() {
 				if (checkedTable.length !== 3) return;
 
 				// フィルターしたデータを取得
-				const filteredResponse = (await myDuckDB.c.query(
-					calcPlbsSql,
-				)) as unknown as arrow.Table;
-				const filteredArray =
-					reportArrowTableToArrays(filteredResponse);
-				if (filteredArray) {
-					setFilteredData(filteredArray);
-				} else {
-					console.error('filteredArray is undefined');
+				const filteredResponse = await myDuckDB.c.query(calcPlbsSql);
+				console.log(filteredResponse);
+
+				// データのjs array化
+				const formatData: FilteredSettlementReport[] = [];
+				for (let i = 0; i < filteredResponse.numRows; i++) {
+					const record = filteredResponse.get(i);
+					const json = record?.toJSON();
+
+					// TODO: zodでやりたい
+					const data: FilteredSettlementReport = {
+						date: json?.date,
+						costPrice: Number(json?.costPrice),
+						principal: json?.principal,
+						principalTax: json?.principalTax,
+						shipping: json?.shipping,
+						shippingTax: json?.shippingTax,
+						refund: json?.refund,
+						promotion: json?.promotion,
+						commissionFee: json?.commissionFee,
+						fbaShippingFee: json?.fbaShippingFee,
+						inventoryStorageFee: json?.inventoryStorageFee,
+						inventoryUpdateFee: json?.inventoryUpdateFee,
+						shippingReturnFee: json?.shippingReturnFee,
+						accountSubscriptionFee: json?.accountSubscriptionFee,
+						accountsReceivable: json?.accountsReceivable,
+					};
+					formatData.push(data);
 				}
+
+				console.log(formatData);
+				setFilteredData(formatData);
 			});
 		}
 	}, [myDuckDB, reportData, inventoryData, costPriceData]);
