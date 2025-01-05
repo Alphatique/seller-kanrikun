@@ -1,6 +1,21 @@
 'use client';
 
-import { format, isAfter, isBefore, startOfWeek } from 'date-fns';
+import {
+	format,
+	isAfter,
+	isBefore,
+	previousDay,
+	startOfDay,
+	startOfMonth,
+	startOfQuarter,
+	startOfWeek,
+	startOfYear,
+	subDays,
+	subMonths,
+	subQuarters,
+	subWeeks,
+	subYears,
+} from 'date-fns';
 import { useEffect, useMemo, useState } from 'react';
 import type { DateRange } from 'react-day-picker';
 
@@ -27,6 +42,11 @@ import {
 import { fetchGunzipStrApi } from '~/lib/fetch-gunzip';
 
 import { Chart } from './chart';
+import { SessionTable } from './table';
+
+export function formatValue(input: number) {
+	return Number.isFinite(Number(input)) ? Number(input) : 0;
+}
 
 export function SessionCvrTableFilter() {
 	const { data: reportData } = useSWR(
@@ -55,12 +75,12 @@ export function SessionCvrTableFilter() {
 				await createSalesTrafficReportTable(myDuckDB, reportData);
 				await createInventoryTable(myDuckDB, inventoryData);
 				// sqlの実行
-				const filteredData = await myDuckDB.c.query(calcSessionCvrSql);
+				const chartData = await myDuckDB.c.query(calcSessionCvrSql);
 
 				// データのjs array化
 				const formatData: SessionCvrData[] = [];
-				for (let i = 0; i < filteredData.numRows; i++) {
-					const record = filteredData.get(i);
+				for (let i = 0; i < chartData.numRows; i++) {
+					const record = chartData.get(i);
 					const json = record?.toJSON();
 
 					// TODO: zodでやりたい
@@ -96,7 +116,7 @@ export function SessionCvrTableFilter() {
 		return results;
 	}, [sessionCvrData]);
 
-	const filteredData = useMemo(() => {
+	const chartData = useMemo(() => {
 		if (!(sessionCvrData && dateRange?.from && dateRange?.to)) return [];
 		if (selectData === 'date') return [];
 		type itemKeys = (typeof items)[number] | 'date';
@@ -123,9 +143,7 @@ export function SessionCvrTableFilter() {
 					dateResult[dateStr] = {};
 				}
 				// Nan, +-infinityを0にしていく
-				const value = Number.isFinite(Number(data[selectData]))
-					? Number(data[selectData])
-					: 0;
+				const value = formatValue(Number(data[selectData]));
 				if (dateResult[dateStr][data.asin]) {
 					const existValue = dateResult[dateStr][data.asin];
 					dateResult[dateStr][data.asin] = existValue + value;
@@ -235,8 +253,15 @@ export function SessionCvrTableFilter() {
 			</div>
 			<Chart
 				selectData={selectData}
-				chartData={filteredData}
+				chartData={chartData}
 				items={items}
+			/>
+			<SessionTable
+				period={period}
+				selectsItems={selectsItems}
+				selectData={selectData}
+				dateRange={dateRange}
+				sessionCvrData={sessionCvrData}
 			/>
 		</div>
 	);
