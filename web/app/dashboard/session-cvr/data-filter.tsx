@@ -14,18 +14,8 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from '@seller-kanrikun/ui/components/select';
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHeader,
-	TableRow,
-} from '@seller-kanrikun/ui/components/table';
 
-import { BarChart } from '~/components/bar-chart';
 import { DatePickerWithRange } from '~/components/date-range';
-import { LineChart } from '~/components/line-chart';
-import { downloadCsv } from '~/lib/file-downloads';
 
 import { calcSessionCvrSql } from '@seller-kanrikun/data-operation/sql';
 import useSWR from 'swr';
@@ -35,6 +25,8 @@ import {
 	initDuckDB,
 } from '~/lib/duckdb';
 import { fetchGunzipStrApi } from '~/lib/fetch-gunzip';
+
+import { Chart } from './chart';
 
 export function SessionCvrTableFilter() {
 	const { data: reportData } = useSWR(
@@ -222,35 +214,11 @@ export function SessionCvrTableFilter() {
 				/>
 				<Button onClick={handleDownload}>Download</Button>
 			</div>
-			{selectData === 'sales' || selectData === 'units' ? (
-				<BarChart
-					data={chartData}
-					config={Object.entries(items).reduce(
-						(acc, [key, label], i) => {
-							acc[key] = {
-								label,
-								color: `hsl(var(--chart-${i + 1}))`,
-							};
-							return acc;
-						},
-						{} as ChartConfig,
-					)}
-				/>
-			) : (
-				<LineChart
-					data={chartData}
-					config={Object.entries(items).reduce(
-						(acc, [key, label], i) => {
-							acc[key] = {
-								label,
-								color: `hsl(var(--chart-${i + 1}))`,
-							};
-							return acc;
-						},
-						{} as ChartConfig,
-					)}
-				/>
-			)}
+			<Chart
+				selectData={selectData}
+				chartData={chartData}
+				items={items}
+			/>
 			{/*
 			<Table>
 				<TableHeader>

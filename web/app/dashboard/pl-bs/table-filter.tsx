@@ -93,7 +93,7 @@ export function PlbsTableFilter() {
 
 				// フィルターしたデータを取得
 				const filteredResponse = await myDuckDB.c.query(calcPlbsSql);
-				console.log(filteredResponse);
+				console.log(filteredResponse.toString());
 
 				// データのjs array化
 				const formatData: FilteredSettlementReport[] = [];

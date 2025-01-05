@@ -72,6 +72,9 @@ export function InputPriceUpload() {
 
 		return validatedObj;
 	});
+
+	console.log(loadedData);
+
 	// 更新後のデータを保持するためにrefで保持
 	const existData = useRef<CostPriceTsv[] | undefined>(loadedData);
 
