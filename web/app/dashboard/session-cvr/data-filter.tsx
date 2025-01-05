@@ -116,53 +116,6 @@ export function SessionCvrTableFilter() {
 		return results;
 	}, [sessionCvrData]);
 
-	const chartData = useMemo(() => {
-		if (!(sessionCvrData && dateRange?.from && dateRange?.to)) return [];
-		if (selectData === 'date') return [];
-		type itemKeys = (typeof items)[number] | 'date';
-		const dateResult: Record<string, Record<itemKeys, number>> = {};
-		for (const data of sessionCvrData) {
-			if (!selectsItems.includes(data.asin)) continue;
-			if (
-				isAfter(data.date, dateRange.from) &&
-				isBefore(data.date, dateRange.to)
-			) {
-				const dateStr =
-					period === 'daily'
-						? data.date.toString()
-						: period === 'weekly'
-							? startOfWeek(data.date, {
-									weekStartsOn: 1,
-								}).toString()
-							: period === 'monthly'
-								? format(data.date, 'yyyy-MM')
-								: period === 'quarterly'
-									? format(data.date, 'yyyy-Q')
-									: format(data.date, 'yyyy');
-				if (!dateResult[dateStr]) {
-					dateResult[dateStr] = {};
-				}
-				// Nan, +-infinityを0にしていく
-				const value = formatValue(Number(data[selectData]));
-				if (dateResult[dateStr][data.asin]) {
-					const existValue = dateResult[dateStr][data.asin];
-					dateResult[dateStr][data.asin] = existValue + value;
-				} else {
-					dateResult[dateStr][data.asin] = value;
-				}
-			}
-		}
-
-		// 配列に展開
-		const result = [];
-		for (const [key, value] of Object.entries(dateResult)) {
-			const data: Record<string, number | string> = value;
-			data.date = key;
-			result.push(data);
-		}
-		return result;
-	}, [sessionCvrData, selectData, selectsItems, dateRange, period]);
-
 	const handleDownload = () => {
 		/*
 		const downloadData = filteredTableData.map(data => {
@@ -252,9 +205,12 @@ export function SessionCvrTableFilter() {
 				<Button onClick={handleDownload}>Download</Button>
 			</div>
 			<Chart
-				selectData={selectData}
-				chartData={chartData}
+				period={period}
 				items={items}
+				selectsItems={selectsItems}
+				selectData={selectData}
+				dateRange={dateRange}
+				sessionCvrData={sessionCvrData}
 			/>
 			<SessionTable
 				period={period}
