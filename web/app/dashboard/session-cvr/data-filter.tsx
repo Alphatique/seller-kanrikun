@@ -145,19 +145,6 @@ export function SessionCvrTableFilter() {
 		return result;
 	}, [sessionCvrData, selectData, selectsItems, dateRange, period]);
 
-	const headers: string[] = [
-		'商品名',
-		'日付',
-		'売上',
-		'売上個数',
-		'平均単価',
-		'アクセス数',
-		'CVRユニットセッション',
-		'CVRユニットページビュー',
-		'ROAS',
-		'ACOS',
-	];
-
 	const handleDownload = () => {
 		/*
 		const downloadData = filteredTableData.map(data => {
@@ -251,41 +238,6 @@ export function SessionCvrTableFilter() {
 				chartData={filteredData}
 				items={items}
 			/>
-			{/*
-			<Table>
-				<TableHeader>
-					<TableRow>
-						{headers.map((header, index) => {
-							return (
-								<TableCell
-									key={`${header}-${index.toString()}`}
-								>
-									{header}
-								</TableCell>
-							);
-						})}
-					</TableRow>
-				</TableHeader>
-				<TableBody>
-					{filteredTableData.map((data, index) => {
-						return (
-							<TableRow key={`${data.asin}-${index.toString()}`}>
-								<TableCell>{data.asin}</TableCell>
-								<TableCell>{data.date.toISOString()}</TableCell>
-								<TableCell>{data.sales}</TableCell>
-								<TableCell>{data.units}</TableCell>
-								<TableCell>{data.averagePrice}</TableCell>
-								<TableCell>{data.pageViews}</TableCell>
-								<TableCell>{data.sessionCvr}</TableCell>
-								<TableCell>{data.pageViewCvr}</TableCell>
-								<TableCell>{data.roas}</TableCell>
-								<TableCell>{data.acos}</TableCell>
-							</TableRow>
-						);
-					})}
-				</TableBody>
-			</Table>
-			*/}
 		</div>
 	);
 }

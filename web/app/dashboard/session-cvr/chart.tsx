@@ -3,7 +3,7 @@ import { BarChart } from '~/components/bar-chart';
 import { LineChart } from '~/components/line-chart';
 
 interface Props {
-	selectData: string;
+	selectData: keyof SessionCvrData;
 	chartData: Record<string, string | number>[];
 	items: Record<string, string>;
 }
