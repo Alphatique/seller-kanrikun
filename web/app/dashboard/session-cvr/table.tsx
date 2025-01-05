@@ -118,8 +118,12 @@ export function SessionTable({
 		}
 
 		// 配列に展開
-		return dateResult;
-	}, [sessionCvrData, selectData, selectsItems, dateRange, period]);
+		return {
+			nowData: dateResult[nowDataDay.toString()],
+			previousData: dateResult[previousDataDay.toString()],
+			lastYearData: dateResult[lastYearDataDay.toString()],
+		};
+	}, [sessionCvrData, selectsItems, dateRange, period]);
 
 	function getPeriodPreviousDay(period: Period, day: Date) {
 		return period === 'daily'
