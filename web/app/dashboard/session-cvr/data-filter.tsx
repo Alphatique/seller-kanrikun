@@ -63,7 +63,7 @@ export function SessionCvrTableFilter() {
 	const [selectsItems, setSelects] = useState<string[]>([]);
 	const [selectData, setSelectData] = useState<keyof SessionCvrData>('sales');
 	const [dateRange, setDateRange] = useState<DateRange | undefined>({
-		from: new Date(),
+		from: subMonths(new Date(), 4),
 		to: new Date(),
 	});
 	const [period, setPeriod] = useState<Period>('daily');
