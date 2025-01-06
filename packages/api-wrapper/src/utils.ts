@@ -1,3 +1,4 @@
+// amazonがレートリミットを書いてくれてたり書いてくれなかったりするのでそれを良しなにしたりしてレート待ちをするやつ
 export async function waitRateLimitTime(
 	response: Response,
 	defaultWaitTime = 60,

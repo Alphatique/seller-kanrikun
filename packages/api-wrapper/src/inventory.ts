@@ -1,23 +1,43 @@
-import { Result } from 'neverthrow';
+import { gunzipSync, gzipSync, strFromU8, strToU8 } from 'fflate';
 import type { Client } from 'openapi-fetch';
 
-import { getFile } from '@seller-kanrikun/data-operation/r2';
+import { getFile, putFile } from '@seller-kanrikun/data-operation/r2';
+import type {
+	components,
+	paths,
+} from '@seller-kanrikun/sp-api/schema/fba-inventory';
 
-import type { components, paths } from '../../sp-api/schema/fba-inventory';
+import {
+	type InventorySummaries,
+	type InventorySummary,
+	inventorySummaries,
+} from '../schema/inventory';
 import { JAPAN_MARKET_PLACE_ID } from './constants';
-import { waitRateLimitTime } from './utils';
 
 async function saveInventorySummaries<Data, Error>(
 	bucketName: string,
 	fileName: string,
 	userId: string,
-	newData: components['schemas']['InventorySummary'][],
+	newData: InventorySummaries,
 ) {
-	const existData = await getFile(
+	const existResponse = await getFile(
 		bucketName,
 		userId,
-		'inventory-summary.tsv.gz',
+		'inventory-summary.json.gz',
 	);
+	const existByteArray = await existResponse?.Body?.transformToByteArray();
+	if (existByteArray === undefined) return;
+	const unzipped = gunzipSync(existByteArray);
+	const existText = strFromU8(unzipped);
+	const existData = inventorySummaries.parse(JSON.parse(existText));
+
+	const result = [...existData, ...newData];
+
+	const resultText = result.toString();
+	const resultByteArray = strToU8(resultText);
+	const gzip = gzipSync(resultByteArray);
+
+	return await putFile(bucketName, userId, 'inventory-summary.json.gz', gzip);
 }
 
 async function getMultiInventorySummaries<Data, Error>(

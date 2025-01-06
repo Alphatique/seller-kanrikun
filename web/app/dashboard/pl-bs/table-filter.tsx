@@ -59,6 +59,8 @@ export function PlbsTableFilter() {
 	// duckdb
 	const { data: myDuckDB } = useSWR('/initDuckDB', initDuckDB);
 
+	console.log(inventoryData);
+
 	// フィルターしたデータ
 	const [filteredData, setFilteredData] = useState<
 		FilteredSettlementReport[] | undefined
