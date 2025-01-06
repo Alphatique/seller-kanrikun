@@ -63,7 +63,7 @@ export function SessionCvrTableFilter() {
 	const [selectsItems, setSelects] = useState<string[]>([]);
 	const [selectData, setSelectData] = useState<keyof SessionCvrData>('sales');
 	const [dateRange, setDateRange] = useState<DateRange | undefined>({
-		from: new Date(),
+		from: subMonths(new Date(), 4),
 		to: new Date(),
 	});
 	const [period, setPeriod] = useState<Period>('daily');
@@ -113,6 +113,8 @@ export function SessionCvrTableFilter() {
 				results[data.asin] = data.name ? data.name : data.asin;
 			}
 		}
+		// 全部の商品を選択状態にする
+		setSelects(Object.keys(results));
 		return results;
 	}, [sessionCvrData]);
 
@@ -143,8 +145,8 @@ export function SessionCvrTableFilter() {
 		units: '売上個数',
 		averagePrice: '平均単価',
 		pageViews: 'ページビュー',
-		sessionCvr: 'CVRユニットセッション',
-		pageViewCvr: 'CVRユニットページビュー',
+		sessionCvr: 'CVRセッション',
+		pageViewCvr: 'CVRページビュー',
 		roas: 'ROAS',
 		acos: 'ACOS',
 	};
