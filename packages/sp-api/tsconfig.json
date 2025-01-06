@@ -12,6 +12,6 @@
 		"forceConsistentCasingInFileNames": true,
 		"noEmit": true
 	},
-	"include": ["./"],
+	"include": ["./", "../sp-api-wrapper/src"],
 	"exclude": ["*.template.ts"]
 }

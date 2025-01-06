@@ -1,0 +1,15 @@
+{
+	"name": "@seller-kanrikun/api-wrapper",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./*": "./src/*.ts",
+		"./schema/*": "./schema/*.ts"
+	},
+	"scripts": {
+		"typecheck": "tsc"
+	},
+	"dependencies": {
+		"zod": "^3.23.8"
+	}
+}

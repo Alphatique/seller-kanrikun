@@ -3,7 +3,7 @@ import type { Client } from 'openapi-fetch';
 
 import { getFile } from '@seller-kanrikun/data-operation/r2';
 
-import type { components, paths } from '../schema/fba-inventory';
+import type { components, paths } from '../../sp-api/schema/fba-inventory';
 import { JAPAN_MARKET_PLACE_ID } from './constants';
 import { waitRateLimitTime } from './utils';
 
@@ -24,6 +24,7 @@ async function getMultiInventorySummaries<Data, Error>(
 	api: Client<paths>,
 	loopWaitFunc?: (response: Response) => Promise<void>,
 ): Promise<Record<string, string>[]> {
+	// 事前に定義
 	let nextToken: string | undefined = undefined;
 	const allSummaries: components['schemas']['InventorySummaries'][] = [];
 
@@ -31,11 +32,13 @@ async function getMultiInventorySummaries<Data, Error>(
 	const maxLoopCount = 500;
 	let loopCount = 0;
 	while (true) {
+		// 取得
 		const result = await getInventorySummaries(api, nextToken);
 		const summaries = result?.data?.payload?.inventorySummaries;
 		nextToken = result.data?.pagination?.nextToken;
 
 		if (summaries) {
+			// 追加
 			allSummaries.push(summaries);
 		}
 		if (nextToken === undefined) {
