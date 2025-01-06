@@ -30,7 +30,10 @@ export function BarChart({ className, data, config }: BarChartProps) {
 				<CardDescription>January - June 2024</CardDescription>
 			</CardHeader>
 			<CardContent>
-				<ChartContainer config={config}>
+				<ChartContainer
+					config={config}
+					style={{ width: '100%', height: '40vh' }}
+				>
 					<BarChartIcon accessibilityLayer data={data}>
 						<CartesianGrid vertical={false} />
 						<XAxis
