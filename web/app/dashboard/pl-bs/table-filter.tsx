@@ -1,6 +1,6 @@
 'use client';
-
 import type * as arrow from 'apache-arrow';
+import { subMonths } from 'date-fns';
 import { format } from 'date-fns';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import useSWR from 'swr';
@@ -64,13 +64,12 @@ export function PlbsTableFilter() {
 		FilteredSettlementReport[] | undefined
 	>(undefined);
 
-	// グルーピングのピリオド
 	const [period, setPeriod] = useState<Period>('monthly');
-	// 日付フィルター
 	const [dateRange, setDateRange] = useState<{ start: Date; end: Date }>({
-		start: new Date(),
+		start: subMonths(new Date(), 7),
 		end: new Date(),
 	});
+
 	// 税込みか税抜きか
 	const [withTax, setWithTax] = useState<boolean>(true);
 

@@ -101,7 +101,7 @@ export function PlbsTable({
 										<TableCell
 											key={`pl_${item.key}_${date}`}
 										>
-											{sumValue}
+											{sumValue.toLocaleString()}
 										</TableCell>
 									);
 								},
