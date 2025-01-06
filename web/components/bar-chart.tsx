@@ -1,4 +1,10 @@
-import { Bar, BarChart as BarChartIcon, CartesianGrid, XAxis } from 'recharts';
+import {
+	Bar,
+	BarChart as BarChartIcon,
+	CartesianGrid,
+	XAxis,
+	YAxis,
+} from 'recharts';
 
 import {
 	Card,
@@ -45,6 +51,14 @@ export function BarChart({ className, data, config }: BarChartProps) {
 								new Date(value).toLocaleDateString()
 							}
 						/>
+						<YAxis
+							yAxisId='right'
+							orientation='right' // 右側に配置
+							tickLine={false}
+							axisLine={false}
+							tickMargin={8}
+							tickFormatter={value => `${value}`}
+						/>
 						<ChartTooltip
 							content={<ChartTooltipContent hideLabel />}
 						/>
@@ -63,6 +77,7 @@ export function BarChart({ className, data, config }: BarChartProps) {
 										stackId='a'
 										fill={fill}
 										radius={[0, 0, 4, 4]}
+										yAxisId='right'
 									/>
 								);
 							})}
