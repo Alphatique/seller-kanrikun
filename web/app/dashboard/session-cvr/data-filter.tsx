@@ -113,6 +113,8 @@ export function SessionCvrTableFilter() {
 				results[data.asin] = data.name ? data.name : data.asin;
 			}
 		}
+		// 全部の商品を選択状態にする
+		setSelects(Object.keys(results));
 		return results;
 	}, [sessionCvrData]);
 
@@ -143,8 +145,8 @@ export function SessionCvrTableFilter() {
 		units: '売上個数',
 		averagePrice: '平均単価',
 		pageViews: 'ページビュー',
-		sessionCvr: 'CVRユニットセッション',
-		pageViewCvr: 'CVRユニットページビュー',
+		sessionCvr: 'CVRセッション',
+		pageViewCvr: 'CVRページビュー',
 		roas: 'ROAS',
 		acos: 'ACOS',
 	};
