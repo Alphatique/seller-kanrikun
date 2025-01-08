@@ -12,3 +12,5 @@ export async function waitRateLimitTime(
 	console.log('waitTime:', waitTime);
 	await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
 }
+
+export type ValueOf<T> = T[keyof T];

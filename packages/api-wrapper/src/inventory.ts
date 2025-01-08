@@ -1,9 +1,11 @@
 import { gunzipSync, gzipSync, strFromU8, strToU8 } from 'fflate';
+import { Err, Ok, type Result } from 'neverthrow';
 import type { Client } from 'openapi-fetch';
 
 import { getFile, putFile } from '@seller-kanrikun/data-operation/r2';
 import type {
 	components,
+	operations,
 	paths,
 } from '@seller-kanrikun/sp-api/schema/fba-inventory';
 
@@ -11,8 +13,10 @@ import {
 	type InventorySummaries,
 	type InventorySummary,
 	inventorySummaries,
+	inventorySummary,
 } from '../schema/inventory';
 import { JAPAN_MARKET_PLACE_ID } from './constants';
+import type { ValueOf } from './utils';
 
 async function saveInventorySummaries<Data, Error>(
 	bucketName: string,
@@ -20,32 +24,30 @@ async function saveInventorySummaries<Data, Error>(
 	userId: string,
 	newData: InventorySummaries,
 ) {
-	const existResponse = await getFile(
-		bucketName,
-		userId,
-		'inventory-summary.json.gz',
-	);
+	const existResponse = await getFile(bucketName, userId, fileName);
 	const existByteArray = await existResponse?.Body?.transformToByteArray();
 	if (existByteArray === undefined) return;
 	const unzipped = gunzipSync(existByteArray);
 	const existText = strFromU8(unzipped);
 	const existData = inventorySummaries.parse(JSON.parse(existText));
 
-	const result = [...existData, ...newData];
+	const response = [...existData, ...newData];
 
-	const resultText = result.toString();
-	const resultByteArray = strToU8(resultText);
-	const gzip = gzipSync(resultByteArray);
+	const responseText = response.toString();
+	const responseByteArray = strToU8(responseText);
+	const gzip = gzipSync(responseByteArray);
 
-	return await putFile(bucketName, userId, 'inventory-summary.json.gz', gzip);
+	return await putFile(bucketName, userId, fileName, gzip);
 }
 
-async function getMultiInventorySummaries<Data, Error>(
+type responseValues = ValueOf<operations['getInventorySummaries']['responses']>;
+
+async function getMultiInventorySummaries(
 	api: Client<paths>,
-	loopWaitFunc?: (response: Response) => Promise<void>,
-): Promise<Record<string, string>[]> {
+	nextToken?: string,
+): Promise<Result<InventorySummaries, [Error, InventorySummaries]>> {
 	// 事前に定義
-	let nextToken: string | undefined = undefined;
+	let currentNextToken = nextToken;
 	const allSummaries: components['schemas']['InventorySummaries'][] = [];
 
 	// nextTokenがある限りnextTokenを使って続けて取得
@@ -53,15 +55,24 @@ async function getMultiInventorySummaries<Data, Error>(
 	let loopCount = 0;
 	while (true) {
 		// 取得
-		const result = await getInventorySummaries(api, nextToken);
-		const summaries = result?.data?.payload?.inventorySummaries;
-		nextToken = result.data?.pagination?.nextToken;
+		const { data, error, response } = await getInventorySummaries(
+			api,
+			nextToken,
+		);
+		const summaries = data?.payload?.inventorySummaries;
+		currentNextToken = data?.pagination?.nextToken;
 
 		if (summaries) {
 			// 追加
 			allSummaries.push(summaries);
+		} else {
+			/*
+			return new Err([
+				error?.errors,
+				apiSummariesToSchemaSummaries(allSummaries),
+			]);*/
 		}
-		if (nextToken === undefined) {
+		if (currentNextToken === undefined) {
 			// nextTokenがない場合はループを抜ける
 			break;
 		}
@@ -74,34 +85,25 @@ async function getMultiInventorySummaries<Data, Error>(
 			);
 			break;
 		}
-
-		if (loopWaitFunc) {
-			// レート制限分待機
-			await loopWaitFunc(result.response);
-		}
 	}
 
-	// レコードにしたものを返す
-	return multiSummariesToStrRecord(allSummaries);
+	return new Ok(apiSummariesToSchemaSummaries(allSummaries));
 }
 
-// 複数のinventorySummariesをRecordに変換
-function multiSummariesToStrRecord(
+// 取得したデータをschemaで変換
+function apiSummariesToSchemaSummaries(
 	multiSummaries: components['schemas']['InventorySummaries'][],
-): Record<string, string>[] {
-	const result: Record<string, string>[] = [];
-
-	// summariesを一つのデータとする
-	for (const summaries of multiSummaries) {
-		for (const [key, value] of Object.entries(summaries)) {
-			if (value === null) continue;
-			result.push({
-				[key]: value as string,
-			});
-		}
+): InventorySummaries {
+	const response: InventorySummaries = [];
+	for (const summary of multiSummaries) {
+		response.push(
+			inventorySummary.parse({
+				...summary,
+				sellerKanrikunSavedTime: new Date(),
+			}),
+		);
 	}
-
-	return result;
+	return response;
 }
 
 interface fetchReturn<Data, Error> {
