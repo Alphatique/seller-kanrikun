@@ -3,6 +3,7 @@ import {
 	Line,
 	LineChart as LineChartIcon,
 	XAxis,
+	YAxis,
 } from 'recharts';
 
 import {
@@ -35,7 +36,10 @@ export function LineChart({ className, data, config }: LineChartProps) {
 				<CardDescription>January - June 2024</CardDescription>
 			</CardHeader>
 			<CardContent>
-				<ChartContainer config={config}>
+				<ChartContainer
+					config={config}
+					style={{ width: '100%', height: '40vh' }}
+				>
 					<LineChartIcon
 						accessibilityLayer
 						data={data}
@@ -53,6 +57,14 @@ export function LineChart({ className, data, config }: LineChartProps) {
 							tickFormatter={value =>
 								new Date(value).toLocaleDateString()
 							}
+						/>
+						<YAxis
+							yAxisId='right'
+							orientation='right' // 右側に配置
+							tickLine={false}
+							axisLine={false}
+							tickMargin={8}
+							tickFormatter={value => `${value}`}
 						/>
 						<ChartTooltip
 							cursor={false}
@@ -73,6 +85,7 @@ export function LineChart({ className, data, config }: LineChartProps) {
 										stroke={fill}
 										strokeWidth={2}
 										dot={false}
+										yAxisId='right'
 									/>
 								);
 							})}

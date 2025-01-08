@@ -34,8 +34,8 @@ const headers: string[] = [
 	'売上個数',
 	'平均単価',
 	'アクセス数',
-	'CVRユニットセッション',
-	'CVRユニットページビュー',
+	'CVRセッション',
+	'CVRページビュー',
 	'ROAS',
 	'ACOS',
 ];
@@ -48,6 +48,12 @@ interface Props {
 	sessionCvrData: SessionCvrData[] | undefined;
 }
 
+interface TableData {
+	nowData: Record<string, SessionCvrData>;
+	previousData: Record<string, SessionCvrData>;
+	lastYearData: Record<string, SessionCvrData>;
+}
+
 export function SessionTable({
 	period,
 	selectsItems,
@@ -55,7 +61,7 @@ export function SessionTable({
 	dateRange,
 	sessionCvrData,
 }: Props) {
-	const tableData = useMemo(() => {
+	const tableData: TableData | [] = useMemo(() => {
 		if (!(sessionCvrData && dateRange?.from && dateRange?.to)) return [];
 		if (selectData === 'date') return [];
 
@@ -154,35 +160,140 @@ export function SessionTable({
 						: startOfYear(day);
 	}
 
+	function roundValue(value: number | null): string {
+		if (value === null || value === undefined) return '-';
+		return (Math.round(value * 10) / 10).toString(); // 小数点第1位で丸める
+	}
+
 	return (
 		<Table>
 			<TableHeader>
 				<TableRow>
-					{headers.map((header, index) => {
-						return (
-							<TableCell key={`${header}-${index.toString()}`}>
-								{header}
-							</TableCell>
-						);
-					})}
+					{headers.map((header, index) => (
+						<TableCell key={`${header}-${index.toString()}`}>
+							{header}
+						</TableCell>
+					))}
 				</TableRow>
 			</TableHeader>
 			<TableBody>
-				{/*tableData.map((data, index) => {
-					return (
-						<TableRow key={`${data.asin}-${index.toString()}`}>
-							<TableCell>{data.asin}</TableCell>
-							<TableCell>{data.sales}</TableCell>
-							<TableCell>{data.units}</TableCell>
-							<TableCell>{data.averagePrice}</TableCell>
-							<TableCell>{data.pageViews}</TableCell>
-							<TableCell>{data.sessionCvr}</TableCell>
-							<TableCell>{data.pageViewCvr}</TableCell>
-							<TableCell>{data.roas}</TableCell>
-							<TableCell>{data.acos}</TableCell>
-						</TableRow>
-					);
-				})*/}
+				{Array.isArray(tableData) ||
+				!tableData.nowData ||
+				Object.values(tableData.nowData).length === 0 ? (
+					<TableRow>
+						<TableCell
+							colSpan={headers.length + 1}
+							style={{ textAlign: 'center' }}
+						>
+							データがありません
+						</TableCell>
+					</TableRow>
+				) : (
+					Object.values(tableData.nowData).map((data, index) => {
+						const typedData = data as SessionCvrData;
+						const previousData = tableData.previousData
+							? tableData.previousData[typedData.asin]
+							: null;
+
+						function calculateDifference(
+							nowValue: number | null,
+							prevValue: number | null,
+						): string {
+							if (nowValue === null || nowValue === undefined)
+								return '-';
+							if (prevValue === null || prevValue === undefined)
+								return `${roundValue(nowValue)}`;
+							const diff = nowValue - prevValue;
+							const sign = diff > 0 ? '+' : diff < 0 ? '' : '±';
+							return `${roundValue(nowValue)} (${sign}${roundValue(
+								diff,
+							)})`;
+						}
+
+						return (
+							<TableRow
+								key={`${typedData.asin}-${index.toString()}`}
+							>
+								<TableCell>{typedData.asin}</TableCell>
+								<TableCell>
+									{format(typedData.date, 'yyyy/MM/dd')}
+								</TableCell>
+								<TableCell>
+									{calculateDifference(
+										formatValue(typedData.sales),
+										previousData
+											? formatValue(previousData.sales)
+											: null,
+									)}
+								</TableCell>
+								<TableCell>
+									{calculateDifference(
+										formatValue(typedData.units),
+										previousData
+											? formatValue(previousData.units)
+											: null,
+									)}
+								</TableCell>
+								<TableCell>
+									{calculateDifference(
+										formatValue(typedData.averagePrice),
+										previousData
+											? formatValue(
+													previousData.averagePrice,
+												)
+											: null,
+									)}
+								</TableCell>
+								<TableCell>
+									{calculateDifference(
+										formatValue(typedData.pageViews),
+										previousData
+											? formatValue(
+													previousData.pageViews,
+												)
+											: null,
+									)}
+								</TableCell>
+								<TableCell>
+									{calculateDifference(
+										formatValue(typedData.sessionCvr),
+										previousData
+											? formatValue(
+													previousData.sessionCvr,
+												)
+											: null,
+									)}
+								</TableCell>
+								<TableCell>
+									{calculateDifference(
+										formatValue(typedData.pageViewCvr),
+										previousData
+											? formatValue(
+													previousData.pageViewCvr,
+												)
+											: null,
+									)}
+								</TableCell>
+								<TableCell>
+									{calculateDifference(
+										formatValue(typedData.roas),
+										previousData
+											? formatValue(previousData.roas)
+											: null,
+									)}
+								</TableCell>
+								<TableCell>
+									{calculateDifference(
+										formatValue(typedData.acos),
+										previousData
+											? formatValue(previousData.acos)
+											: null,
+									)}
+								</TableCell>
+							</TableRow>
+						);
+					})
+				)}
 			</TableBody>
 		</Table>
 	);
