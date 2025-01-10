@@ -1,5 +1,5 @@
 import { gunzipSync, gzipSync, strFromU8, strToU8 } from 'fflate';
-import { Err, Ok, type Result } from 'neverthrow';
+import { Err, Ok, type Result, err } from 'neverthrow';
 import type { Client } from 'openapi-fetch';
 
 import { getFile, putFile } from '@seller-kanrikun/data-operation/r2';
@@ -16,7 +16,7 @@ import {
 	inventorySummary,
 } from '../schema/inventory';
 import { JAPAN_MARKET_PLACE_ID } from './constants';
-import type { ValueOf } from './utils';
+import { type ValueOf, waitRateLimitTime } from './utils';
 
 async function saveInventorySummaries<Data, Error>(
 	bucketName: string,
@@ -40,14 +40,11 @@ async function saveInventorySummaries<Data, Error>(
 	return await putFile(bucketName, userId, fileName, gzip);
 }
 
-type responseValues = ValueOf<operations['getInventorySummaries']['responses']>;
-
-async function getMultiInventorySummaries(
+async function getAllInventorySummariesWithRateLimit(
 	api: Client<paths>,
-	nextToken?: string,
-): Promise<Result<InventorySummaries, [Error, InventorySummaries]>> {
+): Promise<InventorySummaries> {
 	// 事前に定義
-	let currentNextToken = nextToken;
+	let nextToken: string | undefined = undefined;
 	const allSummaries: components['schemas']['InventorySummaries'][] = [];
 
 	// nextTokenがある限りnextTokenを使って続けて取得
@@ -60,19 +57,71 @@ async function getMultiInventorySummaries(
 			nextToken,
 		);
 		const summaries = data?.payload?.inventorySummaries;
-		currentNextToken = data?.pagination?.nextToken;
+		nextToken = data?.pagination?.nextToken;
 
 		if (summaries) {
 			// 追加
 			allSummaries.push(summaries);
-		} else {
-			/*
-			return new Err([
-				error?.errors,
-				apiSummariesToSchemaSummaries(allSummaries),
-			]);*/
 		}
-		if (currentNextToken === undefined) {
+		if (error) {
+			console.warn(error);
+		} else if (response.status === 429) {
+			// レート制限のときは二分待って続行
+			await new Promise(resolve => setTimeout(resolve, 120 * 1000));
+			continue;
+		} else {
+			// それ以外のエラーならループ終了
+			console.error('loop terminated incorrectly!!!');
+			break;
+		}
+
+		if (nextToken === undefined) {
+			// next tokenがなければ終了
+			break;
+		}
+
+		// ループ回数が制限を超えた場合はエラーを出力
+		loopCount++;
+		if (loopCount >= maxLoopCount) {
+			console.error(
+				'getInventorySummariesWithRateLimit: loop limit exceeded',
+			);
+			break;
+		}
+
+		await waitRateLimitTime(response, 65);
+	}
+
+	return apiSummariesToSchemaSummaries(allSummaries);
+}
+
+async function getAllInventorySummaries(
+	api: Client<paths>,
+): Promise<InventorySummaries> {
+	// 事前に定義
+	let nextToken: string | undefined = undefined;
+	const allSummaries: components['schemas']['InventorySummaries'][] = [];
+
+	// nextTokenがある限りnextTokenを使って続けて取得
+	const maxLoopCount = 500;
+	let loopCount = 0;
+	while (true) {
+		// 取得
+		const { data, error, response } = await getInventorySummaries(
+			api,
+			nextToken,
+		);
+		const summaries = data?.payload?.inventorySummaries;
+		nextToken = data?.pagination?.nextToken;
+
+		if (summaries) {
+			// 追加
+			allSummaries.push(summaries);
+		}
+		if (error) {
+			console.error(error, response);
+		}
+		if (nextToken === undefined) {
 			// nextTokenがない場合はループを抜ける
 			break;
 		}
@@ -87,7 +136,7 @@ async function getMultiInventorySummaries(
 		}
 	}
 
-	return new Ok(apiSummariesToSchemaSummaries(allSummaries));
+	return apiSummariesToSchemaSummaries(allSummaries);
 }
 
 // 取得したデータをschemaで変換
