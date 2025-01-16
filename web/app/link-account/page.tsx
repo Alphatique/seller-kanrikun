@@ -71,7 +71,7 @@ export default function Page() {
 					/>
 				</svg>
 				<span className='font-bold text-sm leading-6'>
-					セラー管理君
+					セラー管理くん
 				</span>
 			</div>
 

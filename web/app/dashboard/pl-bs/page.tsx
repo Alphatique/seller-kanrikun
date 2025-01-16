@@ -6,7 +6,7 @@ import { Separator } from '@seller-kanrikun/ui/components/separator';
 import { PlbsTableFilter } from './table-filter';
 
 export const metadata: Metadata = {
-	title: 'PL/BS | セラー管理君',
+	title: 'PL/BS | セラー管理くん',
 };
 
 export default function Page() {

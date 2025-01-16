@@ -1,7 +1,7 @@
 import './globals.css';
 
 export const metadata: Metadata = {
-	title: 'セラー管理君',
+	title: 'セラー管理くん',
 	icons: [
 		{
 			rel: 'icon',
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 		},
 	],
 	appleWebApp: {
-		title: 'セラー管理君',
+		title: 'セラー管理くん',
 	},
 };
 

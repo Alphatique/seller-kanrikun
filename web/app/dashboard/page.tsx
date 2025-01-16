@@ -1,5 +1,5 @@
 export const metadata: Metadata = {
-	title: 'ホーム | セラー管理君',
+	title: 'ホーム | セラー管理くん',
 };
 
 export default function Page() {

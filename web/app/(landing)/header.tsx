@@ -59,7 +59,7 @@ export function Header() {
 					</svg>
 
 					<h1 className='select-none font-semibold text-background text-lg'>
-						セラー管理君
+						セラー管理くん
 					</h1>
 				</Link>
 

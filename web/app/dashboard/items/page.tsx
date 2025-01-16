@@ -3,7 +3,7 @@ import { Separator } from '@seller-kanrikun/ui/components/separator';
 import { ItemsTableFilter } from './table-filter';
 
 export const metadata: Metadata = {
-	title: '商品別明細 | セラー管理君',
+	title: '商品別明細 | セラー管理くん',
 };
 
 export default function Page() {

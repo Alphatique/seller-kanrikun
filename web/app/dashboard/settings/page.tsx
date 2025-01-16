@@ -21,7 +21,7 @@ import { getSession } from '~/lib/session';
 import { CreatePasskeyButton, SignOutAllSessionButton } from './client';
 
 export const metadata: Metadata = {
-	title: '設定 | セラー管理君',
+	title: '設定 | セラー管理くん',
 };
 
 export default async function Page() {

@@ -1,5 +1,5 @@
 export const metadata: Metadata = {
-	title: 'サインイン | セラー管理君',
+	title: 'サインイン | セラー管理くん',
 };
 
 export default function Layout({ children }: LayoutProps) {

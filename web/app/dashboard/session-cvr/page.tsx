@@ -3,7 +3,7 @@ import { Separator } from '@seller-kanrikun/ui/components/separator';
 import { SessionCvrTableFilter } from './data-filter';
 
 export const metadata: Metadata = {
-	title: 'セッション/CVR | セラー管理君',
+	title: 'セッション/CVR | セラー管理くん',
 };
 
 export default function Page() {
