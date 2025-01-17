@@ -202,7 +202,7 @@ export function PlbsTableFilter() {
 						checked={withTax}
 						onCheckedChange={setWithTax}
 					/>
-					<Label htmlFor='airplane-mode'>Without Tax</Label>
+					<Label htmlFor='airplane-mode'>税抜き</Label>
 				</div>
 				<PopoverMonthRangePicker
 					value={dateRange}
