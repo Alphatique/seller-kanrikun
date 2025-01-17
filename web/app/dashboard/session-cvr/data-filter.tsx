@@ -164,10 +164,10 @@ export function SessionCvrTableFilter() {
 						<SelectValue placeholder='period' />
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value='daily'>Daily</SelectItem>
-						<SelectItem value='weekly'>Weekly</SelectItem>
-						<SelectItem value='monthly'>Monthly</SelectItem>
-						<SelectItem value='quarterly'>Quarterly</SelectItem>
+						<SelectItem value='daily'>日</SelectItem>
+						<SelectItem value='weekly'>週</SelectItem>
+						<SelectItem value='monthly'>月</SelectItem>
+						<SelectItem value='quarterly'>四半期</SelectItem>
 					</SelectContent>
 				</Select>
 				<MultiSelect

@@ -191,9 +191,9 @@ export function PlbsTableFilter() {
 						<SelectValue placeholder='period' />
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value='monthly'>Monthly</SelectItem>
-						<SelectItem value='quarterly'>Quarterly</SelectItem>
-						<SelectItem value='yearly'>Yearly</SelectItem>
+						<SelectItem value='monthly'>月</SelectItem>
+						<SelectItem value='quarterly'>四半期</SelectItem>
+						<SelectItem value='yearly'>年</SelectItem>
 					</SelectContent>
 				</Select>
 				<div className='flex items-center space-x-2'>
