@@ -1,3 +1,4 @@
+import { writeFile } from 'node:fs/promises';
 import { Readable } from 'node:stream';
 import type { ReadableStream as WebReadableStream } from 'node:stream/web';
 import { addSeconds, isBefore } from 'date-fns';
@@ -6,7 +7,11 @@ import createApiClient from 'openapi-fetch';
 import type { Middleware } from 'openapi-fetch';
 import Papa from 'papaparse';
 
-import { getAllSettlementReportsUntilRateLimit } from '@seller-kanrikun/api-wrapper/settlement-report';
+import {
+	getAllSettlementReportsRetryRateLimit,
+	getAllSettlementReportsUntilRateLimit,
+	getSettlementReportsDocumentRetryRateLimit,
+} from '@seller-kanrikun/api-wrapper/settlement-report';
 import {
 	getAccountsByProviderId,
 	refreshAccessToken,
@@ -30,27 +35,38 @@ export const app = new Hono()
 	.use(authMiddleware)
 	.use(dbMiddleware)
 	.get('/', accessTokenMiddleware, async c => {
-		const db = c.var.db;
-		const accounts = await getAccountsByProviderId(db, 'seller-central');
+		const accessToken = c.var.spApiAccessToken;
 
-		/*
-		for (const account of accounts) {
-			let access_token = account.accessToken;
-			let expire_in = account.accessTokenExpiresAt;
-			// レポートapi
-			const reportsApi = createApiClient<reportsPaths>({
-				baseUrl: SELLER_API_BASE_URL,
-			});
-			const tokenMiddleware: Middleware = {
-				async onRequest({ request, options }) {
-					// リクエストにアクセストークンを追加
-					request.headers.set('x-amz-access-token', access_token);
-					return request;
-				},
-			};
-			reportsApi.use(tokenMiddleware);
-			const settlementReports =
-				await getAllSettlementReportsUntilRateLimit(reportsApi, []);
-			console.log(settlementReports);
-		}*/
+		// レポートapi
+		const reportsApi = createApiClient<reportsPaths>({
+			baseUrl: SELLER_API_BASE_URL,
+		});
+
+		const tokenMiddleware: Middleware = {
+			async onRequest({ request, options }) {
+				// リクエストにアクセストークンを追加
+				request.headers.set('x-amz-access-token', accessToken);
+				return request;
+			},
+		};
+		reportsApi.use(tokenMiddleware);
+
+		const settlementReports = await getAllSettlementReportsRetryRateLimit(
+			reportsApi,
+			[],
+		);
+
+		const settlementReportDocuments =
+			await getSettlementReportsDocumentRetryRateLimit(
+				reportsApi,
+				settlementReports,
+			);
+		await writeFile(
+			'./settlementReportDocuments.json',
+			JSON.stringify(settlementReportDocuments, null, 2),
+			'utf8',
+		);
+		return new Response('ok', {
+			status: 200,
+		});
 	});

@@ -101,6 +101,7 @@ export async function getAllSettlementReportsRetryRateLimit(
 			}
 		} else if (nextToken === undefined) {
 			// エラー出ないかつnextTokenがなくなれば終了
+			console.log(loopCount, nextToken, data);
 			break;
 		}
 
@@ -213,11 +214,12 @@ export async function getSettlementReportsDocumentRetryRateLimit(
 			break;
 		}
 
-		const strObj = papaparseOnStream(reader);
-		const parsedObj = settlementReportDocument.parse(strObj);
-
+		const strObj = await papaparseOnStream(reader);
+		const parsedObj: SettlementReportDocument = strObj
+			.map(row => parseSettlementRow(row)) // 各行をパース
+			.filter((row): row is SettlementReportDocumentRow => row !== null); // null を除外
 		result.reports.push(report);
-		result.document.concat(parsedObj);
+		result.document.push(...parsedObj);
 
 		await waitRateLimitTime(response, 0.5);
 	}
