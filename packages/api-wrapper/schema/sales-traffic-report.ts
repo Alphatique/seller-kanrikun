@@ -26,6 +26,15 @@ const salesAndTrafficByAsin = z.object({
 	trafficByAsin: trafficByAsin,
 });
 
+export const salesTrafficReportDocument = z.object({
+	reportSpecification: z.object({
+		dataStartTime: z.coerce.date(),
+		dataEndTime: z.coerce.date(),
+	}),
+	salesAndTrafficByAsin: z.array(salesAndTrafficByAsin),
+});
+// ここまで読み取り用
+
 // これを保存する
 export const salesAndTrafficReportDocumentRow = z.object({
 	parentAsin: z.string(),
@@ -52,15 +61,6 @@ export const salesAndTrafficReportDocumentRow = z.object({
 	// 保存した時間
 	sellerKanrikunSaveTime: z.coerce.date(),
 });
-
-export const salesTrafficReportDocument = z.object({
-	reportSpecification: z.object({
-		dataStartTime: z.coerce.date(),
-		dataEndTime: z.coerce.date(),
-	}),
-	salesAndTrafficByAsin: z.array(salesAndTrafficByAsin),
-});
-
 export const salesAndTrafficReportDocument = z.array(
 	salesAndTrafficReportDocumentRow,
 );
