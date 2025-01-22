@@ -13,8 +13,8 @@ import {
 	settlementReportDocument,
 	settlementReportDocumentRow,
 	settlementReports,
-} from '../../schema/settlement-reports';
-import { type ValueOf, waitRateLimitTime } from '../utils';
+} from '../schema/settlement-reports';
+import { type ValueOf, waitRateLimitTime } from './utils';
 
 function filterSettlementReportDocument(
 	existReports: SettlementReports,
@@ -60,7 +60,7 @@ function isExistSettlementReport(
 	return false;
 }
 
-async function getAllSettlementReportsRetryRateLimit(
+export async function getAllSettlementReportsRetryRateLimit(
 	api: Client<paths>,
 	existReports: SettlementReports,
 ): Promise<SettlementReports> {
@@ -116,7 +116,7 @@ async function getAllSettlementReportsRetryRateLimit(
 	return result;
 }
 
-async function getAllSettlementReportsUntilRateLimit(
+export async function getAllSettlementReportsUntilRateLimit(
 	api: Client<paths>,
 	existReports: SettlementReports,
 ): Promise<SettlementReports> {

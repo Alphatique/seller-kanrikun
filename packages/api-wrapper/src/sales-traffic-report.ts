@@ -21,11 +21,13 @@ import {
 	type SalesAndTrafficReportDocument,
 	type SalesAndTrafficReportDocumentRow,
 	salesTrafficReportDocument,
-} from '../../schema/sales-traffic-report';
-import { JAPAN_MARKET_PLACE_ID } from '../constants';
-import { type ValueOf, waitRateLimitTime } from '../utils';
+} from '../schema/sales-traffic-report';
+import { JAPAN_MARKET_PLACE_ID } from './constants';
+import { type ValueOf, waitRateLimitTime } from './utils';
 
-async function getAllSalesTrafficReportsUntilRateLimit(api: Client<paths>) {
+export async function getAllSalesTrafficReportsUntilRateLimit(
+	api: Client<paths>,
+) {
 	const now = new Date();
 	const sunDay = startOfWeek(now, { weekStartsOn: 0 });
 	// 先週の日曜日
