@@ -118,11 +118,12 @@ async function getAllInventorySummariesUntilRateLimit(
 			// 追加
 			allSummaries.push(summaries);
 		}
-		if (error) {
-			console.error(error, response);
-		}
+		// nextTokenがない場合はループを抜ける
 		if (nextToken === undefined) {
-			// nextTokenがない場合はループを抜ける
+			if (response.status === 429) {
+				// 429出なければエラー
+				console.error(error, response);
+			}
 			break;
 		}
 

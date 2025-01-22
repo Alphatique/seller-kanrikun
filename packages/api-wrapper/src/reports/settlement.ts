@@ -142,15 +142,14 @@ async function getAllSettlementReportsUntilRateLimit(
 				result.push(formattedReport);
 			}
 		}
-		if (error) {
-			if (response.status === 429) {
-				console.warn(error, response);
-			} else {
+
+		// ネクストトークンがなければ終了
+		if (nextToken === undefined) {
+			if (!(response.status === 429 || response.status === 200)) {
+				// 429 or 200でない場合エラー
 				console.error(error, response);
 			}
-		}
-		// ネクストトークンがなければ終了(エラーでも終了)
-		if (nextToken === undefined) {
+
 			break;
 		}
 
@@ -182,22 +181,22 @@ async function getSettlementReportsDocumentRetryRateLimit(
 		document: [],
 	};
 	for (const report of reports) {
-		const resultDocument = await getReportDocument(
+		const documentResult = await getReportDocument(
 			api,
 			report.reportDocumentId,
 		);
-		if (!resultDocument.isOk()) {
-			if (resultDocument.error.status === 429) {
+		if (!documentResult.isOk()) {
+			if (documentResult.error.status === 429) {
 				// レートリミットなら30秒待ってリトライ
-				console.warn(resultDocument.error);
+				console.warn(documentResult.error);
 				await new Promise(resolve => setTimeout(resolve, 30 * 1000));
 				continue;
 			} else {
-				console.error(resultDocument.error);
+				console.error(documentResult.error);
 				break;
 			}
 		}
-		const response = resultDocument.value;
+		const response = documentResult.value;
 		const reader = response.body?.getReader();
 		if (!reader) {
 			console.warn('stream not available');
@@ -225,19 +224,18 @@ async function getSettlementReportsDocumentUntilRateLimit(
 		document: [],
 	};
 	for (const report of reports) {
-		const resultDocument = await getReportDocument(
+		const documentResult = await getReportDocument(
 			api,
 			report.reportDocumentId,
 		);
-		if (!resultDocument.isOk()) {
-			if (resultDocument.error.status === 429) {
-				console.warn(resultDocument.error);
-			} else {
-				console.error(resultDocument.error);
+		if (!documentResult.isOk()) {
+			if (documentResult.error.status !== 429) {
+				// 429出なければエラー
+				console.error(documentResult.error);
 			}
 			break;
 		}
-		const reader = resultDocument.value.body?.getReader();
+		const reader = documentResult.value.body?.getReader();
 		if (!reader) {
 			console.warn('stream not available');
 			break;
@@ -328,7 +326,7 @@ async function getSettlementReports(
 	});
 }
 
-async function getReportDocument(
+export async function getReportDocument(
 	api: Client<paths>,
 	reportDocumentId: string,
 ): Promise<Result<Response, Response>> {

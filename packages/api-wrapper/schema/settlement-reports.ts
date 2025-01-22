@@ -9,6 +9,7 @@ export const settlementReport = z.object({
 	dataStartTime: z.coerce.date(),
 	dataEndTime: z.coerce.date(),
 	createdTime: z.coerce.date(),
+	sellerKanrikunSaveTime: z.coerce.date(),
 });
 export const settlementReports = z.array(settlementReport);
 
@@ -16,40 +17,27 @@ export type SettlementReport = z.infer<typeof settlementReport>;
 export type SettlementReports = z.infer<typeof settlementReports>;
 
 export const settlementReportDocumentRow = z.object({
-	settlementId: z.number(), // 必須
-	transactionType: z.string(), // 必須
-	postedDate: z.coerce.date(), // 必須
-	priceAmount: z.number().optional(), // 必須
-	itemRelatedFeeAmount: z.number().optional(), // 必須
-	promotionAmount: z.number().optional(), // 必須
-	shipmentFeeAmount: z.number().optional(), // 必須
-	orderFeeAmount: z.number().optional(), // 必須
-	miscFeeAmount: z.number().optional(), // 必須
-	otherFeeAmount: z.number().optional(), // 必須
-	otherAmount: z.number().optional(), // 必須
-	sku: z.string().optional(), // 必須
-	priceType: z.string().optional(),
-	promotionType: z.string().optional(),
-	itemRelatedFeeType: z.string().optional(),
-	otherFeeReasonDescription: z.string().optional(),
-	settlementStartDate: z.string().datetime().optional(),
-	settlementEndDate: z.string().datetime().optional(),
-	depositDate: z.string().datetime().optional(),
-	totalAmount: z.number().optional(),
-	currency: z.string().optional(),
-	orderId: z.string().optional(),
-	merchantOrderId: z.string().optional(),
-	adjustmentId: z.string().optional(),
-	shipmentId: z.string().optional(),
-	marketplaceName: z.string().optional(),
-	fulfillmentId: z.string().optional(),
-	orderItemCode: z.string().optional(),
-	merchantOrderItemId: z.string().optional(),
-	merchantAdjustmentItemId: z.string().optional(),
-	quantityPurchased: z.number().optional(),
-	directPaymentType: z.string().optional(),
-	directPaymentAmount: z.number().optional(),
-	promotionId: z.string().optional(),
+	settlementId: z.number(),
+	transactionType: z.string(),
+	postedDate: z.coerce.date(),
+	priceAmount: z.number(),
+	itemRelatedFeeAmount: z.number(),
+	promotionAmount: z.number(),
+	shipmentFeeAmount: z.number(),
+	orderFeeAmount: z.number(),
+	miscFeeAmount: z.number(),
+	otherFeeAmount: z.number(),
+	otherAmount: z.number(),
+	priceType: z.string(),
+	sku: z.string(),
+	promotionType: z.string(),
+	itemRelatedFeeType: z.string(),
+	otherFeeReasonDescription: z.string(),
+	depositDate: z.coerce.date(),
+	currency: z.string(),
+	marketplaceName: z.string(),
+	quantityPurchased: z.number(),
+	promotionId: z.string(),
 });
 export const settlementReportDocument = z.array(settlementReportDocumentRow);
 

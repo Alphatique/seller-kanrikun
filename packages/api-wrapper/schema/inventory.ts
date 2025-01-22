@@ -12,7 +12,7 @@ export const inventorySummary = z.object({
 	totalQuantity: z.number(),
 	stores: z.array(z.string()).nullable(),
 	// ↑今使ってない/nullだからいらん気もするが、必要になったとき大変な気がしたので一応持っておく
-	sellerKanrikunSavedTime: z.coerce.date(),
+	sellerKanrikunSaveTime: z.coerce.date(),
 });
 export const inventorySummaries = z.array(inventorySummary);
 

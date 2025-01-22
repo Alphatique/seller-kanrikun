@@ -19,7 +19,7 @@ export const catalogSummary = z.object({
 	tradeInEligible: z.boolean(),
 	websiteDisplayGroup: z.string(),
 	websiteDisplayGroupName: z.string(),
-	sellerKanrikunSavedTime: z.coerce.date(),
+	sellerKanrikunSaveTime: z.coerce.date(),
 });
 export const catalogSummaries = z.array(catalogSummary);
 

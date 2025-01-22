@@ -1,116 +1,74 @@
 import z from 'zod';
 
-const AmountSchema = z.object({
-	amount: z.number(),
-	currencyCode: z.string(),
-});
-const SalesByDateSchema = z.object({
-	orderedProductSales: AmountSchema,
-	orderedProductSalesB2B: AmountSchema,
+const salesByAsin = z.object({
 	unitsOrdered: z.number(),
-	unitsOrderedB2B: z.number(),
-	totalOrderItems: z.number(),
-	totalOrderItemsB2B: z.number(),
-	averageSalesPerOrderItem: AmountSchema,
-	averageSalesPerOrderItemB2B: AmountSchema,
-	averageUnitsPerOrderItem: z.number(),
-	averageUnitsPerOrderItemB2B: z.number(),
-	averageSellingPrice: AmountSchema,
-	averageSellingPriceB2B: AmountSchema,
-	unitsRefunded: z.number(),
-	refundRate: z.number(),
-	claimsGranted: z.number(),
-	claimsAmount: AmountSchema,
-	shippedProductSales: AmountSchema,
-	unitsShipped: z.number(),
-	ordersShipped: z.number(),
+	orderedProductSales: z.object({
+		amount: z.number(),
+		currencyCode: z.string(),
+	}),
 });
-const TrafficByDateSchema = z.object({
-	browserPageViews: z.number(),
-	browserPageViewsB2B: z.number(),
-	mobileAppPageViews: z.number(),
-	mobileAppPageViewsB2B: z.number(),
-	pageViews: z.number(),
-	pageViewsB2B: z.number(),
+const trafficByAsin = z.object({
 	browserSessions: z.number(),
-	browserSessionsB2B: z.number(),
 	mobileAppSessions: z.number(),
-	mobileAppSessionsB2B: z.number(),
 	sessions: z.number(),
-	sessionsB2B: z.number(),
-	buyBoxPercentage: z.number(),
-	buyBoxPercentageB2B: z.number(),
-	orderItemSessionPercentage: z.number(),
-	orderItemSessionPercentageB2B: z.number(),
-	unitSessionPercentage: z.number(),
-	unitSessionPercentageB2B: z.number(),
-	averageOfferCount: z.number(),
-	averageParentItems: z.number(),
-	feedbackReceived: z.number(),
-	negativeFeedbackReceived: z.number(),
-	receivedNegativeFeedbackRate: z.number(),
-});
-const SalesAndTrafficByDateSchema = z.object({
-	date: z.string(),
-	salesByDate: SalesByDateSchema,
-	trafficByDate: TrafficByDateSchema,
-});
-const SalesByAsinSchema = z.object({
-	unitsOrdered: z.number(),
-	unitsOrderedB2B: z.number(),
-	orderedProductSales: AmountSchema,
-	orderedProductSalesB2B: AmountSchema,
-	totalOrderItems: z.number(),
-	totalOrderItemsB2B: z.number(),
-});
-const TrafficByAsinSchema = z.object({
-	browserSessions: z.number(),
-	browserSessionsB2B: z.number(),
-	mobileAppSessions: z.number(),
-	mobileAppSessionsB2B: z.number(),
-	sessions: z.number(),
-	sessionsB2B: z.number(),
 	browserSessionPercentage: z.number(),
-	browserSessionPercentageB2B: z.number(),
 	mobileAppSessionPercentage: z.number(),
-	mobileAppSessionPercentageB2B: z.number(),
 	sessionPercentage: z.number(),
-	sessionPercentageB2B: z.number(),
 	browserPageViews: z.number(),
-	browserPageViewsB2B: z.number(),
 	mobileAppPageViews: z.number(),
-	mobileAppPageViewsB2B: z.number(),
 	pageViews: z.number(),
-	pageViewsB2B: z.number(),
-	browserPageViewsPercentage: z.number(),
-	browserPageViewsPercentageB2B: z.number(),
-	mobileAppPageViewsPercentage: z.number(),
-	mobileAppPageViewsPercentageB2B: z.number(),
-	pageViewsPercentage: z.number(),
-	pageViewsPercentageB2B: z.number(),
-	buyBoxPercentage: z.number(),
-	buyBoxPercentageB2B: z.number(),
-	unitSessionPercentage: z.number(),
-	unitSessionPercentageB2B: z.number(),
 });
-const SalesAndTrafficByAsinSchema = z.object({
+
+const salesAndTrafficByAsin = z.object({
 	parentAsin: z.string(),
 	childAsin: z.string(),
-	salesByAsin: SalesByAsinSchema,
-	trafficByAsin: TrafficByAsinSchema,
+	salesByAsin: salesByAsin,
+	trafficByAsin: trafficByAsin,
 });
-const ReportSpecificationSchema = z.object({
-	reportType: z.string(),
-	reportOptions: z.object({
-		dateGranularity: z.string(),
-		asinGranularity: z.string(),
+
+// これを保存する
+export const salesAndTrafficReportDocumentRow = z.object({
+	parentAsin: z.string(),
+	childAsin: z.string(),
+	// 以下階層取っ払ってもってきたプロパティ
+	// salesByAsin
+	unitsOrdered: z.number(),
+	orderedProductSalesAmount: z.number(),
+	orderedProductSalesCurrencyCode: z.string(),
+	// trafficByAsin
+	browserSessions: z.number(),
+	mobileAppSessions: z.number(),
+	sessions: z.number(),
+	browserSessionPercentage: z.number(),
+	mobileAppSessionPercentage: z.number(),
+	sessionPercentage: z.number(),
+	browserPageViews: z.number(),
+	mobileAppPageViews: z.number(),
+	pageViews: z.number(),
+	// データの時間を持っておく
+	dataStartTime: z.coerce.date(),
+	dataEndTime: z.coerce.date(),
+	// これは完全自作プロパティ
+	// 保存した時間
+	sellerKanrikunSaveTime: z.coerce.date(),
+});
+
+export const salesTrafficReportDocument = z.object({
+	reportSpecification: z.object({
+		dataStartTime: z.coerce.date(),
+		dataEndTime: z.coerce.date(),
 	}),
-	dataStartTime: z.string(),
-	dataEndTime: z.string(),
-	marketplaceIds: z.array(z.string()),
+	salesAndTrafficByAsin: z.array(salesAndTrafficByAsin),
 });
-const RootSchema = z.object({
-	reportSpecification: ReportSpecificationSchema,
-	salesAndTrafficByDate: z.array(SalesAndTrafficByDateSchema),
-	salesAndTrafficByAsin: z.array(SalesAndTrafficByAsinSchema),
-});
+
+export const salesAndTrafficReportDocument = z.array(
+	salesAndTrafficReportDocumentRow,
+);
+
+export type SalesAndTrafficReportDocumentRow = z.infer<
+	typeof salesAndTrafficReportDocumentRow
+>;
+
+export type SalesAndTrafficReportDocument = z.infer<
+	typeof salesAndTrafficReportDocument
+>;

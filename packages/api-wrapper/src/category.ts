@@ -69,9 +69,11 @@ async function getAllCatalogSummariesUntilRateLimit(
 		if (summaries) {
 			// 追加
 			allSummaries.concat(summaries);
-		}
-		if (error) {
-			console.error(error, response);
+		} else {
+			if (response.status === 429) {
+				// 429出なければエラー
+				console.error(error, response);
+			}
 			break;
 		}
 	}
