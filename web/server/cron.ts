@@ -34,7 +34,7 @@ import {
 export const app = new Hono()
 	.use(authMiddleware)
 	.use(dbMiddleware)
-	.get('/', accessTokenMiddleware, async c => {
+	.get('/settlement-report', accessTokenMiddleware, async c => {
 		const accessToken = c.var.spApiAccessToken;
 
 		// レポートapi

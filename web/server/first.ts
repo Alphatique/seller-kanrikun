@@ -32,7 +32,7 @@ import {
 export const app = new Hono()
 	.use(dbMiddleware)
 	.use(authMiddleware)
-	.get('/', accessTokenMiddleware, async c => {
+	.get('/settlement-report', accessTokenMiddleware, async c => {
 		const accessToken = c.var.spApiAccessToken;
 
 		// レポートapi
