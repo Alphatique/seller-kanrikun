@@ -19,7 +19,7 @@ import {
 import { JAPAN_MARKET_PLACE_ID } from './constants';
 import { type ValueOf, waitRateLimitTime } from './utils';
 
-async function getAllCatalogSummariesRetryRateLimit(
+export async function getAllCatalogSummariesRetryRateLimit(
 	api: Client<paths>,
 	asins: string[],
 ): Promise<CatalogSummaries> {
@@ -51,7 +51,7 @@ async function getAllCatalogSummariesRetryRateLimit(
 	return apiSummariesToSchemaSummaries(allSummaries);
 }
 
-async function getAllCatalogSummariesUntilRateLimit(
+export async function getAllCatalogSummariesUntilRateLimit(
 	api: Client<paths>,
 	asins: string[],
 ): Promise<CatalogSummaries> {

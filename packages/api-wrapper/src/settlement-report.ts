@@ -16,7 +16,7 @@ import {
 } from '../schema/settlement-reports';
 import { type ValueOf, waitRateLimitTime } from './utils';
 
-function filterSettlementReportDocument(
+export function filterSettlementReportDocument(
 	existReports: SettlementReports,
 	newReport: SettlementReport,
 	newReportDocument: SettlementReportDocument,
@@ -168,11 +168,11 @@ export async function getAllSettlementReportsUntilRateLimit(
 	return result;
 }
 
-export interface SettlementReportsDocumentResult {
+interface SettlementReportsDocumentResult {
 	reports: SettlementReports;
 	document: SettlementReportDocument;
 }
-async function getSettlementReportsDocumentRetryRateLimit(
+export async function getSettlementReportsDocumentRetryRateLimit(
 	api: Client<paths>,
 	reports: SettlementReports,
 ): Promise<SettlementReportsDocumentResult> {
@@ -215,7 +215,7 @@ async function getSettlementReportsDocumentRetryRateLimit(
 	return result;
 }
 
-async function getSettlementReportsDocumentUntilRateLimit(
+export async function getSettlementReportsDocumentUntilRateLimit(
 	api: Client<paths>,
 	reports: SettlementReports,
 ): Promise<SettlementReportsDocumentResult> {
@@ -326,7 +326,7 @@ async function getSettlementReports(
 	});
 }
 
-export async function getReportDocument(
+async function getReportDocument(
 	api: Client<paths>,
 	reportDocumentId: string,
 ): Promise<Result<Response, Response>> {

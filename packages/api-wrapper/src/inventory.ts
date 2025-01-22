@@ -40,7 +40,7 @@ async function saveInventorySummaries<Data, Error>(
 	return await putFile(bucketName, userId, fileName, gzip);
 }
 
-async function getAllInventorySummariesRetryRateLimit(
+export async function getAllInventorySummariesRetryRateLimit(
 	api: Client<paths>,
 ): Promise<InventorySummaries> {
 	// 事前に定義
@@ -95,7 +95,7 @@ async function getAllInventorySummariesRetryRateLimit(
 	return apiSummariesToSchemaSummaries(allSummaries);
 }
 
-async function getAllInventorySummariesUntilRateLimit(
+export async function getAllInventorySummariesUntilRateLimit(
 	api: Client<paths>,
 ): Promise<InventorySummaries> {
 	// 事前に定義

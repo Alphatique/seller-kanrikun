@@ -64,7 +64,7 @@ export async function getAllSalesTrafficReportsUntilRateLimit(
 	}
 }
 
-async function getCreatedReportDocumentIdRetryRateLimit(
+export async function getCreatedReportDocumentIdRetryRateLimit(
 	api: Client<paths>,
 	reportIds: string[],
 ) {
@@ -116,7 +116,7 @@ async function getCreatedReportDocumentIdRetryRateLimit(
 	return result;
 }
 
-async function getSalesTrafficReportsDocumentRetryRateLimit(
+export async function getSalesTrafficReportsDocumentRetryRateLimit(
 	api: Client<paths>,
 	reportDocumentIds: string[],
 ) {
@@ -195,7 +195,7 @@ async function getCreatedReport(api: Client<paths>, reportId: string) {
 	});
 }
 
-export async function getReportDocument(
+async function getReportDocument(
 	api: Client<paths>,
 	reportDocumentId: string,
 ): Promise<Result<Response, Response>> {
