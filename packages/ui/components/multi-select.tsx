@@ -66,8 +66,8 @@ export function MultiSelect({
 				className='w-56'
 				onCloseAutoFocus={e => e.preventDefault()}
 			>
-				<Button onClick={handleSelectAll}>select all</Button>
-				<Button onClick={handleClearAll}>clear all</Button>
+				<Button onClick={handleSelectAll}>すべて選択</Button>
+				<Button onClick={handleClearAll}>クリア</Button>
 				{Object.entries(values).map(([key, value], index) => {
 					return (
 						<DropdownMenuCheckboxItem
