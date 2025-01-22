@@ -8,10 +8,11 @@ import { isAfter, isBefore, max, min } from 'date-fns';
 import {
 	type SettlementReport,
 	type SettlementReportDocument,
+	type SettlementReportDocumentRow,
 	type SettlementReports,
+	parseSettlementRow,
 	settlementReport,
 	settlementReportDocument,
-	settlementReportDocumentRow,
 	settlementReports,
 } from '../schema/settlement-reports';
 import { type ValueOf, waitRateLimitTime } from './utils';
@@ -69,7 +70,7 @@ export async function getAllSettlementReportsRetryRateLimit(
 
 	const maxLoopCount = 500;
 	let loopCount = 0;
-	while (nextToken) {
+	while (nextToken || loopCount === 0) {
 		const { data, error, response } = await getSettlementReports(api);
 
 		const reports = data?.reports;
@@ -79,7 +80,10 @@ export async function getAllSettlementReportsRetryRateLimit(
 			for (const report of reports) {
 				// ステータスがdoneじゃなければスキップ
 				if (report.processingStatus !== 'DONE') continue;
-				const formattedReport = settlementReport.parse(report);
+				const formattedReport = settlementReport.parse({
+					...report,
+					sellerKanrikunSaveTime: new Date(),
+				});
 				// 既存のレポートであればスキップ
 				if (isExistSettlementReport(existReports, formattedReport))
 					continue;
@@ -125,8 +129,11 @@ export async function getAllSettlementReportsUntilRateLimit(
 
 	const maxLoopCount = 500;
 	let loopCount = 0;
-	while (nextToken) {
-		const { data, error, response } = await getSettlementReports(api);
+	while (nextToken || loopCount === 0) {
+		const { data, error, response } = await getSettlementReports(
+			api,
+			nextToken,
+		);
 
 		const reports = data?.reports;
 		nextToken = data?.nextToken;
@@ -135,7 +142,10 @@ export async function getAllSettlementReportsUntilRateLimit(
 			for (const report of reports) {
 				// ステータスがdoneじゃなければスキップ
 				if (report.processingStatus !== 'DONE') continue;
-				const formattedReport = settlementReport.parse(report);
+				const formattedReport = settlementReport.parse({
+					...report,
+					sellerKanrikunSaveTime: new Date(),
+				});
 				// 既存のレポートであればスキップ
 				if (isExistSettlementReport(existReports, formattedReport))
 					continue;
@@ -241,11 +251,12 @@ export async function getSettlementReportsDocumentUntilRateLimit(
 			break;
 		}
 
-		const strObj = papaparseOnStream(reader);
-		const parsedObj = settlementReportDocument.parse(strObj);
-
+		const strObj = await papaparseOnStream(reader);
+		const parsedObj: SettlementReportDocument = strObj
+			.map(row => parseSettlementRow(row)) // 各行をパース
+			.filter((row): row is SettlementReportDocumentRow => row !== null); // null を除外
 		result.reports.push(report);
-		result.document.concat(parsedObj);
+		result.document.push(...parsedObj);
 	}
 
 	return result;
@@ -255,6 +266,8 @@ async function papaparseOnStream(
 	reader: ReadableStreamDefaultReader<Uint8Array>,
 ) {
 	const result: Record<string, string>[] = [];
+	const decoder = new TextDecoder('utf-8');
+
 	return new Promise<Record<string, string>[]>((resolve, reject) => {
 		// パース用のPapaparseストリームを作成
 		const papaStream = Papa.parse(Papa.NODE_STREAM_INPUT, {
@@ -277,6 +290,29 @@ async function papaparseOnStream(
 			console.error('Error parsing CSV:', error);
 			reject(result);
 		});
+
+		// ストリームを読み取りながらPapaparseに送信
+		(async () => {
+			try {
+				let buffer = '';
+				while (true) {
+					const { done, value } = await reader.read();
+					if (done) break;
+
+					// チャンクをデコードしてPapaparseに渡す
+					buffer += decoder.decode(value, {
+						stream: true,
+					});
+					papaStream.write(buffer);
+					buffer = ''; // 書き込み後にバッファをリセット
+				}
+				papaStream.end(); // ストリームの終了を通知
+			} catch (err) {
+				console.error('Error reading stream:', err);
+				papaStream.end();
+				reject(err);
+			}
+		})();
 	});
 }
 

@@ -17,7 +17,6 @@ export async function getAccountsByProviderId(
 // 一旦dbに置いておくけど全然動かしていい
 export async function refreshAccessToken(
 	db: ClientType,
-	url: string,
 	accountData: Account,
 	clientId: string,
 	clientSecret: string,
@@ -35,6 +34,7 @@ export async function refreshAccessToken(
 	)
 		return accountData;
 
+	const url = 'https://api.amazon.co.jp/auth/o2/token';
 	// リフレッシュトークンから新規アクセストークンを取得
 	const { accessToken, expiresAt } = await getAccessTokenFromRefreshToken(
 		url,
@@ -75,7 +75,6 @@ export async function refreshAccountsToken(
 				// 値渡しっぽくなるとトークンが変更されなくなったりするので注意
 				eachAccount = await refreshAccessToken(
 					db,
-					'https://api.amazon.co.jp/auth/o2/token',
 					eachAccount,
 					amazonClientId,
 					amazonClientSecret,
@@ -84,7 +83,6 @@ export async function refreshAccountsToken(
 			case 'seller-central':
 				eachAccount = await refreshAccessToken(
 					db,
-					'https://api.amazon.co.jp/auth/o2/token',
 					eachAccount,
 					spApiClientId,
 					spApiClientSecret,

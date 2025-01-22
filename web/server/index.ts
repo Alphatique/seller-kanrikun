@@ -9,6 +9,7 @@ import {
 
 import { FILE_NAMES, R2_BUCKET_NAME } from '~/lib/constants';
 
+import { app as first } from './first';
 import { app as linkAccount } from './link-account';
 import { authMiddleware } from './middleware';
 
@@ -22,6 +23,7 @@ const route = app
 	.on(['POST', 'GET'], '/auth/*', c => {
 		return auth.handler(c.req.raw);
 	})
+	.route('/first', first)
 	.route('/link-account', linkAccount)
 	.put('/cost-price', authMiddleware, async c => {
 		console.log('cost-price put');
