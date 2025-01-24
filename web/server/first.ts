@@ -8,6 +8,7 @@ import Papa from 'papaparse';
 
 import {
 	getAllSettlementReportsUntilRateLimit,
+	getSettlementReportsDocumentRetryRateLimit,
 	getSettlementReportsDocumentUntilRateLimit,
 } from '@seller-kanrikun/api-wrapper/settlement-report';
 import { putFile } from '@seller-kanrikun/data-operation/r2';
@@ -23,6 +24,12 @@ import {
 	SELLER_API_BASE_URL,
 } from '~/lib/constants';
 
+import {
+	getAllCreatedReportDocumentIdsRetryRateLimit,
+	getAllSalesTrafficReportDocumentsRetryRateLimit,
+	getAllSalesTrafficReportsUntilRateLimit,
+	getCreatedReportDocumentIdRetryRateLimit,
+} from '@seller-kanrikun/api-wrapper/sales-traffic-report';
 import {
 	accessTokenMiddleware,
 	authMiddleware,
@@ -56,7 +63,7 @@ export const app = new Hono()
 		console.log(settlementReports);
 
 		const settlementReportDocuments =
-			await getSettlementReportsDocumentUntilRateLimit(
+			await getSettlementReportsDocumentRetryRateLimit(
 				reportsApi,
 				settlementReports,
 			);
@@ -66,6 +73,47 @@ export const app = new Hono()
 			'utf8',
 		);
 
+		return new Response('ok', {
+			status: 200,
+		});
+	})
+	.get('/sales-traffic-report', accessTokenMiddleware, async c => {
+		const accessToken = c.var.spApiAccessToken;
+
+		// レポートapi
+		const reportsApi = createApiClient<reportsPaths>({
+			baseUrl: SELLER_API_BASE_URL,
+		});
+
+		const tokenMiddleware: Middleware = {
+			async onRequest({ request, options }) {
+				// リクエストにアクセストークンを追加
+				request.headers.set('x-amz-access-token', accessToken);
+				return request;
+			},
+		};
+		reportsApi.use(tokenMiddleware);
+
+		const salesTrafficReportIds =
+			await getAllSalesTrafficReportsUntilRateLimit(reportsApi);
+
+		const reportDocumentIds =
+			await getAllCreatedReportDocumentIdsRetryRateLimit(
+				reportsApi,
+				salesTrafficReportIds,
+			);
+
+		const settlementReportDocuments =
+			await getAllSalesTrafficReportDocumentsRetryRateLimit(
+				reportsApi,
+				reportDocumentIds,
+			);
+
+		await writeFile(
+			'./salesTrafficReportDocuments.json',
+			JSON.stringify(settlementReportDocuments, null, 2),
+			'utf8',
+		);
 		return new Response('ok', {
 			status: 200,
 		});

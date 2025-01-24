@@ -7,7 +7,30 @@ import { account } from '@seller-kanrikun/db/schema';
 
 const tokenEndpoint = 'https://api.amazon.co.jp/auth/o2/token';
 
-export async function getSpApiAccessToken(userId: string, db: ClientType) {
+export async function getSpApiAccessToken(
+	userId: string,
+	db: ClientType,
+): Promise<string> {
+	const [accessToken, accessTokenExpiresAt] =
+		await getSpApiAccessTokenAndExpiresAt(userId, db);
+
+	return accessToken;
+}
+
+export async function getSpApiAccessTokenExpiresAt(
+	userId: string,
+	db: ClientType,
+): Promise<Date> {
+	const [accessToken, accessTokenExpiresAt] =
+		await getSpApiAccessTokenAndExpiresAt(userId, db);
+
+	return accessTokenExpiresAt;
+}
+
+export async function getSpApiAccessTokenAndExpiresAt(
+	userId: string,
+	db: ClientType,
+): Promise<[string, Date]> {
 	const account = await db.query.account.findFirst({
 		where: (t, { and, eq }) =>
 			and(eq(t.userId, userId), eq(t.providerId, 'seller-central')),
@@ -19,16 +42,18 @@ export async function getSpApiAccessToken(userId: string, db: ClientType) {
 		throw new Error('accessToken not found');
 
 	if (new Date().getTime() > accessTokenExpiresAt.getTime()) {
-		return await refreshAccessToken(
+		const { accessToken, accessTokenExpiresAt } = await refreshAccessToken(
 			{
 				userId,
 				refreshToken,
 			},
 			db,
 		);
+
+		return [accessToken, accessTokenExpiresAt];
 	}
 
-	return accessToken;
+	return [accessToken, accessTokenExpiresAt];
 }
 
 async function refreshAccessToken(
@@ -48,6 +73,7 @@ async function refreshAccessToken(
 		client_secret: process.env.SP_API_CLIENT_SECRET!,
 	});
 
+	console.log('hello!', body);
 	const tokens = await betterFetch(tokenEndpoint, {
 		method: 'POST',
 		headers: {
@@ -63,17 +89,19 @@ async function refreshAccessToken(
 		throw: true,
 	});
 
+	console.log('what!');
 	const now = new Date();
 	const expiresAt = new Date(now.getTime() + tokens.expires_in * 1000);
 
+	const result = {
+		accessToken: tokens.access_token,
+		accessTokenExpiresAt: expiresAt,
+		refreshToken: tokens.refresh_token,
+		updatedAt: now,
+	};
 	await db
 		.update(account)
-		.set({
-			accessToken: tokens.access_token,
-			accessTokenExpiresAt: expiresAt,
-			refreshToken: tokens.refresh_token,
-			updatedAt: now,
-		})
+		.set(result)
 		.where(
 			and(
 				eq(account.userId, userId),
@@ -81,5 +109,5 @@ async function refreshAccessToken(
 			),
 		);
 
-	return tokens.access_token;
+	return result;
 }

@@ -200,7 +200,7 @@ export async function getSettlementReportsDocumentRetryRateLimit(
 			if (documentResult.error.status === 429) {
 				// レートリミットなら30秒待ってリトライ
 				console.warn(documentResult.error);
-				await new Promise(resolve => setTimeout(resolve, 30 * 1000));
+				await new Promise(resolve => setTimeout(resolve, 120 * 1000));
 				continue;
 			} else {
 				console.error(documentResult.error);
@@ -221,7 +221,7 @@ export async function getSettlementReportsDocumentRetryRateLimit(
 		result.reports.push(report);
 		result.document.push(...parsedObj);
 
-		await waitRateLimitTime(response, 0.5);
+		await waitRateLimitTime(response, 60);
 	}
 
 	return result;

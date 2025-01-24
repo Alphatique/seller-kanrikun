@@ -7,6 +7,7 @@ import {
 	max,
 	min,
 	startOfWeek,
+	subDays,
 	subWeeks,
 	subYears,
 } from 'date-fns';
@@ -25,11 +26,59 @@ import {
 import { JAPAN_MARKET_PLACE_ID } from './constants';
 import { type ValueOf, waitRateLimitTime } from './utils';
 
+export async function getAllSalesTrafficReportsRetryRateLimit(
+	api: Client<paths>,
+) {
+	const now = new Date();
+	const sunDay = startOfWeek(now, { weekStartsOn: 1 });
+	// 昨日
+	let current = subDays(sunDay, 1);
+
+	const endDate = subWeeks(now, 3); //subYears(now, 2);
+
+	const reportIds: string[] = [];
+	while (true) {
+		// 一日前
+		const end = subDays(current, 1);
+		const { data, error, response } = await createSalesTrafficReport(
+			api,
+			current,
+			end,
+		);
+		if (data?.reportId) {
+			reportIds.push(data.reportId);
+		} else {
+			if (response.status === 429) {
+				// レートリミットなら2分待ってリトライ
+				console.warn(error, response);
+				await new Promise(resolve => setTimeout(resolve, 120 * 1000));
+			} else {
+				// 429じゃなければエラー
+				console.error(error, response);
+				break;
+			}
+		}
+
+		// 現在を更新
+		current = end;
+		// 終了日を超えたら終了
+		if (isBefore(current, endDate)) {
+			break;
+		}
+
+		console.log(current);
+
+		await waitRateLimitTime(response, 60);
+	}
+
+	return reportIds;
+}
+
 export async function getAllSalesTrafficReportsUntilRateLimit(
 	api: Client<paths>,
 ) {
 	const now = new Date();
-	const sunDay = startOfWeek(now, { weekStartsOn: 0 });
+	const sunDay = startOfWeek(now, { weekStartsOn: 1 });
 	// 先週の日曜日
 	let current = subWeeks(sunDay, 1);
 
@@ -38,7 +87,7 @@ export async function getAllSalesTrafficReportsUntilRateLimit(
 	const reportIds: string[] = [];
 	while (true) {
 		// 土曜
-		const end = endOfWeek(current, { weekStartsOn: 0 });
+		const end = subDays(current, 1);
 		const { data, error, response } = await createSalesTrafficReport(
 			api,
 			current,
@@ -55,16 +104,18 @@ export async function getAllSalesTrafficReportsUntilRateLimit(
 			break;
 		}
 
-		// 一週追加
-		current = addWeeks(current, 1);
-		// 2年より前になったら終了
+		// 現在を更新
+		current = end;
 		if (isBefore(current, endDate)) {
+			// 終了日を超えたら終了
 			break;
 		}
 	}
+
+	return reportIds;
 }
 
-export async function getCreatedReportDocumentIdRetryRateLimit(
+export async function getAllCreatedReportDocumentIdsRetryRateLimit(
 	api: Client<paths>,
 	reportIds: string[],
 ) {
@@ -109,6 +160,7 @@ export async function getCreatedReportDocumentIdRetryRateLimit(
 				break;
 			}
 
+			console.log(loopCount);
 			await waitRateLimitTime(response, 0.5);
 		}
 	}
@@ -116,7 +168,7 @@ export async function getCreatedReportDocumentIdRetryRateLimit(
 	return result;
 }
 
-export async function getSalesTrafficReportsDocumentRetryRateLimit(
+export async function getAllSalesTrafficReportDocumentsRetryRateLimit(
 	api: Client<paths>,
 	reportDocumentIds: string[],
 ) {
@@ -126,10 +178,16 @@ export async function getSalesTrafficReportsDocumentRetryRateLimit(
 		const documentResult = await getReportDocument(api, documentId);
 
 		if (!documentResult.isOk()) {
-			if (documentResult.error.status !== 429) {
-				console.error(documentResult.error);
+			if (documentResult.error.status === 429) {
+				// レートリミットなら30秒待ってリトライ
+				console.warn(documentResult);
+				await new Promise(resolve => setTimeout(resolve, 30 * 1000));
+				continue;
+			} else {
+				// 429じゃなければエラー
+				console.error(documentResult);
+				break;
 			}
-			break;
 		}
 
 		const response = documentResult.value;
@@ -138,8 +196,9 @@ export async function getSalesTrafficReportsDocumentRetryRateLimit(
 		const decompressed = gunzipSync(new Uint8Array(gzipData));
 		const decoder = new TextDecoder();
 		const jsonStr = decoder.decode(decompressed);
+		const json = JSON.parse(jsonStr);
 
-		const parsedData = salesTrafficReportDocument.parse(jsonStr);
+		const parsedData = salesTrafficReportDocument.parse(json);
 
 		const dateMetaData = {
 			dataStartTime: parsedData.reportSpecification.dataStartTime,
@@ -162,6 +221,72 @@ export async function getSalesTrafficReportsDocumentRetryRateLimit(
 				...dateMetaData,
 			});
 		}
+		console.log(documentId);
+
+		await waitRateLimitTime(response, 0.5);
+	}
+
+	return result;
+}
+
+export async function getSalesTrafficReportDocumentRetryRateLimit(
+	api: Client<paths>,
+	reportDocumentId: string,
+	rateLimitWaitTime: number,
+) {
+	const result: SalesAndTrafficReportDocument = [];
+
+	const documentResult = await getReportDocument(api, reportDocumentId);
+
+	if (!documentResult.isOk()) {
+		if (documentResult.error.status === 429) {
+			// レートリミットならリトライ
+			console.warn(documentResult);
+			await new Promise(resolve =>
+				setTimeout(resolve, rateLimitWaitTime),
+			);
+			return getSalesTrafficReportDocumentRetryRateLimit(
+				api,
+				reportDocumentId,
+				rateLimitWaitTime,
+			);
+		} else {
+			// 429じゃなければエラー
+			console.error(documentResult);
+			return null;
+		}
+	}
+
+	const response = documentResult.value;
+
+	const gzipData = await response.arrayBuffer();
+	const decompressed = gunzipSync(new Uint8Array(gzipData));
+	const decoder = new TextDecoder();
+	const jsonStr = decoder.decode(decompressed);
+	const json = JSON.parse(jsonStr);
+
+	const parsedData = salesTrafficReportDocument.parse(json);
+
+	const dateMetaData = {
+		dataStartTime: parsedData.reportSpecification.dataStartTime,
+		dataEndTime: parsedData.reportSpecification.dataEndTime,
+		sellerKanrikunSaveTime: new Date(),
+	};
+	for (const eachAsinData of parsedData.salesAndTrafficByAsin) {
+		const salesByAsin = {
+			unitsOrdered: eachAsinData.salesByAsin.unitsOrdered,
+			orderedProductSalesAmount:
+				eachAsinData.salesByAsin.orderedProductSales.amount,
+			orderedProductSalesCurrencyCode:
+				eachAsinData.salesByAsin.orderedProductSales.currencyCode,
+		};
+		result.push({
+			parentAsin: eachAsinData.parentAsin,
+			childAsin: eachAsinData.childAsin,
+			...eachAsinData.trafficByAsin,
+			...salesByAsin,
+			...dateMetaData,
+		});
 	}
 
 	return result;
@@ -185,6 +310,50 @@ async function createSalesTrafficReport(
 	});
 }
 
+export async function createSalesTrafficReportRetryRateLimit(
+	api: Client<paths>,
+	start: Date,
+	end: Date,
+	rateLimitWaitTime: number,
+) {
+	const { data, error, response } = await api.POST(
+		'/reports/2021-06-30/reports',
+		{
+			body: {
+				reportType: 'GET_SALES_AND_TRAFFIC_REPORT',
+				marketplaceIds: [JAPAN_MARKET_PLACE_ID],
+				reportOptions: {
+					asinGranularity: 'CHILD',
+				},
+				dataStartTime: start.toISOString(),
+				dataEndTime: end.toISOString(),
+			},
+		},
+	);
+
+	const reportId = data?.reportId;
+	if (reportId) {
+		return reportId;
+	}
+
+	// reportIdがない場合
+	if (response.status === 429) {
+		// レートリミットなら2分待ってリトライ
+		console.warn(error, response);
+		await new Promise(resolve => setTimeout(resolve, rateLimitWaitTime));
+		return createSalesTrafficReportRetryRateLimit(
+			api,
+			start,
+			end,
+			rateLimitWaitTime,
+		);
+	} else {
+		// 429じゃなければエラー
+		console.error(error, response);
+		return null;
+	}
+}
+
 async function getCreatedReport(api: Client<paths>, reportId: string) {
 	return api.GET('/reports/2021-06-30/reports/{reportId}', {
 		params: {
@@ -193,6 +362,70 @@ async function getCreatedReport(api: Client<paths>, reportId: string) {
 			},
 		},
 	});
+}
+
+export async function getCreatedReportDocumentIdRetryRateLimit(
+	api: Client<paths>,
+	reportId: string,
+	rateLimitWaitTime: number,
+	retryWaitTime: number,
+	totalWaitTime = 0,
+): Promise<[string, number] | null> {
+	let waitTime: number = totalWaitTime;
+
+	const { data, error, response } = await api.GET(
+		'/reports/2021-06-30/reports/{reportId}',
+		{
+			params: {
+				path: {
+					reportId,
+				},
+			},
+		},
+	);
+
+	const status = data?.processingStatus;
+	if (status) {
+		if (status === 'DONE') {
+			const reportDocumentId = data.reportDocumentId;
+			if (reportDocumentId) {
+				return [reportDocumentId, waitTime];
+			} else {
+				console.error('reportDocumentId was undefined');
+				return null;
+			}
+		} else if (status === 'FATAL') {
+			console.error(data, response);
+			return null;
+		} else if (status === 'CANCELLED') {
+			return null;
+		}
+		await new Promise(resolve => setTimeout(resolve, retryWaitTime));
+		waitTime += retryWaitTime;
+
+		return getCreatedReportDocumentIdRetryRateLimit(
+			api,
+			reportId,
+			rateLimitWaitTime,
+			retryWaitTime,
+			waitTime,
+		);
+	}
+	if (response.status === 429) {
+		console.warn(error, response);
+		await new Promise(resolve => setTimeout(resolve, rateLimitWaitTime));
+		waitTime += rateLimitWaitTime;
+
+		return getCreatedReportDocumentIdRetryRateLimit(
+			api,
+			reportId,
+			rateLimitWaitTime,
+			retryWaitTime,
+			waitTime,
+		);
+	}
+	console.error(error, response);
+	return null;
 }
 
 async function getReportDocument(
@@ -212,6 +445,7 @@ async function getReportDocument(
 
 	const url = data?.url;
 	const compressionAlgorithm = data?.compressionAlgorithm;
+	console.log(data);
 	if (url && compressionAlgorithm) {
 		if (compressionAlgorithm === 'GZIP') {
 			return new Ok(await fetch(url));
