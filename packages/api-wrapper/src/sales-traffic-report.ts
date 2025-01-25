@@ -369,10 +369,7 @@ export async function getCreatedReportDocumentIdRetryRateLimit(
 	reportId: string,
 	rateLimitWaitTime: number,
 	retryWaitTime: number,
-	totalWaitTime = 0,
-): Promise<[string, number] | null> {
-	let waitTime: number = totalWaitTime;
-
+): Promise<string | null> {
 	const { data, error, response } = await api.GET(
 		'/reports/2021-06-30/reports/{reportId}',
 		{
@@ -389,7 +386,7 @@ export async function getCreatedReportDocumentIdRetryRateLimit(
 		if (status === 'DONE') {
 			const reportDocumentId = data.reportDocumentId;
 			if (reportDocumentId) {
-				return [reportDocumentId, waitTime];
+				return reportDocumentId;
 			} else {
 				console.error('reportDocumentId was undefined');
 				return null;
@@ -401,27 +398,23 @@ export async function getCreatedReportDocumentIdRetryRateLimit(
 			return null;
 		}
 		await new Promise(resolve => setTimeout(resolve, retryWaitTime));
-		waitTime += retryWaitTime;
 
 		return getCreatedReportDocumentIdRetryRateLimit(
 			api,
 			reportId,
 			rateLimitWaitTime,
 			retryWaitTime,
-			waitTime,
 		);
 	}
 	if (response.status === 429) {
 		console.warn(error, response);
 		await new Promise(resolve => setTimeout(resolve, rateLimitWaitTime));
-		waitTime += rateLimitWaitTime;
 
 		return getCreatedReportDocumentIdRetryRateLimit(
 			api,
 			reportId,
 			rateLimitWaitTime,
 			retryWaitTime,
-			waitTime,
 		);
 	}
 	console.error(error, response);
@@ -445,7 +438,6 @@ async function getReportDocument(
 
 	const url = data?.url;
 	const compressionAlgorithm = data?.compressionAlgorithm;
-	console.log(data);
 	if (url && compressionAlgorithm) {
 		if (compressionAlgorithm === 'GZIP') {
 			return new Ok(await fetch(url));

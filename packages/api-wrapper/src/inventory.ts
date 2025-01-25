@@ -45,7 +45,7 @@ export async function getAllInventorySummariesRetryRateLimit(
 ): Promise<InventorySummaries> {
 	// 事前に定義
 	let nextToken: string | undefined = undefined;
-	const allSummaries: components['schemas']['InventorySummaries'][] = [];
+	const allSummaries: components['schemas']['InventorySummaries'] = [];
 
 	// nextTokenがある限りnextTokenを使って続けて取得
 	const maxLoopCount = 500;
@@ -61,7 +61,7 @@ export async function getAllInventorySummariesRetryRateLimit(
 
 		if (summaries) {
 			// 追加
-			allSummaries.push(summaries);
+			allSummaries.push(...summaries);
 		}
 		if (error) {
 			console.warn(error);
@@ -100,7 +100,7 @@ export async function getAllInventorySummariesUntilRateLimit(
 ): Promise<InventorySummaries> {
 	// 事前に定義
 	let nextToken: string | undefined = undefined;
-	const allSummaries: components['schemas']['InventorySummaries'][] = [];
+	const allSummaries: components['schemas']['InventorySummaries'] = [];
 
 	// nextTokenがある限りnextTokenを使って続けて取得
 	const maxLoopCount = 500;
@@ -116,7 +116,7 @@ export async function getAllInventorySummariesUntilRateLimit(
 
 		if (summaries) {
 			// 追加
-			allSummaries.push(summaries);
+			allSummaries.push(...summaries);
 		}
 		// nextTokenがない場合はループを抜ける
 		if (nextToken === undefined) {
@@ -142,14 +142,15 @@ export async function getAllInventorySummariesUntilRateLimit(
 
 // 取得したデータをschemaで変換
 function apiSummariesToSchemaSummaries(
-	multiSummaries: components['schemas']['InventorySummaries'][],
+	multiSummaries: components['schemas']['InventorySummaries'],
 ): InventorySummaries {
 	const response: InventorySummaries = [];
 	for (const summary of multiSummaries) {
+		if (summary.lastUpdatedTime === '') summary.lastUpdatedTime = undefined;
 		response.push(
 			inventorySummary.parse({
 				...summary,
-				sellerKanrikunSavedTime: new Date(),
+				sellerKanrikunSaveTime: new Date(),
 			}),
 		);
 	}

@@ -7,11 +7,10 @@ export const inventorySummary = z.object({
 	condition: z.string(),
 	// inventoryDetails: z.object().optional(),
 	// inventoryDetailsはフラグを立てないと出てこないらしいので今回は無視
-	lastUpdatedTime: z.coerce.date(),
+	lastUpdatedTime: z.coerce.date().optional(),
 	productName: z.string(),
 	totalQuantity: z.number(),
-	stores: z.array(z.string()).nullable(),
-	// ↑今使ってない/nullだからいらん気もするが、必要になったとき大変な気がしたので一応持っておく
+	stores: z.array(z.string()),
 	sellerKanrikunSaveTime: z.coerce.date(),
 });
 export const inventorySummaries = z.array(inventorySummary);

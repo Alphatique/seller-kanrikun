@@ -19,6 +19,8 @@ import createApiClient from 'openapi-fetch';
 import type { Middleware } from 'openapi-fetch';
 import Papa from 'papaparse';
 
+import { getAllCatalogSummariesRetryRateLimit } from '@seller-kanrikun/api-wrapper/category';
+import { getAllInventorySummariesRetryRateLimit } from '@seller-kanrikun/api-wrapper/inventory';
 import {
 	createSalesTrafficReportRetryRateLimit,
 	getAllSalesTrafficReportsRetryRateLimit,
@@ -32,10 +34,13 @@ import {
 	getAllSettlementReportsUntilRateLimit,
 	getSettlementReportsDocumentRetryRateLimit,
 } from '@seller-kanrikun/api-wrapper/settlement-report';
+import { getFile, putFile } from '@seller-kanrikun/data-operation/r2';
 import {
 	getAccountsByProviderId,
 	refreshAccessToken,
 } from '@seller-kanrikun/db/account';
+import type { paths as catalogPaths } from '@seller-kanrikun/sp-api/schema/catalog-items';
+import type { paths as inventoryPaths } from '@seller-kanrikun/sp-api/schema/fba-inventory';
 import type { paths as reportsPaths } from '@seller-kanrikun/sp-api/schema/reports';
 
 import {
@@ -116,6 +121,9 @@ export const app = new Hono()
 
 		const now = new Date();
 		const sunDay = startOfWeek(now, { weekStartsOn: 1 });
+		const endDate = subWeeks(now, 3); //subYears(now, 2);
+		// 昨日
+		let current = subDays(sunDay, 1);
 
 		const result: SalesAndTrafficReportDocument = [];
 		const promises = accounts.map(async account => {
@@ -144,26 +152,31 @@ export const app = new Hono()
 			};
 			reportsApi.use(tokenMiddleware);
 
-			// 昨日
-			let current = subDays(sunDay, 1);
-
-			const endDate = subWeeks(now, 3); //subYears(now, 2);
-
 			const reportIds: string[] = [];
 			while (true) {
 				// 一日前
-				const end = subDays(current, 1);
+				const lastDay = subDays(current, 1);
+
+				console.log(
+					'start get sales traffic report:',
+					lastDay,
+					' to ',
+					current,
+				);
 				const reportId = await createSalesTrafficReportRetryRateLimit(
 					reportsApi,
+					lastDay,
 					current,
-					end,
 					120 * 1000,
 				);
 				if (!reportId) {
 					console.error('create report was failed');
 					return;
 				}
+				console.log('report id:', reportId);
 
+				console.log('waiting...');
+				await new Promise(resolve => setTimeout(resolve, 60 * 1000));
 				const reportDocumentResult =
 					await getCreatedReportDocumentIdRetryRateLimit(
 						reportsApi,
@@ -176,12 +189,12 @@ export const app = new Hono()
 					console.error('get report document was failed');
 					return;
 				}
-				const [reportDocumentId, retryTime]: [string, number] =
-					reportDocumentResult;
+				const reportDocumentId = reportDocumentResult;
 				if (!reportDocumentId) {
 					console.error('report document was not found');
 					return;
 				}
+				console.log('report document id:', reportDocumentId);
 				const documentResult =
 					await getSalesTrafficReportDocumentRetryRateLimit(
 						reportsApi,
@@ -193,19 +206,16 @@ export const app = new Hono()
 					console.error('get report document data was failed');
 					return;
 				}
+				console.log('document row length:', documentResult.length);
 
-				result.concat(documentResult);
+				result.push(...documentResult);
 
 				// 現在を更新
-				current = end;
+				current = lastDay;
 				// 終了日を超えたら終了
 				if (isBefore(current, endDate)) {
 					break;
 				}
-
-				const waitTime = 60 * 1000 - retryTime;
-				console.log(current);
-				await new Promise(resolve => setTimeout(resolve, waitTime));
 			}
 
 			await writeFile(
@@ -216,6 +226,87 @@ export const app = new Hono()
 		});
 
 		await Promise.all(promises);
+
+		return new Response('ok', {
+			status: 200,
+		});
+	})
+	.get('inventory', async c => {
+		const db = c.var.db;
+		const accounts = await getAccountsByProviderId(db, 'seller-central');
+
+		for (const account of accounts) {
+			let [accessToken, expiresAt] =
+				await getSpApiAccessTokenAndExpiresAt(account.userId, db);
+			const tokenMiddleware: Middleware = {
+				async onRequest({ request, options }) {
+					// トークンが期限切れをしていたら再生成
+					if (new Date().getTime() > expiresAt.getTime()) {
+						[accessToken, expiresAt] =
+							await getSpApiAccessTokenAndExpiresAt(
+								account.userId,
+								db,
+							);
+					}
+					// リクエストにアクセストークンを追加
+					request.headers.set('x-amz-access-token', accessToken);
+					return request;
+				},
+			};
+			const api = createApiClient<inventoryPaths>({
+				baseUrl: SELLER_API_BASE_URL,
+			});
+			api.use(tokenMiddleware);
+			const inventorySummaries =
+				await getAllInventorySummariesRetryRateLimit(api);
+
+			console.log(inventorySummaries);
+		}
+
+		return new Response('ok', {
+			status: 200,
+		});
+	})
+	.get('catalog', async c => {
+		const db = c.var.db;
+		const accounts = await getAccountsByProviderId(db, 'seller-central');
+
+		for (const account of accounts) {
+			let [accessToken, expiresAt] =
+				await getSpApiAccessTokenAndExpiresAt(account.userId, db);
+			const tokenMiddleware: Middleware = {
+				async onRequest({ request, options }) {
+					// トークンが期限切れをしていたら再生成
+					if (new Date().getTime() > expiresAt.getTime()) {
+						[accessToken, expiresAt] =
+							await getSpApiAccessTokenAndExpiresAt(
+								account.userId,
+								db,
+							);
+					}
+					// リクエストにアクセストークンを追加
+					request.headers.set('x-amz-access-token', accessToken);
+					return request;
+				},
+			};
+			const api = createApiClient<catalogPaths>({
+				baseUrl: SELLER_API_BASE_URL,
+			});
+			api.use(tokenMiddleware);
+			const catalogSummaries = await getAllCatalogSummariesRetryRateLimit(
+				api,
+				[],
+			);
+			console.log(catalogSummaries);
+		}
+	})
+	.get('test', async c => {
+		(async () => {
+			for (let i = 0; i < 10; i++) {
+				console.log('heno');
+				await new Promise(resolve => setTimeout(resolve, 10 * 1000));
+			}
+		})();
 
 		return new Response('ok', {
 			status: 200,

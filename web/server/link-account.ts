@@ -17,6 +17,10 @@ const tokenEndpoint = 'https://api.amazon.co.jp/auth/o2/token';
 
 export const app = new Hono()
 	.use(authMiddleware)
+	.get('/test', dbMiddleware, async c => {
+		fetch('https://localhost:3000/api/cron/sales-traffic-report');
+		return c.redirect('/dashboard');
+	})
 	.get('/', dbMiddleware, async c => {
 		const verification = (
 			await c.var.db

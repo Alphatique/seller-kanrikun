@@ -36,7 +36,7 @@ export async function getAllCatalogSummariesRetryRateLimit(
 
 		if (summaries) {
 			// 追加
-			allSummaries.concat(summaries);
+			allSummaries.push(...summaries);
 		}
 		if (error) {
 			if (response.status === 200) {
@@ -68,7 +68,7 @@ export async function getAllCatalogSummariesUntilRateLimit(
 
 		if (summaries) {
 			// 追加
-			allSummaries.concat(summaries);
+			allSummaries.push(...summaries);
 		} else {
 			if (response.status === 429) {
 				// 429出なければエラー
@@ -87,10 +87,11 @@ function apiSummariesToSchemaSummaries(
 ): CatalogSummaries {
 	const response: CatalogSummaries = [];
 	for (const summary of multiSummaries) {
+		console.log(summary);
 		response.push(
 			catalogSummary.parse({
 				...summary,
-				sellerKanrikunSavedTime: new Date(),
+				sellerKanrikunSaveTime: new Date(),
 			}),
 		);
 	}
