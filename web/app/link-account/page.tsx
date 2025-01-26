@@ -9,7 +9,7 @@ import { signIn, useSession } from '@seller-kanrikun/auth/client';
 import { Button } from '@seller-kanrikun/ui/components/button';
 import { cn } from '@seller-kanrikun/ui/lib/utils';
 
-import amazonLogo from '~/assets/amazon.svg';
+//import amazonLogo from '~/assets/amazon.svg';
 
 export default function Page() {
 	const router = useRouter();
@@ -94,7 +94,7 @@ export default function Page() {
 						<Loader2 className='animate-spin' />
 					) : (
 						<Image
-							src={amazonLogo}
+							src='' //src={amazonLogo}
 							alt='amazon logo'
 							className='size-4'
 						/>
