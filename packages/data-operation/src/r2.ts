@@ -116,10 +116,10 @@ export async function putFile(
 	data: Uint8Array,
 ): Promise<PutObjectCommandOutput | undefined> {
 	try {
-		const key = await generateR2Hash(userId, fileName);
+		//const key = await generateR2Hash(userId, fileName);
 		const putParams: PutObjectCommandInput = {
 			Bucket: bucketName,
-			Key: key,
+			Key: fileName,
 			Body: data,
 			ContentType: 'application/gzip',
 		};
