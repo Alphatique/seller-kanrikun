@@ -299,16 +299,4 @@ export const app = new Hono()
 			);
 			console.log(catalogSummaries);
 		}
-	})
-	.get('test', async c => {
-		(async () => {
-			for (let i = 0; i < 10; i++) {
-				console.log('heno');
-				await new Promise(resolve => setTimeout(resolve, 10 * 1000));
-			}
-		})();
-
-		return new Response('ok', {
-			status: 200,
-		});
 	});

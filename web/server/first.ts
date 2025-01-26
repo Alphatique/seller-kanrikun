@@ -117,23 +117,4 @@ export const app = new Hono()
 		return new Response('ok', {
 			status: 200,
 		});
-	})
-	.get('/test', async c => {
-		(async () => {
-			for (let i = 0; i < 10; i++) {
-				console.log('heno');
-				await new Promise(resolve => setTimeout(resolve, 10 * 1000));
-			}
-
-			await putFile(
-				R2_BUCKET_NAME,
-				'first-test',
-				'first-test',
-				new Uint8Array(),
-			);
-		})();
-
-		return new Response('ok', {
-			status: 200,
-		});
 	});
