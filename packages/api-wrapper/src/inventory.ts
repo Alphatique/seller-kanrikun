@@ -18,28 +18,6 @@ import {
 import { JAPAN_MARKET_PLACE_ID } from './constants';
 import { type ValueOf, waitRateLimitTime } from './utils';
 
-async function saveInventorySummaries<Data, Error>(
-	bucketName: string,
-	fileName: string,
-	userId: string,
-	newData: InventorySummaries,
-) {
-	const existResponse = await getFile(bucketName, userId, fileName);
-	const existByteArray = await existResponse?.Body?.transformToByteArray();
-	if (existByteArray === undefined) return;
-	const unzipped = gunzipSync(existByteArray);
-	const existText = strFromU8(unzipped);
-	const existData = inventorySummaries.parse(JSON.parse(existText));
-
-	const response = [...existData, ...newData];
-
-	const responseText = response.toString();
-	const responseByteArray = strToU8(responseText);
-	const gzip = gzipSync(responseByteArray);
-
-	return await putFile(bucketName, userId, fileName, gzip);
-}
-
 export async function getAllInventorySummariesRetryRateLimit(
 	api: Client<paths>,
 ): Promise<InventorySummaries> {

@@ -98,7 +98,7 @@ export async function createSalesTrafficReportTable(
 		myDuckDB,
 		reportData,
 		'sales-traffic-report.tsv',
-		'sales_traffic_report',
+		'SALES_TRAFFIC_REPORT_report',
 	);
 }
 

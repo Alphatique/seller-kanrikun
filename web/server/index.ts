@@ -37,7 +37,7 @@ const route = app
 		if (result.isErr())
 			return new Response('Internal Server Error', {
 				status: 500,
-				statusText: `Error: ${result.error?.message ?? 'Unknown'}`,
+				statusText: `Error: ${result.error ?? 'Unknown'}`,
 			});
 
 		const url = result.value;
@@ -55,8 +55,8 @@ const route = app
 			const slug = c.req.param('slug');
 
 			const fileName = {
-				'reports/settlement': FILE_NAMES.SETTLEMENT_REPORT,
-				'reports/sales-traffic': FILE_NAMES.SALES_TRAFFIC,
+				'reports/settlement': FILE_NAMES.SETTLEMENT_REPORT_DOCUMENT,
+				'reports/sales-traffic': FILE_NAMES.SALES_TRAFFIC_REPORT,
 				'cost-price': FILE_NAMES.COST_PRICE,
 				inventory: FILE_NAMES.INVENTORY_SUMMARIES,
 				catalog: FILE_NAMES.CATALOG_ITEMS,

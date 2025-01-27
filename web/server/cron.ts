@@ -24,7 +24,6 @@ import { getAllInventorySummariesRetryRateLimit } from '@seller-kanrikun/api-wra
 import {
 	createSalesTrafficReportRetryRateLimit,
 	getAllSalesTrafficReportsRetryRateLimit,
-	getAllSalesTrafficReportsUntilRateLimit,
 	getCreatedReportDocumentIdRetryRateLimit,
 	getSalesTrafficReportDocumentRetryRateLimit,
 } from '@seller-kanrikun/api-wrapper/sales-traffic-report';
@@ -95,6 +94,7 @@ export const app = new Hono()
 
 			const settlementReports =
 				await getAllSettlementReportsRetryRateLimit(reportsApi, []);
+			console.log(settlementReports);
 
 			const settlementReportDocuments =
 				await getSettlementReportsDocumentRetryRateLimit(
@@ -169,30 +169,27 @@ export const app = new Hono()
 					current,
 					120 * 1000,
 				);
-				if (!reportId) {
-					console.error('create report was failed');
-					return;
+				if (reportId.isErr()) {
+					return new Response('failed to create report', {
+						status: 500,
+					});
 				}
 				console.log('report id:', reportId);
 
 				console.log('waiting...');
 				await new Promise(resolve => setTimeout(resolve, 60 * 1000));
-				const reportDocumentResult =
+				const reportDocumentId =
 					await getCreatedReportDocumentIdRetryRateLimit(
 						reportsApi,
-						reportId,
+						reportId.value,
 						30 * 1000,
 						0.5 * 1000,
 					);
 
-				if (!reportDocumentResult) {
-					console.error('get report document was failed');
-					return;
-				}
-				const reportDocumentId = reportDocumentResult;
-				if (!reportDocumentId) {
-					console.error('report document was not found');
-					return;
+				if (reportDocumentId === null) {
+					return new Response('failed to get report document id', {
+						status: 500,
+					});
 				}
 				console.log('report document id:', reportDocumentId);
 				const documentResult =
@@ -202,13 +199,17 @@ export const app = new Hono()
 						120 * 1000,
 					);
 
-				if (!documentResult) {
-					console.error('get report document data was failed');
-					return;
+				if (documentResult.isErr()) {
+					return new Response('failed to get report document', {
+						status: 500,
+					});
 				}
-				console.log('document row length:', documentResult.length);
+				console.log(
+					'document row length:',
+					documentResult.value.length,
+				);
 
-				result.push(...documentResult);
+				result.push(...documentResult.value);
 
 				// 現在を更新
 				current = lastDay;
@@ -217,12 +218,6 @@ export const app = new Hono()
 					break;
 				}
 			}
-
-			await writeFile(
-				`./salesTrafficReportDocuments-${account.userId}.json`,
-				JSON.stringify(result, null, 2),
-				'utf8',
-			);
 		});
 
 		await Promise.all(promises);
@@ -266,37 +261,4 @@ export const app = new Hono()
 		return new Response('ok', {
 			status: 200,
 		});
-	})
-	.get('catalog', async c => {
-		const db = c.var.db;
-		const accounts = await getAccountsByProviderId(db, 'seller-central');
-
-		for (const account of accounts) {
-			let [accessToken, expiresAt] =
-				await getSpApiAccessTokenAndExpiresAt(account.userId, db);
-			const tokenMiddleware: Middleware = {
-				async onRequest({ request, options }) {
-					// トークンが期限切れをしていたら再生成
-					if (new Date().getTime() > expiresAt.getTime()) {
-						[accessToken, expiresAt] =
-							await getSpApiAccessTokenAndExpiresAt(
-								account.userId,
-								db,
-							);
-					}
-					// リクエストにアクセストークンを追加
-					request.headers.set('x-amz-access-token', accessToken);
-					return request;
-				},
-			};
-			const api = createApiClient<catalogPaths>({
-				baseUrl: SELLER_API_BASE_URL,
-			});
-			api.use(tokenMiddleware);
-			const catalogSummaries = await getAllCatalogSummariesRetryRateLimit(
-				api,
-				[],
-			);
-			console.log(catalogSummaries);
-		}
 	});

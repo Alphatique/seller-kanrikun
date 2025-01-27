@@ -16,6 +16,7 @@ import { Err, Ok, type Result, err } from 'neverthrow';
 import type { Client } from 'openapi-fetch';
 import Papa from 'papaparse';
 
+import type { Account } from '@seller-kanrikun/db/schema';
 import type { paths } from '@seller-kanrikun/sp-api/schema/reports';
 
 import {
@@ -28,22 +29,18 @@ import { type ValueOf, waitRateLimitTime } from './utils';
 
 export async function getAllSalesTrafficReportsRetryRateLimit(
 	api: Client<paths>,
-) {
-	const now = new Date();
-	const sunDay = startOfWeek(now, { weekStartsOn: 1 });
-	// 昨日
-	let current = subDays(sunDay, 1);
-
-	const endDate = subWeeks(now, 3); //subYears(now, 2);
-
+	start: Date,
+	end: Date,
+): Promise<Result<string[], undefined>> {
+	let current = start;
 	const reportIds: string[] = [];
 	while (true) {
 		// 一日前
-		const end = subDays(current, 1);
+		const last = subDays(current, 1);
 		const { data, error, response } = await createSalesTrafficReport(
 			api,
+			last,
 			current,
-			end,
 		);
 		if (data?.reportId) {
 			reportIds.push(data.reportId);
@@ -53,45 +50,39 @@ export async function getAllSalesTrafficReportsRetryRateLimit(
 				console.warn(error, response);
 				await new Promise(resolve => setTimeout(resolve, 120 * 1000));
 			} else {
-				// 429じゃなければエラー
-				console.error(error, response);
-				break;
+				console.error(data, error, response);
+				return new Err(undefined);
 			}
 		}
 
 		// 現在を更新
-		current = end;
+		current = last;
 		// 終了日を超えたら終了
-		if (isBefore(current, endDate)) {
+		if (isBefore(current, end)) {
 			break;
 		}
-
-		console.log(current);
 
 		await waitRateLimitTime(response, 60);
 	}
 
-	return reportIds;
+	return new Ok(reportIds);
 }
 
-export async function getAllSalesTrafficReportsUntilRateLimit(
+export async function createAllSalesTrafficReportsUntilRateLimit(
 	api: Client<paths>,
-) {
-	const now = new Date();
-	const sunDay = startOfWeek(now, { weekStartsOn: 1 });
-	// 先週の日曜日
-	let current = subWeeks(sunDay, 1);
-
-	const endDate = subYears(now, 2);
+	start: Date,
+	end: Date,
+): Promise<Result<string[], undefined>> {
+	let current = start;
 
 	const reportIds: string[] = [];
 	while (true) {
 		// 土曜
-		const end = subDays(current, 1);
+		const last = subDays(current, 1);
 		const { data, error, response } = await createSalesTrafficReport(
 			api,
+			last,
 			current,
-			end,
 		);
 		if (data?.reportId) {
 			reportIds.push(data.reportId);
@@ -99,26 +90,26 @@ export async function getAllSalesTrafficReportsUntilRateLimit(
 			// データがなくなれば終了
 			if (response.status !== 429) {
 				// 429じゃなければエラー
-				console.error(error, response);
+				return new Err(undefined);
 			}
 			break;
 		}
 
 		// 現在を更新
-		current = end;
-		if (isBefore(current, endDate)) {
+		current = last;
+		if (isBefore(current, end)) {
 			// 終了日を超えたら終了
 			break;
 		}
 	}
 
-	return reportIds;
+	return new Ok(reportIds);
 }
 
 export async function getAllCreatedReportDocumentIdsRetryRateLimit(
 	api: Client<paths>,
 	reportIds: string[],
-) {
+): Promise<Result<string[], undefined>> {
 	const result = [];
 	const maxLoopCount = 500;
 	for (const reportId of reportIds) {
@@ -145,8 +136,7 @@ export async function getAllCreatedReportDocumentIdsRetryRateLimit(
 				}
 			} else {
 				if (response.status !== 429) {
-					console.error(error, response);
-					break;
+					return new Err(undefined);
 				}
 				await new Promise(resolve => setTimeout(resolve, 30 * 1000));
 			}
@@ -160,80 +150,18 @@ export async function getAllCreatedReportDocumentIdsRetryRateLimit(
 				break;
 			}
 
-			console.log(loopCount);
 			await waitRateLimitTime(response, 0.5);
 		}
 	}
 
-	return result;
-}
-
-export async function getAllSalesTrafficReportDocumentsRetryRateLimit(
-	api: Client<paths>,
-	reportDocumentIds: string[],
-) {
-	const result: SalesAndTrafficReportDocument = [];
-
-	for (const documentId of reportDocumentIds) {
-		const documentResult = await getReportDocument(api, documentId);
-
-		if (!documentResult.isOk()) {
-			if (documentResult.error.status === 429) {
-				// レートリミットなら30秒待ってリトライ
-				console.warn(documentResult);
-				await new Promise(resolve => setTimeout(resolve, 30 * 1000));
-				continue;
-			} else {
-				// 429じゃなければエラー
-				console.error(documentResult);
-				break;
-			}
-		}
-
-		const response = documentResult.value;
-
-		const gzipData = await response.arrayBuffer();
-		const decompressed = gunzipSync(new Uint8Array(gzipData));
-		const decoder = new TextDecoder();
-		const jsonStr = decoder.decode(decompressed);
-		const json = JSON.parse(jsonStr);
-
-		const parsedData = salesTrafficReportDocument.parse(json);
-
-		const dateMetaData = {
-			dataStartTime: parsedData.reportSpecification.dataStartTime,
-			dataEndTime: parsedData.reportSpecification.dataEndTime,
-			sellerKanrikunSaveTime: new Date(),
-		};
-		for (const eachAsinData of parsedData.salesAndTrafficByAsin) {
-			const salesByAsin = {
-				unitsOrdered: eachAsinData.salesByAsin.unitsOrdered,
-				orderedProductSalesAmount:
-					eachAsinData.salesByAsin.orderedProductSales.amount,
-				orderedProductSalesCurrencyCode:
-					eachAsinData.salesByAsin.orderedProductSales.currencyCode,
-			};
-			result.push({
-				parentAsin: eachAsinData.parentAsin,
-				childAsin: eachAsinData.childAsin,
-				...eachAsinData.trafficByAsin,
-				...salesByAsin,
-				...dateMetaData,
-			});
-		}
-		console.log(documentId);
-
-		await waitRateLimitTime(response, 0.5);
-	}
-
-	return result;
+	return new Ok(result);
 }
 
 export async function getSalesTrafficReportDocumentRetryRateLimit(
 	api: Client<paths>,
 	reportDocumentId: string,
 	rateLimitWaitTime: number,
-) {
+): Promise<Result<SalesAndTrafficReportDocument, Response>> {
 	const result: SalesAndTrafficReportDocument = [];
 
 	const documentResult = await getReportDocument(api, reportDocumentId);
@@ -252,8 +180,7 @@ export async function getSalesTrafficReportDocumentRetryRateLimit(
 			);
 		} else {
 			// 429じゃなければエラー
-			console.error(documentResult);
-			return null;
+			return new Err(documentResult.error);
 		}
 	}
 
@@ -289,10 +216,33 @@ export async function getSalesTrafficReportDocumentRetryRateLimit(
 		});
 	}
 
-	return result;
+	return new Ok(result);
+}
+export async function getAllSalesTrafficReportDocumentRetryRateLimit(
+	api: Client<paths>,
+	reportDocumentIds: string[],
+	rateLimitWaitTime: number,
+): Promise<Result<SalesAndTrafficReportDocument, undefined>> {
+	const result: SalesAndTrafficReportDocument = [];
+
+	for (const reportDocumentId in reportDocumentIds) {
+		const reportDocument =
+			await getSalesTrafficReportDocumentRetryRateLimit(
+				api,
+				reportDocumentId,
+				rateLimitWaitTime,
+			);
+		if (reportDocument.isOk()) {
+			result.push(...reportDocument.value);
+		} else {
+			break;
+		}
+	}
+
+	return new Ok(result);
 }
 
-async function createSalesTrafficReport(
+export async function createSalesTrafficReport(
 	api: Client<paths>,
 	start: Date,
 	end: Date,
@@ -315,25 +265,16 @@ export async function createSalesTrafficReportRetryRateLimit(
 	start: Date,
 	end: Date,
 	rateLimitWaitTime: number,
-) {
-	const { data, error, response } = await api.POST(
-		'/reports/2021-06-30/reports',
-		{
-			body: {
-				reportType: 'GET_SALES_AND_TRAFFIC_REPORT',
-				marketplaceIds: [JAPAN_MARKET_PLACE_ID],
-				reportOptions: {
-					asinGranularity: 'CHILD',
-				},
-				dataStartTime: start.toISOString(),
-				dataEndTime: end.toISOString(),
-			},
-		},
+): Promise<Result<string, undefined>> {
+	const { data, error, response } = await createSalesTrafficReport(
+		api,
+		start,
+		end,
 	);
 
 	const reportId = data?.reportId;
 	if (reportId) {
-		return reportId;
+		return new Ok(reportId);
 	}
 
 	// reportIdがない場合
@@ -349,12 +290,12 @@ export async function createSalesTrafficReportRetryRateLimit(
 		);
 	} else {
 		// 429じゃなければエラー
-		console.error(error, response);
-		return null;
+		console.error(data, error, response);
+		return new Err(undefined);
 	}
 }
 
-async function getCreatedReport(api: Client<paths>, reportId: string) {
+export async function getCreatedReport(api: Client<paths>, reportId: string) {
 	return api.GET('/reports/2021-06-30/reports/{reportId}', {
 		params: {
 			path: {
@@ -370,16 +311,7 @@ export async function getCreatedReportDocumentIdRetryRateLimit(
 	rateLimitWaitTime: number,
 	retryWaitTime: number,
 ): Promise<string | null> {
-	const { data, error, response } = await api.GET(
-		'/reports/2021-06-30/reports/{reportId}',
-		{
-			params: {
-				path: {
-					reportId,
-				},
-			},
-		},
-	);
+	const { data, error, response } = await getCreatedReport(api, reportId);
 
 	const status = data?.processingStatus;
 	if (status) {
@@ -395,6 +327,7 @@ export async function getCreatedReportDocumentIdRetryRateLimit(
 			console.error(data, response);
 			return null;
 		} else if (status === 'CANCELLED') {
+			console.warn('create report was canceled');
 			return null;
 		}
 		await new Promise(resolve => setTimeout(resolve, retryWaitTime));
@@ -417,7 +350,7 @@ export async function getCreatedReportDocumentIdRetryRateLimit(
 			retryWaitTime,
 		);
 	}
-	console.error(error, response);
+	console.error(data, error, response);
 	return null;
 }
 

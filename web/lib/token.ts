@@ -73,7 +73,6 @@ async function refreshAccessToken(
 		client_secret: process.env.SP_API_CLIENT_SECRET!,
 	});
 
-	console.log('hello!', body);
 	const tokens = await betterFetch(tokenEndpoint, {
 		method: 'POST',
 		headers: {
@@ -89,7 +88,6 @@ async function refreshAccessToken(
 		throw: true,
 	});
 
-	console.log('what!');
 	const now = new Date();
 	const expiresAt = new Date(now.getTime() + tokens.expires_in * 1000);
 

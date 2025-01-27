@@ -92,7 +92,7 @@ SELECT
     pageViews,
     sessions / units AS sessionCvr,
     pageViews / units AS pageViewCvr
-FROM sales_traffic_report) as r
+FROM SALES_TRAFFIC_REPORT_report) as r
 LEFT OUTER JOIN (
     SELECT
         asin,

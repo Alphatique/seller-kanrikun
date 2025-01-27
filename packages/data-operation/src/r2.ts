@@ -1,17 +1,21 @@
-import {
-	GetObjectCommand,
-	PutObjectCommand,
-	S3Client,
-} from '@aws-sdk/client-s3';
 import type {
+	ErrorDetails,
+	ErrorDocument,
 	GetObjectCommandInput,
 	GetObjectCommandOutput,
+	HeadObjectCommandInput,
 	PutObjectCommandInput,
 	PutObjectCommandOutput,
 } from '@aws-sdk/client-s3';
+import {
+	GetObjectCommand,
+	HeadObjectCommand,
+	PutObjectCommand,
+	S3Client,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { gunzipSync, gzipSync } from 'fflate';
-import { ResultAsync } from 'neverthrow';
+import { Err, Ok, type Result, ResultAsync, err, ok } from 'neverthrow';
 
 export async function generateR2Hash(
 	userId: string,
@@ -64,28 +68,66 @@ export async function getWriteOnlySignedUrl(
 	userId: string,
 	dataName: string,
 	expiresIn = 60,
-) {
+): Promise<Result<string, undefined>> {
 	const key = await generateR2Hash(userId, dataName);
 
-	return ResultAsync.fromPromise(
-		getSignedUrl(
-			R2,
-			new PutObjectCommand({
-				Bucket: bucketName,
-				Key: key,
-			}),
-			{ expiresIn },
-		),
-		error => new Error(`Failed to get signed url: ${error}`),
+	const url = await getSignedUrl(
+		R2,
+		new PutObjectCommand({
+			Bucket: bucketName,
+			Key: key,
+		}),
+		{ expiresIn },
 	);
+	if (url) {
+		return new Ok(url);
+	}
+	return new Err(undefined);
 }
 
 // データを一時urlなしで取得
+export async function existFile(
+	bucketName: string,
+	userId: string,
+	fileName: string,
+): Promise<boolean> {
+	try {
+		const key = await generateR2Hash(userId, fileName);
+
+		const headParams: HeadObjectCommandInput = {
+			Bucket: bucketName,
+			Key: key,
+		};
+
+		const command = new HeadObjectCommand(headParams);
+		const response = await R2.send(command);
+		console.log(response);
+		return true;
+	} catch (error: unknown) {
+		if (isNotFoundError(error)) {
+			return false;
+		} else {
+			throw error;
+		}
+	}
+}
+// 型ガード関数を定義
+function isNotFoundError(
+	error: unknown,
+): error is { name: string; $fault: string } {
+	return (
+		typeof error === 'object' &&
+		error !== null &&
+		'name' in error &&
+		'name' in error &&
+		(error as { name: string }).name === 'NotFound'
+	);
+}
 export async function getFile(
 	bucketName: string,
 	userId: string,
 	fileName: string,
-): Promise<GetObjectCommandOutput | undefined> {
+): Promise<Result<GetObjectCommandOutput, undefined>> {
 	try {
 		const key = await generateR2Hash(userId, fileName);
 
@@ -98,13 +140,13 @@ export async function getFile(
 		const response = await R2.send(command);
 
 		if (response.Body === undefined) {
-			return undefined;
+			return new Err(undefined);
 		}
 
-		return response;
+		return new Ok(response);
 	} catch (error) {
 		console.error(error);
-		return undefined;
+		return new Err(undefined);
 	}
 }
 
@@ -126,8 +168,6 @@ export async function putFile(
 
 		const command = new PutObjectCommand(putParams);
 		const response = await R2.send(command);
-
-		console.log(response);
 
 		return response;
 	} catch (error) {
