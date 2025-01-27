@@ -33,7 +33,7 @@ export const userHeaderMiddleware = createMiddleware<{
 });
 
 export const cronAuthMiddleware = createMiddleware(async (c, next) => {
-	const authorizationHeader = c.req.header('Authorization');
+	const authorizationHeader = c.req.header('authorization');
 	console.log(authorizationHeader, process.env.CRON_TOKEN);
 
 	if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
