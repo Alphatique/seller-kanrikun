@@ -75,13 +75,6 @@ const appBase = new Hono<{
 		spApiAccessToken: string;
 	};
 }>()
-	.get('/', async c => {
-		const userId = c.get('user').id; // ミドルウェアでセットされたユーザー情報を取得
-		console.log(userId);
-		return new Response('ok', {
-			status: 200,
-		});
-	})
 	.get('/settlement-report', async c => {
 		const userId = c.var.user.id;
 		// メタファイルがなければとする

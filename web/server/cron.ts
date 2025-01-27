@@ -77,13 +77,26 @@ export const app = new Hono()
 	.use(dbMiddleware)
 	.use(cronAuthMiddleware)
 	.route('/init', init)
+	.get('/', async c => {
+		const promises = [
+			fetchCron('/settlement-report'),
+			fetchCron('/sales-traffic-report'),
+			fetchCron('/inventory-summaries'),
+		];
+
+		await Promise.all(promises);
+
+		return new Response('ok', {
+			status: 200,
+		});
+	})
 	.get('/settlement-report', async c => {
 		const db = c.var.db;
 		const accounts = await getAccountsByProviderId(db, 'seller-central');
 
 		const promises = accounts.map(async account => {
-			const initRes = await fetchInit(
-				'settlement-report',
+			const initRes = await fetchCron(
+				'/init/settlement-report',
 				account.userId,
 			);
 			if (!(initRes.status === 200 || initRes.status === 409)) {
@@ -194,8 +207,8 @@ export const app = new Hono()
 		let current = subDays(sunDay, 1);
 
 		const promises = accounts.map(async account => {
-			const initRes = await fetchInit(
-				'settlement-report',
+			const initRes = await fetchCron(
+				'/init/sales-traffic-report',
 				account.userId,
 			);
 
@@ -308,8 +321,8 @@ export const app = new Hono()
 		const accounts = await getAccountsByProviderId(db, 'seller-central');
 
 		const promises = accounts.map(async account => {
-			const initRes = await fetchInit(
-				'settlement-report',
+			const initRes = await fetchCron(
+				'/init/inventory-summaries',
 				account.userId,
 			);
 
@@ -363,11 +376,16 @@ export const app = new Hono()
 		});
 	});
 
-async function fetchInit(path: string, userId: string) {
-	return fetch(`${process.env.API_BASE_URL}/api/cron/init/${path}`, {
-		headers: {
-			Authorization: `Bearer ${process.env.CRON_TOKEN!}`,
-			'X-Cron-UserId': userId,
-		},
+async function fetchCron(path: string, userId: string | undefined = undefined) {
+	const headers: Record<string, string> = {
+		Authorization: `Bearer ${process.env.CRON_TOKEN!}`,
+	};
+
+	if (userId) {
+		headers['X-Cron-UserId'] = userId;
+	}
+
+	return fetch(`${process.env.API_BASE_URL}/api/cron${path}`, {
+		headers: headers,
 	});
 }
