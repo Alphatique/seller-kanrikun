@@ -6,52 +6,61 @@ import type { paths } from '@seller-kanrikun/sp-api/schema/reports';
 
 import { isAfter, isBefore, max, min } from 'date-fns';
 import {
-	type SettlementReport,
 	type SettlementReportDocument,
 	type SettlementReportDocumentRow,
-	type SettlementReports,
+	type SettlementReportMeta,
+	type SettlementReportMetas,
 	parseSettlementRow,
-	settlementReport,
 	settlementReportDocument,
-	settlementReports,
+	settlementReportMeta,
+	settlementReportMetas,
 } from '../schema/settlement-reports';
 import { type ValueOf, waitRateLimitTime } from './utils';
 
 export function filterSettlementReportDocument(
-	existReports: SettlementReports,
-	newReport: SettlementReport,
-	newReportDocument: SettlementReportDocument,
+	existReports: SettlementReportMetas,
+	newData: SettlementReportsResult[],
 ): SettlementReportDocument {
+	const result: SettlementReportDocument = [];
 	for (const existReport of existReports) {
-		// 既存のデータの内部の範囲であれば空白の配列を返す
-		if (
-			isBefore(newReport.dataStartTime, existReport.dataStartTime) &&
-			isAfter(newReport.dataEndTime, existReport.dataEndTime)
-		)
-			return [];
+		for (const newReport of newData) {
+			// 既存のデータの内部の範囲であれば空白の配列を返す
+			if (
+				isBefore(
+					newReport.report.dataStartTime,
+					existReport.dataStartTime,
+				) &&
+				isAfter(newReport.report.dataEndTime, existReport.dataEndTime)
+			)
+				return [];
 
-		// かぶっている範囲を取得
-		const coveredRange = getOverlappingRange(existReport, newReport);
+			// かぶっている範囲を取得
+			const coveredRange = getOverlappingRange(
+				existReport,
+				newReport.report,
+			);
 
-		// かぶっている範囲がないならスキップ
-		if (coveredRange === null) continue;
-		// かぶっている範囲があるなら今のデータをかぶっている範囲以外のものにフィルター
-		newReportDocument.filter(
-			row =>
-				!(
-					isBefore(row.postedDate, coveredRange.start) &&
-					isAfter(row.postedDate, coveredRange.end)
-				),
-		);
+			// かぶっている範囲がないならスキップ
+			if (coveredRange === null) continue;
+			// かぶっている範囲があるなら今のデータをかぶっている範囲以外のものにフィルター
+			newReport.document.filter(
+				row =>
+					!(
+						isBefore(row.postedDate, coveredRange.start) &&
+						isAfter(row.postedDate, coveredRange.end)
+					),
+			);
+			result.push(...newReport.document);
+		}
 	}
 
 	// 結果を返す
-	return newReportDocument;
+	return result;
 }
 
 function isExistSettlementReport(
-	existReports: SettlementReports,
-	newReport: SettlementReport,
+	existReports: SettlementReportMetas,
+	newReport: SettlementReportMeta,
 ) {
 	for (const existReport of existReports) {
 		if (existReport.reportId === newReport.reportId) {
@@ -63,10 +72,10 @@ function isExistSettlementReport(
 
 export async function getAllSettlementReportsRetryRateLimit(
 	api: Client<paths>,
-	existReports: SettlementReports,
-): Promise<SettlementReports> {
+	existReports: SettlementReportMetas,
+): Promise<SettlementReportMetas> {
 	let nextToken: string | undefined = undefined;
-	const result: SettlementReports = [];
+	const result: SettlementReportMetas = [];
 
 	const maxLoopCount = 500;
 	let loopCount = 0;
@@ -80,7 +89,7 @@ export async function getAllSettlementReportsRetryRateLimit(
 			for (const report of reports) {
 				// ステータスがdoneじゃなければスキップ
 				if (report.processingStatus !== 'DONE') continue;
-				const formattedReport = settlementReport.parse({
+				const formattedReport = settlementReportMeta.parse({
 					...report,
 					sellerKanrikunSaveTime: new Date(),
 				});
@@ -123,10 +132,10 @@ export async function getAllSettlementReportsRetryRateLimit(
 
 export async function getAllSettlementReportsUntilRateLimit(
 	api: Client<paths>,
-	existReports: SettlementReports,
-): Promise<SettlementReports> {
+	existReports: SettlementReportMetas,
+): Promise<SettlementReportMetas> {
 	let nextToken: string | undefined = undefined;
-	const result: SettlementReports = [];
+	const result: SettlementReportMetas = [];
 
 	const maxLoopCount = 500;
 	let loopCount = 0;
@@ -143,7 +152,7 @@ export async function getAllSettlementReportsUntilRateLimit(
 			for (const report of reports) {
 				// ステータスがdoneじゃなければスキップ
 				if (report.processingStatus !== 'DONE') continue;
-				const formattedReport = settlementReport.parse({
+				const formattedReport = settlementReportMeta.parse({
 					...report,
 					sellerKanrikunSaveTime: new Date(),
 				});
@@ -179,18 +188,15 @@ export async function getAllSettlementReportsUntilRateLimit(
 	return result;
 }
 
-interface SettlementReportsDocumentResult {
-	reports: SettlementReports;
+interface SettlementReportsResult {
+	report: SettlementReportMeta;
 	document: SettlementReportDocument;
 }
 export async function getSettlementReportsDocumentRetryRateLimit(
 	api: Client<paths>,
-	reports: SettlementReports,
-): Promise<SettlementReportsDocumentResult> {
-	const result: SettlementReportsDocumentResult = {
-		reports: [],
-		document: [],
-	};
+	reports: SettlementReportMetas,
+): Promise<SettlementReportsResult[]> {
+	const result: SettlementReportsResult[] = [];
 	for (const report of reports) {
 		const documentResult = await getReportDocument(
 			api,
@@ -218,8 +224,10 @@ export async function getSettlementReportsDocumentRetryRateLimit(
 		const parsedObj: SettlementReportDocument = strObj
 			.map(row => parseSettlementRow(row)) // 各行をパース
 			.filter((row): row is SettlementReportDocumentRow => row !== null); // null を除外
-		result.reports.push(report);
-		result.document.push(...parsedObj);
+		result.push({
+			report: report,
+			document: parsedObj,
+		});
 
 		await waitRateLimitTime(response, 60);
 	}
@@ -229,12 +237,9 @@ export async function getSettlementReportsDocumentRetryRateLimit(
 
 export async function getSettlementReportsDocumentUntilRateLimit(
 	api: Client<paths>,
-	reports: SettlementReports,
-): Promise<SettlementReportsDocumentResult> {
-	const result: SettlementReportsDocumentResult = {
-		reports: [],
-		document: [],
-	};
+	reports: SettlementReportMetas,
+): Promise<SettlementReportsResult[]> {
+	const result: SettlementReportsResult[] = [];
 	for (const report of reports) {
 		const documentResult = await getReportDocument(
 			api,
@@ -257,8 +262,10 @@ export async function getSettlementReportsDocumentUntilRateLimit(
 		const parsedObj: SettlementReportDocument = strObj
 			.map(row => parseSettlementRow(row)) // 各行をパース
 			.filter((row): row is SettlementReportDocumentRow => row !== null); // null を除外
-		result.reports.push(report);
-		result.document.push(...parsedObj);
+		result.push({
+			report: report,
+			document: parsedObj,
+		});
 	}
 
 	return result;
@@ -323,8 +330,8 @@ type DateRange = {
 	end: Date;
 };
 function getOverlappingRange(
-	alpha: SettlementReport,
-	beta: SettlementReport,
+	alpha: SettlementReportMeta,
+	beta: SettlementReportMeta,
 ): DateRange | null {
 	const start1 = new Date(alpha.dataStartTime);
 	const end1 = new Date(alpha.dataEndTime);

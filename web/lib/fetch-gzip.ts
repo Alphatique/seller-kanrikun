@@ -1,7 +1,11 @@
+import { jsonObjToJsonGzipArray } from '@seller-kanrikun/data-operation/json-gzip';
+import { putFile } from '@seller-kanrikun/data-operation/r2';
 import {
 	tsvGzipToTsvObj,
 	tsvGzipToTsvStr,
 } from '@seller-kanrikun/data-operation/tsv-gzip';
+
+import { R2_BUCKET_NAME } from './constants';
 
 export async function fetchGunzipStrApi(url: string) {
 	// データ取得
@@ -22,4 +26,20 @@ export async function fetchGunzipObjApi<T>(url: string): Promise<T[]> {
 	const result = tsvGzipToTsvObj<T>(uint8Array);
 	const data = result.data;
 	return data;
+}
+
+export async function gzipAndPutFile(
+	userId: string,
+	fileName: string,
+	data: object,
+) {
+	const gzippedArray = jsonObjToJsonGzipArray(data);
+
+	const putResult = await putFile(
+		R2_BUCKET_NAME,
+		userId,
+		fileName,
+		gzippedArray,
+	);
+	return !(putResult === undefined);
 }

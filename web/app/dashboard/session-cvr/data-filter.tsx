@@ -39,7 +39,7 @@ import {
 	createSalesTrafficReportTable,
 	initDuckDB,
 } from '~/lib/duckdb';
-import { fetchGunzipStrApi } from '~/lib/fetch-gunzip';
+import { fetchGunzipStrApi } from '~/lib/fetch-gzip';
 
 import { Chart } from './chart';
 import { SessionTable } from './table';

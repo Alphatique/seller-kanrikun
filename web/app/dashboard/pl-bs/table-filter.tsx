@@ -35,7 +35,7 @@ import {
 	createSettlementReportTable,
 	initDuckDB,
 } from '~/lib/duckdb';
-import { fetchGunzipStrApi } from '~/lib/fetch-gunzip';
+import { fetchGunzipStrApi } from '~/lib/fetch-gzip';
 
 import { PlbsTable } from './table';
 import {

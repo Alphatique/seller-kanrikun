@@ -29,15 +29,21 @@ import {
 } from '@seller-kanrikun/api-wrapper/sales-traffic-report';
 import type { SalesAndTrafficReportDocument } from '@seller-kanrikun/api-wrapper/schema/sales-traffic-report';
 import {
+	filterSettlementReportDocument,
 	getAllSettlementReportsRetryRateLimit,
 	getAllSettlementReportsUntilRateLimit,
 	getSettlementReportsDocumentRetryRateLimit,
 } from '@seller-kanrikun/api-wrapper/settlement-report';
-import { getFile, putFile } from '@seller-kanrikun/data-operation/r2';
+import {
+	existFile,
+	getFile,
+	putFile,
+} from '@seller-kanrikun/data-operation/r2';
 import {
 	getAccountsByProviderId,
 	refreshAccessToken,
 } from '@seller-kanrikun/db/account';
+import { type ClientType, createClient } from '@seller-kanrikun/db/index';
 import type { paths as catalogPaths } from '@seller-kanrikun/sp-api/schema/catalog-items';
 import type { paths as inventoryPaths } from '@seller-kanrikun/sp-api/schema/fba-inventory';
 import type { paths as reportsPaths } from '@seller-kanrikun/sp-api/schema/reports';
@@ -46,9 +52,15 @@ import {
 	FILE_NAMES,
 	JAPAN_MARKET_PLACE_ID,
 	R2_BUCKET_NAME,
-	SELLER_API_BASE_URL,
 } from '~/lib/constants';
 
+import {
+	SettlementReportMeta,
+	type SettlementReportMetas,
+	settlementReportMetas,
+} from '@seller-kanrikun/api-wrapper/schema/settlement-reports';
+import { jsonGzipArrayToJsonObj } from '@seller-kanrikun/data-operation/json-gzip';
+import { gzipAndPutFile } from '~/lib/fetch-gzip';
 import {
 	getSpApiAccessToken,
 	getSpApiAccessTokenAndExpiresAt,
@@ -60,9 +72,10 @@ import {
 } from './middleware';
 
 export const app = new Hono()
-	.use(authMiddleware)
 	.use(dbMiddleware)
 	.get('/settlement-report', async c => {
+		console.log('heno');
+
 		const db = c.var.db;
 		const accounts = await getAccountsByProviderId(db, 'seller-central');
 
@@ -70,9 +83,29 @@ export const app = new Hono()
 			let [accessToken, expiresAt] =
 				await getSpApiAccessTokenAndExpiresAt(account.userId, db);
 
+			const reportMetaResult = await getFile(
+				R2_BUCKET_NAME,
+				account.userId,
+				FILE_NAMES.SETTLEMENT_REPORT_META,
+			);
+			if (reportMetaResult.isErr()) {
+				console.error(reportMetaResult.error, account.userId);
+				return;
+			}
+			const reportMetaArray =
+				await reportMetaResult.value.Body?.transformToByteArray();
+			if (!reportMetaArray) {
+				console.error('exist meta data was not found:', account.userId);
+				return;
+			}
+			const reportMetas: SettlementReportMetas = jsonGzipArrayToJsonObj(
+				reportMetaArray,
+				settlementReportMetas,
+			);
+
 			// レポートAPI
-			const reportsApi = createApiClient<reportsPaths>({
-				baseUrl: SELLER_API_BASE_URL,
+			const api = createApiClient<reportsPaths>({
+				baseUrl: process.env.API_BASE_URL,
 			});
 
 			const tokenMiddleware: Middleware = {
@@ -90,23 +123,47 @@ export const app = new Hono()
 					return request;
 				},
 			};
-			reportsApi.use(tokenMiddleware);
+			api.use(tokenMiddleware);
 
-			const settlementReports =
-				await getAllSettlementReportsRetryRateLimit(reportsApi, []);
-			console.log(settlementReports);
-
-			const settlementReportDocuments =
-				await getSettlementReportsDocumentRetryRateLimit(
-					reportsApi,
-					settlementReports,
-				);
-
-			await writeFile(
-				`./settlementReportDocuments-${account.userId}.json`,
-				JSON.stringify(settlementReportDocuments, null, 2),
-				'utf8',
+			const reports = await getAllSettlementReportsRetryRateLimit(
+				api,
+				reportMetas,
 			);
+
+			const reportResult =
+				await getSettlementReportsDocumentRetryRateLimit(api, reports);
+			const reportDocument = await filterSettlementReportDocument(
+				reportMetas,
+				reportResult,
+			);
+
+			const documentPutResult = await gzipAndPutFile(
+				account.userId,
+				FILE_NAMES.SETTLEMENT_REPORT_DOCUMENT,
+				reportDocument,
+			);
+			if (!documentPutResult) {
+				console.error(
+					'failed to put settlement report document:',
+					account.userId,
+				);
+				return;
+			}
+
+			const metaPutResult = await gzipAndPutFile(
+				account.userId,
+				FILE_NAMES.SETTLEMENT_REPORT_META,
+				reportResult.map(row => row.report),
+			);
+			if (!metaPutResult) {
+				console.error(
+					'failed to put settlement report meta:',
+					account.userId,
+				);
+				return;
+			}
+			console.log('success:', account.userId);
+			return;
 		});
 
 		await Promise.all(promises);
@@ -125,14 +182,20 @@ export const app = new Hono()
 		// 昨日
 		let current = subDays(sunDay, 1);
 
-		const result: SalesAndTrafficReportDocument = [];
 		const promises = accounts.map(async account => {
+			const firstRes = await fetch(
+				`${process.env.API_BASE_URL}/api/first/sales-traffic-report`,
+			);
+			if (!(firstRes.status === 200 || firstRes.status === 409)) {
+				console.error('first was failed:', account.userId);
+				return;
+			}
 			let [accessToken, expiresAt] =
 				await getSpApiAccessTokenAndExpiresAt(account.userId, db);
 
 			// レポートAPI
 			const reportsApi = createApiClient<reportsPaths>({
-				baseUrl: SELLER_API_BASE_URL,
+				baseUrl: process.env.API_BASE_URL,
 			});
 
 			const tokenMiddleware: Middleware = {
@@ -152,17 +215,11 @@ export const app = new Hono()
 			};
 			reportsApi.use(tokenMiddleware);
 
-			const reportIds: string[] = [];
+			const result: SalesAndTrafficReportDocument = [];
 			while (true) {
 				// 一日前
 				const lastDay = subDays(current, 1);
 
-				console.log(
-					'start get sales traffic report:',
-					lastDay,
-					' to ',
-					current,
-				);
 				const reportId = await createSalesTrafficReportRetryRateLimit(
 					reportsApi,
 					lastDay,
@@ -170,13 +227,10 @@ export const app = new Hono()
 					120 * 1000,
 				);
 				if (reportId.isErr()) {
-					return new Response('failed to create report', {
-						status: 500,
-					});
+					console.error('failed to create report', account.userId);
+					return;
 				}
-				console.log('report id:', reportId);
 
-				console.log('waiting...');
 				await new Promise(resolve => setTimeout(resolve, 60 * 1000));
 				const reportDocumentId =
 					await getCreatedReportDocumentIdRetryRateLimit(
@@ -187,11 +241,12 @@ export const app = new Hono()
 					);
 
 				if (reportDocumentId === null) {
-					return new Response('failed to get report document id', {
-						status: 500,
-					});
+					console.error(
+						'failed to get report document id',
+						account.userId,
+					);
+					return;
 				}
-				console.log('report document id:', reportDocumentId);
 				const documentResult =
 					await getSalesTrafficReportDocumentRetryRateLimit(
 						reportsApi,
@@ -200,15 +255,12 @@ export const app = new Hono()
 					);
 
 				if (documentResult.isErr()) {
-					return new Response('failed to get report document', {
-						status: 500,
-					});
+					console.error(
+						'failed to get report document',
+						account.userId,
+					);
+					return;
 				}
-				console.log(
-					'document row length:',
-					documentResult.value.length,
-				);
-
 				result.push(...documentResult.value);
 
 				// 現在を更新
@@ -218,6 +270,18 @@ export const app = new Hono()
 					break;
 				}
 			}
+
+			const putResult = await gzipAndPutFile(
+				account.userId,
+				FILE_NAMES.SALES_TRAFFIC_REPORT,
+				result,
+			);
+			if (!putResult) {
+				console.error('put file was failed:', account.userId);
+				return;
+			}
+			console.log('success:', account.userId);
+			return;
 		});
 
 		await Promise.all(promises);
@@ -226,13 +290,22 @@ export const app = new Hono()
 			status: 200,
 		});
 	})
-	.get('inventory', async c => {
+	.get('/inventory-summaries', async c => {
 		const db = c.var.db;
 		const accounts = await getAccountsByProviderId(db, 'seller-central');
 
-		for (const account of accounts) {
+		const promises = accounts.map(async account => {
+			const firstRes = await fetch(
+				`${process.env.API_BASE_URL}/api/first/inventory`,
+			);
+			if (!(firstRes.status === 200 || firstRes.status === 409)) {
+				console.error('first was failed:', account.userId);
+				return;
+			}
+
 			let [accessToken, expiresAt] =
 				await getSpApiAccessTokenAndExpiresAt(account.userId, db);
+
 			const tokenMiddleware: Middleware = {
 				async onRequest({ request, options }) {
 					// トークンが期限切れをしていたら再生成
@@ -249,14 +322,26 @@ export const app = new Hono()
 				},
 			};
 			const api = createApiClient<inventoryPaths>({
-				baseUrl: SELLER_API_BASE_URL,
+				baseUrl: process.env.API_BASE_URL,
 			});
 			api.use(tokenMiddleware);
 			const inventorySummaries =
 				await getAllInventorySummariesRetryRateLimit(api);
 
-			console.log(inventorySummaries);
-		}
+			const putResult = await gzipAndPutFile(
+				account.userId,
+				FILE_NAMES.SALES_TRAFFIC_REPORT,
+				inventorySummaries,
+			);
+			if (!putResult) {
+				console.error('put file was failed:', account.userId);
+				return;
+			}
+			console.log('success:', account.userId);
+			return;
+		});
+
+		await Promise.all(promises);
 
 		return new Response('ok', {
 			status: 200,

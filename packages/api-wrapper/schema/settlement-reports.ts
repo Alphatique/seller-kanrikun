@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const settlementReport = z.object({
+export const settlementReportMeta = z.object({
 	reportId: z.string(),
 	reportDocumentId: z.string(),
 	reportType: z.literal('GET_V2_SETTLEMENT_REPORT_DATA_FLAT_FILE'),
@@ -11,10 +11,10 @@ export const settlementReport = z.object({
 	createdTime: z.coerce.date(),
 	sellerKanrikunSaveTime: z.coerce.date(),
 });
-export const settlementReports = z.array(settlementReport);
+export const settlementReportMetas = z.array(settlementReportMeta);
 
-export type SettlementReport = z.infer<typeof settlementReport>;
-export type SettlementReports = z.infer<typeof settlementReports>;
+export type SettlementReportMeta = z.infer<typeof settlementReportMeta>;
+export type SettlementReportMetas = z.infer<typeof settlementReportMetas>;
 
 // パース関数
 export function parseSettlementRow(

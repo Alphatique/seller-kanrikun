@@ -1,10 +1,10 @@
 import { gunzipSync, gzipSync } from 'fflate';
 import Papa from 'papaparse';
-import type { Schema } from 'zod';
+import type { Schema, infer, z } from 'zod';
 
-export function jsonGzipArrayToJsonObj<T extends Schema>(
+export function jsonGzipArrayToJsonObj<TSchema extends Schema>(
 	jsonGzipArray: Uint8Array,
-	jsonSchema: T,
+	jsonSchema: TSchema,
 ) {
 	const jsonStr = jsonGzipArrayToJsonStr(jsonGzipArray);
 	return jsonSchema.parse(jsonStr);

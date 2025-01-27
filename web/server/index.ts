@@ -61,7 +61,11 @@ const route = app
 				inventory: FILE_NAMES.INVENTORY_SUMMARIES,
 				catalog: FILE_NAMES.CATALOG_ITEMS,
 			}[slug];
-			if (!fileName) throw new Error();
+			if (!fileName) {
+				return new Response('file name was not found', {
+					status: 404,
+				});
+			}
 
 			const url = await getReadOnlySignedUrl(
 				R2_BUCKET_NAME,

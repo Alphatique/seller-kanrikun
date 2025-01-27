@@ -25,7 +25,7 @@ import {
 
 import { DatePickerWithRange } from '~/components/date-range';
 import { InputExcel } from '~/components/input-excel';
-import { fetchGunzipObjApi } from '~/lib/fetch-gunzip';
+import { fetchGunzipObjApi } from '~/lib/fetch-gzip';
 
 const fileToBinaryString = (file: File): Promise<ArrayBuffer> => {
 	return new Promise((resolve, reject) => {

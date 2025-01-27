@@ -35,6 +35,7 @@ import {
 } from '@seller-kanrikun/api-wrapper/sales-traffic-report';
 import type { SalesAndTrafficReportDocument } from '@seller-kanrikun/api-wrapper/schema/sales-traffic-report';
 import {
+	filterSettlementReportDocument,
 	getAllSettlementReportsUntilRateLimit,
 	getSettlementReportsDocumentRetryRateLimit,
 	getSettlementReportsDocumentUntilRateLimit,
@@ -54,8 +55,9 @@ import {
 	FILE_NAMES,
 	JAPAN_MARKET_PLACE_ID,
 	R2_BUCKET_NAME,
-	SELLER_API_BASE_URL,
 } from '~/lib/constants';
+
+import { gzipAndPutFile } from '~/lib/fetch-gzip';
 import { getSpApiAccessTokenAndExpiresAt } from '~/lib/token';
 
 import {
@@ -92,19 +94,20 @@ export const app = new Hono()
 			api,
 			reports,
 		);
-		console.log(
-			'settlement report document:',
-			reportResult.document.length,
+		console.log('settlement report document:', reportResult.length);
+		const reportDocument = await filterSettlementReportDocument(
+			[],
+			reportResult,
 		);
 		console.log(
-			'settlement report by settlement report document:',
-			reportResult.reports.length,
+			'filtered settlement report document:',
+			reportDocument.length,
 		);
 
 		const documentPutResult = await gzipAndPutFile(
 			userId,
 			FILE_NAMES.SETTLEMENT_REPORT_DOCUMENT,
-			reportResult.document,
+			reportDocument,
 		);
 		if (!documentPutResult) {
 			return new Response('failed to put settlement report document', {
@@ -114,7 +117,7 @@ export const app = new Hono()
 		const metaPutResult = await gzipAndPutFile(
 			userId,
 			FILE_NAMES.SETTLEMENT_REPORT_META,
-			reportResult.reports,
+			reportResult.map(row => row.report),
 		);
 		if (!metaPutResult) {
 			return new Response('failed to put settlement report meta', {
@@ -237,7 +240,7 @@ export const app = new Hono()
 function createApi<T extends object>(accessToken: string) {
 	// レポートapi
 	const api = createApiClient<T>({
-		baseUrl: SELLER_API_BASE_URL,
+		baseUrl: process.env.API_BASE_URL,
 	});
 	const middleware: Middleware = {
 		async onRequest({ request }) {
@@ -248,16 +251,4 @@ function createApi<T extends object>(accessToken: string) {
 	};
 	api.use(middleware);
 	return api;
-}
-
-async function gzipAndPutFile(userId: string, fileName: string, data: object) {
-	const gzippedArray = jsonObjToJsonGzipArray(data);
-
-	const putResult = await putFile(
-		R2_BUCKET_NAME,
-		userId,
-		fileName,
-		gzippedArray,
-	);
-	return !(putResult === undefined);
 }
