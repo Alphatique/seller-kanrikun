@@ -34,15 +34,13 @@ export const userHeaderMiddleware = createMiddleware<{
 
 export const cronAuthMiddleware = createMiddleware(async (c, next) => {
 	const authorizationHeader = c.req.header('Authorization');
+	console.log(authorizationHeader, process.env.CRON_TOKEN);
 
 	if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
 		return c.text('Unauthorized', 401);
 	}
 
-	// "Bearer " を除去
-	const token = authorizationHeader.substring(7);
-
-	if (token !== process.env.CRON_TOKEN) {
+	if (authorizationHeader !== `Bearer ${process.env.CRON_TOKEN}`) {
 		return c.text('Forbidden', 403);
 	}
 	await next();
