@@ -15,10 +15,6 @@ variable "BASELIME_KEY" {
   type = string
 }
 
-variable "CRON_TOKEN" {
-  type = string
-}
-
 resource "vercel_project" "seller-kanrikun" {
   name      = "seller-kanrikun"
   team_id   = "alphatique"
@@ -43,9 +39,5 @@ resource "vercel_project" "seller-kanrikun" {
     key    = "BASELIME_KEY"
     target = ["production"]
     value  = var.BASELIME_KEY
-  }, {
-    key    = "CRON_TOKEN"
-    target = ["production"]
-    value  = var.CRON_TOKEN
   }]
 }
