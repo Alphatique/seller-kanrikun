@@ -1,10 +1,52 @@
+import { eq } from 'drizzle-orm/expressions';
 import type { MiddlewareHandler } from 'hono';
 import { createMiddleware } from 'hono/factory';
 
 import { auth } from '@seller-kanrikun/auth/server';
 import { type ClientType, createClient } from '@seller-kanrikun/db/index';
+import { type User, user } from '@seller-kanrikun/db/schema';
 
 import { getSpApiAccessToken } from '~/lib/token';
+
+export const userHeaderMiddleware = createMiddleware<{
+	Variables: {
+		db: ClientType;
+		user: typeof auth.$Infer.Session.user;
+	};
+}>(async (c, next) => {
+	const cronUserIdHeader = c.req.header('X-Cron-UserId');
+	if (!cronUserIdHeader) {
+		return c.text('Unauthorized', 401);
+	}
+
+	const result = await c.var.db
+		.select()
+		.from(user)
+		.where(eq(user.id, cronUserIdHeader))
+		.limit(1);
+	if (result.length <= 0) {
+		return c.text('Forbidden', 403);
+	}
+
+	c.set('user', result[0]);
+	await next();
+});
+
+export const cronAuthMiddleware = createMiddleware(async (c, next) => {
+	const authorizationHeader = c.req.header('Authorization');
+
+	if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
+		return c.text('Unauthorized', 401);
+	}
+
+	// "Bearer " を除去
+	const token = authorizationHeader.substring(7);
+
+	if (token !== process.env.CRON_TOKEN) {
+		return c.text('Forbidden', 403);
+	}
+	await next();
+});
 
 export const authMiddleware = createMiddleware<{
 	Variables: {

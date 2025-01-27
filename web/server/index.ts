@@ -10,7 +10,7 @@ import {
 import { FILE_NAMES, R2_BUCKET_NAME } from '~/lib/constants';
 
 import { app as cron } from './cron';
-import { app as first } from './first';
+import { apiApp as init } from './init';
 import { app as linkAccount } from './link-account';
 import { authMiddleware } from './middleware';
 
@@ -24,7 +24,7 @@ const route = app
 	.on(['POST', 'GET'], '/auth/*', c => {
 		return auth.handler(c.req.raw);
 	})
-	.route('/first', first)
+	.route('/init', init)
 	.route('/cron', cron)
 	.route('/link-account', linkAccount)
 	.put('/cost-price', authMiddleware, async c => {

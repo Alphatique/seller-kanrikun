@@ -60,16 +60,29 @@ import {
 import { gzipAndPutFile } from '~/lib/fetch-gzip';
 import { getSpApiAccessTokenAndExpiresAt } from '~/lib/token';
 
+import type { User } from '@seller-kanrikun/db/schema';
 import {
 	accessTokenMiddleware,
 	authMiddleware,
+	cronAuthMiddleware,
 	dbMiddleware,
+	userHeaderMiddleware,
 } from './middleware';
 
-export const app = new Hono()
-	.use(dbMiddleware)
-	.use(authMiddleware)
-	.get('/settlement-report', accessTokenMiddleware, async c => {
+const appBase = new Hono<{
+	Variables: {
+		user: User;
+		spApiAccessToken: string;
+	};
+}>()
+	.get('/', async c => {
+		const userId = c.get('user').id; // ミドルウェアでセットされたユーザー情報を取得
+		console.log(userId);
+		return new Response('ok', {
+			status: 200,
+		});
+	})
+	.get('/settlement-report', async c => {
 		const userId = c.var.user.id;
 		// メタファイルがなければとする
 		const exist = await existFile(
@@ -129,7 +142,7 @@ export const app = new Hono()
 			status: 200,
 		});
 	})
-	.get('/sales-traffic-report', accessTokenMiddleware, async c => {
+	.get('/sales-traffic-report', async c => {
 		const userId = c.var.user.id;
 		const exist = await existFile(
 			R2_BUCKET_NAME,
@@ -200,8 +213,9 @@ export const app = new Hono()
 			status: 200,
 		});
 	})
-	.get('/inventory-summaries', accessTokenMiddleware, async c => {
+	.get('/inventory-summaries', async c => {
 		const userId = c.var.user.id;
+
 		const exist = await existFile(
 			R2_BUCKET_NAME,
 			userId,
@@ -236,6 +250,14 @@ export const app = new Hono()
 			status: 200,
 		});
 	});
+
+export const cronApp = new Hono().use(userHeaderMiddleware).route('/', appBase);
+
+export const apiApp = new Hono()
+	.use(dbMiddleware)
+	.use(authMiddleware)
+	.use(accessTokenMiddleware)
+	.route('/', appBase);
 
 function createApi<T extends object>(accessToken: string) {
 	// レポートapi

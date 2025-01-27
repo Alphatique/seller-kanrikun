@@ -65,21 +65,32 @@ import {
 	getSpApiAccessToken,
 	getSpApiAccessTokenAndExpiresAt,
 } from '~/lib/token';
+import { cronApp as init } from './init';
 import {
 	accessTokenMiddleware,
 	authMiddleware,
+	cronAuthMiddleware,
 	dbMiddleware,
 } from './middleware';
 
 export const app = new Hono()
 	.use(dbMiddleware)
+	.use(cronAuthMiddleware)
+	.route('/init', init)
 	.get('/settlement-report', async c => {
-		console.log('heno');
-
 		const db = c.var.db;
 		const accounts = await getAccountsByProviderId(db, 'seller-central');
 
 		const promises = accounts.map(async account => {
+			const initRes = await fetchInit(
+				'settlement-report',
+				account.userId,
+			);
+			if (!(initRes.status === 200 || initRes.status === 409)) {
+				console.error('first was failed:', account.userId);
+				return;
+			}
+
 			let [accessToken, expiresAt] =
 				await getSpApiAccessTokenAndExpiresAt(account.userId, db);
 
@@ -183,10 +194,12 @@ export const app = new Hono()
 		let current = subDays(sunDay, 1);
 
 		const promises = accounts.map(async account => {
-			const firstRes = await fetch(
-				`${process.env.API_BASE_URL}/api/first/sales-traffic-report`,
+			const initRes = await fetchInit(
+				'settlement-report',
+				account.userId,
 			);
-			if (!(firstRes.status === 200 || firstRes.status === 409)) {
+
+			if (!(initRes.status === 200 || initRes.status === 409)) {
 				console.error('first was failed:', account.userId);
 				return;
 			}
@@ -295,10 +308,12 @@ export const app = new Hono()
 		const accounts = await getAccountsByProviderId(db, 'seller-central');
 
 		const promises = accounts.map(async account => {
-			const firstRes = await fetch(
-				`${process.env.API_BASE_URL}/api/first/inventory`,
+			const initRes = await fetchInit(
+				'settlement-report',
+				account.userId,
 			);
-			if (!(firstRes.status === 200 || firstRes.status === 409)) {
+
+			if (!(initRes.status === 200 || initRes.status === 409)) {
 				console.error('first was failed:', account.userId);
 				return;
 			}
@@ -347,3 +362,12 @@ export const app = new Hono()
 			status: 200,
 		});
 	});
+
+async function fetchInit(path: string, userId: string) {
+	return fetch(`${process.env.API_BASE_URL}/api/cron/init/${path}`, {
+		headers: {
+			Authorization: `Bearer ${process.env.CRON_TOKEN!}`,
+			'X-Cron-UserId': userId,
+		},
+	});
+}
