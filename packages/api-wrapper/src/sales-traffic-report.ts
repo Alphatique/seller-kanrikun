@@ -243,7 +243,7 @@ export async function getAllSalesTrafficReportDocumentRetryRateLimit(
 > {
 	const result: SalesAndTrafficReportDocument = [];
 
-	for (const reportDocumentId in reportDocumentIds) {
+	for (const reportDocumentId of reportDocumentIds) {
 		const reportDocument =
 			await getSalesTrafficReportDocumentRetryRateLimit(
 				api,
@@ -253,6 +253,7 @@ export async function getAllSalesTrafficReportDocumentRetryRateLimit(
 		if (reportDocument.isOk()) {
 			result.push(...reportDocument.value);
 		} else {
+			console.error(reportDocument.error);
 			break;
 		}
 	}

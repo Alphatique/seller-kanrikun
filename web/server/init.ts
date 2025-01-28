@@ -74,6 +74,34 @@ export const app = new Hono()
 	.use(dbMiddleware)
 	.use(authMiddleware)
 	.use(accessTokenMiddleware)
+	.get('/cost-price', async c => {
+		const userId = c.var.user.id;
+		const exist = await existFile(
+			R2_BUCKET_NAME,
+			userId,
+			FILE_NAMES.COST_PRICE,
+		);
+		if (exist) {
+			return new Response('already exists', {
+				status: 409,
+			});
+		}
+
+		const putResult = await gzipAndPutFile(
+			userId,
+			FILE_NAMES.SETTLEMENT_REPORT_META,
+			[],
+		);
+		if (!putResult) {
+			return new Response('failed to put', {
+				status: 500,
+			});
+		}
+
+		return new Response('ok', {
+			status: 200,
+		});
+	})
 	.get('/settlement-report', async c => {
 		const userId = c.var.user.id;
 		// メタファイルがなければとする
@@ -163,6 +191,7 @@ export const app = new Hono()
 				status: 409,
 			});
 		}
+
 		const accessToken = c.var.spApiAccessToken;
 		const api = createApi<reportsPaths>(accessToken);
 		console.log('create sales traffic reports...');

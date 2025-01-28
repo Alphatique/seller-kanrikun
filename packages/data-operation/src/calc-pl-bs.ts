@@ -13,7 +13,7 @@ export function reportArrowTableToArrays(
 	reportData: Table,
 ): FilteredSettlementReport[] | null {
 	const dateCol: string[] = reportData.getChild('date')?.toArray();
-	const costPrice = reportData.getChild('costPrice')?.toArray();
+	const CostPrice = reportData.getChild('CostPrice')?.toArray();
 	const principalCol = reportData.getChild('principal')?.toArray();
 	const principalTaxCol = reportData.getChild('principalTax')?.toArray();
 	const shippingCol = reportData.getChild('shipping')?.toArray();
@@ -39,7 +39,7 @@ export function reportArrowTableToArrays(
 		?.toArray();
 	if (
 		!dateCol ||
-		!costPrice ||
+		!CostPrice ||
 		!principalCol ||
 		!principalTaxCol ||
 		!shippingCol ||
@@ -60,12 +60,12 @@ export function reportArrowTableToArrays(
 
 	// TODO: 型変換ミスを直す
 	console.log('reportData', refundCol);
-	console.log('reportData', reportData.getChild('costPrice')?.toString());
-	console.log('reportData', reportData.getChild('costPrice'));
+	console.log('reportData', reportData.getChild('CostPrice')?.toString());
+	console.log('reportData', reportData.getChild('CostPrice'));
 
 	const result: FilteredSettlementReport[] = dateCol.map((date, i) => ({
 		date: date,
-		costPrice: costPrice[i],
+		CostPrice: CostPrice[i],
 		principal: principalCol[i],
 		principalTax: principalTaxCol[i],
 		shipping: shippingCol[i],
@@ -142,7 +142,7 @@ export function calcPlData(
 	// 純売上 = 売上 - 返品額
 	const netSales = sales - reportData.refund;
 	// 粗利益 = 純売上 - 原価
-	const grossProfit = netSales - reportData.costPrice;
+	const grossProfit = netSales - reportData.CostPrice;
 	// 販売費および一般管理費
 	const sga = calcSellingGeneralAndAdministrativeExpenses(
 		reportData,

@@ -59,8 +59,6 @@ export function PlbsTableFilter() {
 	// duckdb
 	const { data: myDuckDB } = useSWR('/initDuckDB', initDuckDB);
 
-	console.log(inventoryData);
-
 	// フィルターしたデータ
 	const [filteredData, setFilteredData] = useState<
 		FilteredSettlementReport[] | undefined
@@ -78,6 +76,7 @@ export function PlbsTableFilter() {
 	// データ/dbが更新されたら
 	// TODO: jotai等を使ってreactから切り離す
 	useEffect(() => {
+		console.log(reportData, inventoryData, costPriceData);
 		if (myDuckDB && reportData && inventoryData && costPriceData) {
 			const promises = [];
 			promises.push(createSettlementReportTable(myDuckDB, reportData));
@@ -105,7 +104,7 @@ export function PlbsTableFilter() {
 					// TODO: zodでやりたい
 					const data: FilteredSettlementReport = {
 						date: json?.date,
-						costPrice: Number(json?.costPrice),
+						CostPrice: Number(json?.CostPrice),
 						principal: json?.principal,
 						principalTax: json?.principalTax,
 						shipping: json?.shipping,

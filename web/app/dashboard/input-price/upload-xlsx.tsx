@@ -9,9 +9,8 @@ import { addCostPrices } from '@seller-kanrikun/data-operation/cost-price';
 import { tsvObjToTsvGzip } from '@seller-kanrikun/data-operation/tsv-gzip';
 import {
 	type CostPrice,
-	type CostPriceTsv,
-	CostPriceTsvSchema,
 	type UpdateCostPriceRequest,
+	costPriceSchema,
 } from '@seller-kanrikun/data-operation/types/cost-price';
 import { Button } from '@seller-kanrikun/ui/components/button';
 import {
@@ -23,9 +22,10 @@ import {
 	TableRow,
 } from '@seller-kanrikun/ui/components/table';
 
+import { jsonGzipArrayToJsonObj } from '@seller-kanrikun/data-operation/json-gzip';
 import { DatePickerWithRange } from '~/components/date-range';
 import { InputExcel } from '~/components/input-excel';
-import { fetchGunzipObjApi } from '~/lib/fetch-gzip';
+import { fetchGunzipStrApi } from '~/lib/fetch-gzip';
 
 const fileToBinaryString = (file: File): Promise<ArrayBuffer> => {
 	return new Promise((resolve, reject) => {
@@ -44,7 +44,7 @@ const fileToBinaryString = (file: File): Promise<ArrayBuffer> => {
 	});
 };
 
-const parseXlsxData = (binaryStr: ArrayBuffer): CostPrice[] => {
+const parseXlsxData = (binaryStr: ArrayBuffer): CostPriceInput[] => {
 	const workbook = XLSX.read(binaryStr, { type: 'binary' });
 	const worksheet = workbook.Sheets[workbook.SheetNames[0]];
 	const jsonData = XLSX.utils.sheet_to_json<{
@@ -58,31 +58,32 @@ const parseXlsxData = (binaryStr: ArrayBuffer): CostPrice[] => {
 				typeof item?.ASIN === 'string' &&
 				typeof item['原価(円)'] === 'number',
 		)
-		.map(({ ASIN, '原価(円)': Price }) => ({ ASIN, Price }));
+		.map(({ ASIN: asin, '原価(円)': price }) => ({ asin, price }));
 };
+
+interface CostPriceInput {
+	asin: string;
+	price: number;
+}
 
 export function InputPriceUpload() {
 	// データ取得
 	const { data: loadedData } = useSWR('/api/cost-price', async url => {
-		const obj = await fetchGunzipObjApi<CostPriceTsv>(url);
-		// dateが文字列でくるのでパース
-		const validatedObj = obj.map(item => {
-			return CostPriceTsvSchema.parse(item);
-		});
+		const str = await fetchGunzipStrApi(url);
 
-		return validatedObj;
+		return costPriceSchema.parse(str);
 	});
 
 	console.log(loadedData);
 
 	// 更新後のデータを保持するためにrefで保持
-	const existData = useRef<CostPriceTsv[] | undefined>(loadedData);
+	const existData = useRef<CostPrice | undefined>(loadedData);
 
 	const [date, setDate] = useState<DateRange | undefined>({
 		from: new Date(),
 		to: new Date(),
 	});
-	const [xlsxData, setXlsxData] = useState<CostPrice[] | undefined>();
+	const [xlsxData, setXlsxData] = useState<CostPriceInput[] | undefined>();
 
 	const handleUpload = async () => {
 		// 既存データ、アップロードデータ、日付があるか確認
@@ -150,10 +151,10 @@ export function InputPriceUpload() {
 					</TableRow>
 				</TableHeader>
 				<TableBody>
-					{xlsxData?.map(({ ASIN, Price }) => (
-						<TableRow key={ASIN}>
-							<TableCell>{ASIN}</TableCell>
-							<TableCell>{Price}</TableCell>
+					{xlsxData?.map(({ asin, price }) => (
+						<TableRow key={asin}>
+							<TableCell>{asin}</TableCell>
+							<TableCell>{price}</TableCell>
 						</TableRow>
 					))}
 				</TableBody>

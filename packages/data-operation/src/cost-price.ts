@@ -1,15 +1,15 @@
 import { isAfter, isBefore } from 'date-fns';
 
-import type { CostPriceTsv, UpdateCostPriceRequest } from '../types/cost-price';
+import type { CostPrice, UpdateCostPriceRequest } from '../types/cost-price';
 
 export function addCostPrices(
-	existData: CostPriceTsv[],
+	existData: CostPrice,
 	requestData: UpdateCostPriceRequest,
-): CostPriceTsv[] {
+): CostPrice {
 	// リクエストをtsvにする形式に変換
 	const requestTsv = updateRequestToTsv(requestData);
 	// 削除するASINリスト
-	const asinList = requestData.data.map(row => row.ASIN);
+	const asinList = requestData.data.map(row => row.asin);
 	// 既存のデータからリクエストの期間を削除
 	const existSplit = splitOverlaps(
 		existData,
@@ -30,12 +30,12 @@ export function addCostPrices(
 
 // 特定の期間のデータを削除する関数
 function splitOverlaps(
-	existData: CostPriceTsv[],
+	existData: CostPrice,
 	reqStart: Date,
 	reqEnd: Date,
 	asinList: string[],
-): CostPriceTsv[] {
-	const resultArray: CostPriceTsv[] = [];
+): CostPrice {
+	const resultArray: CostPrice = [];
 
 	for (const row of existData) {
 		// ASINリストに含まれていない場合はそのまま追加
@@ -71,19 +71,17 @@ function splitOverlaps(
 }
 
 // リクエストデータをTSVデータに変換する関数
-function updateRequestToTsv(
-	requestData: UpdateCostPriceRequest,
-): CostPriceTsv[] {
-	const resultArray: CostPriceTsv[] = [];
+function updateRequestToTsv(requestData: UpdateCostPriceRequest): CostPrice {
+	const resultArray: CostPrice = [];
 
 	for (const row of requestData.data) {
 		const { date } = requestData;
 		const { from, to } = date;
 		resultArray.push({
-			asin: row.ASIN,
+			asin: row.asin,
 			startDate: from,
 			endDate: to,
-			price: row.Price,
+			price: row.price,
 		});
 	}
 
@@ -91,7 +89,7 @@ function updateRequestToTsv(
 }
 
 // ASIN, price, startDate の順でソートする関数
-function sortByAsinPriceDate(data: CostPriceTsv[]): CostPriceTsv[] {
+function sortByAsinPriceDate(data: CostPrice): CostPrice {
 	return data.sort((a, b) => {
 		// 1) ASIN の文字列比較
 		if (a.asin !== b.asin) {
@@ -108,8 +106,8 @@ function sortByAsinPriceDate(data: CostPriceTsv[]): CostPriceTsv[] {
 	});
 }
 
-function mergeSameData(sortedData: CostPriceTsv[]): CostPriceTsv[] {
-	const resultArray: CostPriceTsv[] = [];
+function mergeSameData(sortedData: CostPrice): CostPrice {
+	const resultArray: CostPrice = [];
 	for (const current of sortedData) {
 		// 直前のデータを取得
 		const last = resultArray[resultArray.length - 1];

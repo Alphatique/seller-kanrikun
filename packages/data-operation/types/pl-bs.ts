@@ -1,6 +1,6 @@
 /**
  * settlement-reportをフィルタリングしたデータ
- * @property costPrice 商品原価
+ * @property CostPrice 商品原価
  * @property principal 商品代金
  * @property principalTax 商品代金に対する税金
  * @property shipping 配送料
@@ -18,7 +18,7 @@
 export interface FilteredSettlementReport {
 	date: string;
 	/** 商品原価 */
-	costPrice: number;
+	CostPrice: number;
 	/** 商品代金 */
 	principal: number;
 	/** 商品代金に対する税金 */
