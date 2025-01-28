@@ -22,9 +22,9 @@ export function filterSettlementReportDocument(
 	newData: SettlementReportsResult[],
 ): SettlementReportDocument {
 	const result: SettlementReportDocument = [];
-	for (const existReport of existReports) {
-		for (const newReport of newData) {
-			// 既存のデータの内部の範囲であれば空白の配列を返す
+	for (const newReport of newData) {
+		for (const existReport of existReports) {
+			// 既存のデータの内部の範囲であれば
 			if (
 				isBefore(
 					newReport.report.dataStartTime,
@@ -32,7 +32,7 @@ export function filterSettlementReportDocument(
 				) &&
 				isAfter(newReport.report.dataEndTime, existReport.dataEndTime)
 			)
-				return [];
+				break;
 
 			// かぶっている範囲を取得
 			const coveredRange = getOverlappingRange(
@@ -40,7 +40,7 @@ export function filterSettlementReportDocument(
 				newReport.report,
 			);
 
-			// かぶっている範囲がないならスキップ
+			// かぶっている範囲がないなら次
 			if (coveredRange === null) continue;
 			// かぶっている範囲があるなら今のデータをかぶっている範囲以外のものにフィルター
 			newReport.document.filter(
@@ -50,8 +50,9 @@ export function filterSettlementReportDocument(
 						isAfter(row.postedDate, coveredRange.end)
 					),
 			);
-			result.push(...newReport.document);
 		}
+		// かぶっていなければ追加
+		result.push(...newReport.document);
 	}
 
 	// 結果を返す

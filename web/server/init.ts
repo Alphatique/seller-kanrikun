@@ -89,7 +89,7 @@ export const app = new Hono()
 
 		const putResult = await gzipAndPutFile(
 			userId,
-			FILE_NAMES.SETTLEMENT_REPORT_META,
+			FILE_NAMES.COST_PRICE,
 			[],
 		);
 		if (!putResult) {
