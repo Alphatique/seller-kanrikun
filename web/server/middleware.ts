@@ -34,7 +34,6 @@ export const userHeaderMiddleware = createMiddleware<{
 
 export const cronAuthMiddleware = createMiddleware(async (c, next) => {
 	const authorizationHeader = c.req.header('authorization');
-	console.log(authorizationHeader, process.env.CRON_SECRET);
 
 	if (!authorizationHeader || !authorizationHeader.startsWith('Bearer ')) {
 		return c.text('Unauthorized', 401);
