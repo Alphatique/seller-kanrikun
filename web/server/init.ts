@@ -70,12 +70,10 @@ import {
 	userHeaderMiddleware,
 } from './middleware';
 
-const appBase = new Hono<{
-	Variables: {
-		user: User;
-		spApiAccessToken: string;
-	};
-}>()
+export const app = new Hono()
+	.use(dbMiddleware)
+	.use(authMiddleware)
+	.use(accessTokenMiddleware)
 	.get('/settlement-report', async c => {
 		const userId = c.var.user.id;
 		// メタファイルがなければとする
@@ -259,14 +257,6 @@ const appBase = new Hono<{
 			status: 200,
 		});
 	});
-
-export const cronApp = new Hono().use(userHeaderMiddleware).route('/', appBase);
-
-export const apiApp = new Hono()
-	.use(dbMiddleware)
-	.use(authMiddleware)
-	.use(accessTokenMiddleware)
-	.route('/', appBase);
 
 function createApi<T extends object>(accessToken: string) {
 	// レポートapi

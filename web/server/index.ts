@@ -10,7 +10,7 @@ import {
 import { FILE_NAMES, R2_BUCKET_NAME } from '~/lib/constants';
 
 import { app as cron } from './cron';
-import { apiApp as init } from './init';
+import { app as init } from './init';
 import { app as linkAccount } from './link-account';
 import { authMiddleware } from './middleware';
 

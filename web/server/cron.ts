@@ -66,7 +66,6 @@ import {
 	getSpApiAccessToken,
 	getSpApiAccessTokenAndExpiresAt,
 } from '~/lib/token';
-import { cronApp as init } from './init';
 import {
 	accessTokenMiddleware,
 	authMiddleware,
@@ -77,7 +76,6 @@ import {
 export const app = new Hono()
 	.use(dbMiddleware)
 	.use(cronAuthMiddleware)
-	.route('/init', init)
 	.get('/test', async c => {
 		await new Promise(resolve => setTimeout(resolve, 120 * 1000));
 		return new Response('ok', {
