@@ -49,3 +49,8 @@ resource "vercel_project" "seller-kanrikun" {
     value  = var.CRON_TOKEN
   }]
 }
+
+resource "vercel_project_domain" "seller-kanrikun" {
+  project_id = vercel_project.seller-kanrikun.id
+  domain     = "seller-kanrikun.alphatique.co.jp"
+}
