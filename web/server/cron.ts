@@ -78,6 +78,12 @@ export const app = new Hono()
 	.use(dbMiddleware)
 	.use(cronAuthMiddleware)
 	.route('/init', init)
+	.get('/test', async c => {
+		await new Promise(resolve => setTimeout(resolve, 120 * 1000));
+		return new Response('ok', {
+			status: 200,
+		});
+	})
 	.get('/', async c => {
 		const promises = [
 			fetchCron('/settlement-report'),
