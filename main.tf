@@ -15,7 +15,7 @@ variable "BASELIME_KEY" {
   type = string
 }
 
-variable "CRON_TOKEN" {
+variable "CRON_SECRET" {
   type = string
 }
 
@@ -44,9 +44,9 @@ resource "vercel_project" "seller-kanrikun" {
     target = ["production"]
     value  = var.BASELIME_KEY
     }, {
-    key    = "CRON_TOKEN"
+    key    = "CRON_SECRET"
     target = ["production", "preview"]
-    value  = var.CRON_TOKEN
+    value  = var.CRON_SECRET
   }]
 }
 

@@ -378,7 +378,7 @@ export const app = new Hono()
 
 async function fetchCron(path: string, userId: string | undefined = undefined) {
 	const headers: Record<string, string> = {
-		authorization: `Bearer ${process.env.CRON_TOKEN!}`,
+		authorization: `Bearer ${process.env.CRON_SECRET!}`,
 	};
 
 	if (userId) {
