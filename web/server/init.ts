@@ -98,6 +98,13 @@ export const app = new Hono()
 				status: 500,
 			});
 		}
+
+		let limitedReports = reports.value;
+		// sales-traffic用に7件は確保
+		const reportsLimit = 15 - 7;
+		if (reports.value.length > 15 - 7) {
+			limitedReports = limitedReports.slice(0, reportsLimit);
+		}
 		console.log('settlement report:', reports.value.length);
 		console.log('get settlement report document...');
 		const reportResult = await getSettlementReportsDocumentUntilRateLimit(
