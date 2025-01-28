@@ -2,7 +2,7 @@ import { Err, Ok, type Result, err } from 'neverthrow';
 import type { Client } from 'openapi-fetch';
 import Papa from 'papaparse';
 
-import type { paths } from '@seller-kanrikun/sp-api/schema/reports';
+import type { components, paths } from '@seller-kanrikun/sp-api/schema/reports';
 
 import { isAfter, isBefore, max, min } from 'date-fns';
 import {
@@ -73,7 +73,12 @@ function isExistSettlementReport(
 export async function getAllSettlementReportsRetryRateLimit(
 	api: Client<paths>,
 	existReports: SettlementReportMetas,
-): Promise<SettlementReportMetas> {
+): Promise<
+	Result<
+		SettlementReportMetas,
+		components['schemas']['ErrorList'] | undefined | 'loop limit exceeded'
+	>
+> {
 	let nextToken: string | undefined = undefined;
 	const result: SettlementReportMetas = [];
 
@@ -106,11 +111,10 @@ export async function getAllSettlementReportsRetryRateLimit(
 				await new Promise(resolve => setTimeout(resolve, 120 * 1000));
 			} else {
 				console.error(error, response);
-				break;
+				return new Err(error);
 			}
 		} else if (nextToken === undefined) {
 			// エラー出ないかつnextTokenがなくなれば終了
-			console.log(loopCount, nextToken, data);
 			break;
 		}
 
@@ -120,20 +124,25 @@ export async function getAllSettlementReportsRetryRateLimit(
 			console.error(
 				'getInventorySummariesWithRateLimit: loop limit exceeded',
 			);
-			break;
+			return new Err('loop limit exceeded');
 		}
 
 		// 一分待つ
 		await waitRateLimitTime(response, 60);
 	}
 
-	return result;
+	return new Ok(result);
 }
 
 export async function getAllSettlementReportsUntilRateLimit(
 	api: Client<paths>,
 	existReports: SettlementReportMetas,
-): Promise<SettlementReportMetas> {
+): Promise<
+	Result<
+		SettlementReportMetas,
+		components['schemas']['ErrorList'] | undefined | 'loop limit exceeded'
+	>
+> {
 	let nextToken: string | undefined = undefined;
 	const result: SettlementReportMetas = [];
 
@@ -168,6 +177,7 @@ export async function getAllSettlementReportsUntilRateLimit(
 			if (!(response.status === 429 || response.status === 200)) {
 				// 429 or 200でない場合エラー
 				console.error(error, response);
+				return new Err(error);
 			}
 
 			break;
@@ -179,13 +189,13 @@ export async function getAllSettlementReportsUntilRateLimit(
 			console.error(
 				'getInventorySummariesWithRateLimit: loop limit exceeded',
 			);
-			break;
+			return new Err('loop limit exceeded');
 		}
 
 		await waitRateLimitTime(response, 60);
 	}
 
-	return result;
+	return new Ok(result);
 }
 
 interface SettlementReportsResult {
@@ -195,7 +205,12 @@ interface SettlementReportsResult {
 export async function getSettlementReportsDocumentRetryRateLimit(
 	api: Client<paths>,
 	reports: SettlementReportMetas,
-): Promise<SettlementReportsResult[]> {
+): Promise<
+	Result<
+		SettlementReportsResult[],
+		components['schemas']['ErrorList'] | undefined | 'stream not available'
+	>
+> {
 	const result: SettlementReportsResult[] = [];
 	for (const report of reports) {
 		const documentResult = await getReportDocument(
@@ -203,21 +218,21 @@ export async function getSettlementReportsDocumentRetryRateLimit(
 			report.reportDocumentId,
 		);
 		if (!documentResult.isOk()) {
-			if (documentResult.error.status === 429) {
+			if (documentResult.error.response.status === 429) {
 				// レートリミットなら30秒待ってリトライ
 				console.warn(documentResult.error);
 				await new Promise(resolve => setTimeout(resolve, 120 * 1000));
 				continue;
 			} else {
 				console.error(documentResult.error);
-				break;
+				return new Err(documentResult.error.error);
 			}
 		}
 		const response = documentResult.value;
 		const reader = response.body?.getReader();
 		if (!reader) {
-			console.warn('stream not available');
-			break;
+			console.error('stream not available');
+			return new Err('stream not available');
 		}
 
 		const strObj = await papaparseOnStream(reader);
@@ -232,13 +247,22 @@ export async function getSettlementReportsDocumentRetryRateLimit(
 		await waitRateLimitTime(response, 60);
 	}
 
-	return result;
+	return new Ok(result);
 }
 
 export async function getSettlementReportsDocumentUntilRateLimit(
 	api: Client<paths>,
 	reports: SettlementReportMetas,
-): Promise<SettlementReportsResult[]> {
+): Promise<
+	Result<
+		SettlementReportsResult[],
+		| {
+				error: components['schemas']['ErrorList'] | undefined;
+				response: Response;
+		  }
+		| 'stream not available'
+	>
+> {
 	const result: SettlementReportsResult[] = [];
 	for (const report of reports) {
 		const documentResult = await getReportDocument(
@@ -246,16 +270,17 @@ export async function getSettlementReportsDocumentUntilRateLimit(
 			report.reportDocumentId,
 		);
 		if (!documentResult.isOk()) {
-			if (documentResult.error.status !== 429) {
+			if (documentResult.error.response.status !== 429) {
 				// 429出なければエラー
 				console.error(documentResult.error);
+				return new Err(documentResult.error);
 			}
 			break;
 		}
 		const reader = documentResult.value.body?.getReader();
 		if (!reader) {
-			console.warn('stream not available');
-			break;
+			console.error('stream not available');
+			return new Err('stream not available');
 		}
 
 		const strObj = await papaparseOnStream(reader);
@@ -268,7 +293,7 @@ export async function getSettlementReportsDocumentUntilRateLimit(
 		});
 	}
 
-	return result;
+	return new Ok(result);
 }
 
 async function papaparseOnStream(
@@ -374,7 +399,15 @@ async function getSettlementReports(
 async function getReportDocument(
 	api: Client<paths>,
 	reportDocumentId: string,
-): Promise<Result<Response, Response>> {
+): Promise<
+	Result<
+		Response,
+		{
+			error: components['schemas']['ErrorList'] | undefined;
+			response: Response;
+		}
+	>
+> {
 	const { data, error, response } = await api.GET(
 		'/reports/2021-06-30/documents/{reportDocumentId}',
 		{
@@ -390,6 +423,6 @@ async function getReportDocument(
 	if (url) {
 		return new Ok(await fetch(url));
 	} else {
-		return new Err(response);
+		return new Err({ error, response });
 	}
 }

@@ -21,7 +21,7 @@ import { type ValueOf, waitRateLimitTime } from './utils';
 export async function getAllCatalogSummariesRetryRateLimit(
 	api: Client<paths>,
 	asins: string[],
-): Promise<CatalogSummaries> {
+): Promise<Result<CatalogSummaries, components['schemas']['ErrorList']>> {
 	const allSummaries: components['schemas']['ItemSummaries'] = [];
 
 	// nextTokenがある限りnextTokenを使って続けて取得
@@ -42,18 +42,20 @@ export async function getAllCatalogSummariesRetryRateLimit(
 				await waitRateLimitTime(response, 60);
 			} else {
 				console.error(error, response);
-				break;
+				return new Err(error);
 			}
 		}
 	}
 
-	return apiSummariesToSchemaSummaries(allSummaries);
+	return new Ok(apiSummariesToSchemaSummaries(allSummaries));
 }
 
 export async function getAllCatalogSummariesUntilRateLimit(
 	api: Client<paths>,
 	asins: string[],
-): Promise<CatalogSummaries> {
+): Promise<
+	Result<CatalogSummaries, components['schemas']['ErrorList'] | undefined>
+> {
 	const allSummaries: components['schemas']['ItemSummaries'] = [];
 
 	// nextTokenがある限りnextTokenを使って続けて取得
@@ -72,12 +74,13 @@ export async function getAllCatalogSummariesUntilRateLimit(
 			if (response.status === 429) {
 				// 429出なければエラー
 				console.error(error, response);
+				return new Err(error);
 			}
 			break;
 		}
 	}
 
-	return apiSummariesToSchemaSummaries(allSummaries);
+	return new Ok(apiSummariesToSchemaSummaries(allSummaries));
 }
 
 // 取得したデータをschemaで変換

@@ -10,10 +10,13 @@ import { getSpApiAccessToken } from '~/lib/token';
 
 export const userHeaderMiddleware = createMiddleware<{
 	Variables: {
-		db: ClientType;
 		user: typeof auth.$Infer.Session.user;
-	};
+	} & (typeof dbMiddleware extends MiddlewareHandler<infer Env>
+		? Env['Variables']
+		: // biome-ignore lint/complexity/noBannedTypes:
+			{});
 }>(async (c, next) => {
+	if (!c.var.db) throw new Error();
 	const cronUserIdHeader = c.req.header('X-Cron-UserId');
 	if (!cronUserIdHeader) {
 		return c.text('Unauthorized', 401);

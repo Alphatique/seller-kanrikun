@@ -101,8 +101,10 @@ export async function existFile(
 
 		const command = new HeadObjectCommand(headParams);
 		const response = await R2.send(command);
-		console.log(response);
-		return true;
+		if (response) {
+			return true;
+		}
+		return false;
 	} catch (error: unknown) {
 		if (isNotFoundError(error)) {
 			return false;

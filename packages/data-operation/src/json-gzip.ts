@@ -7,12 +7,13 @@ export function jsonGzipArrayToJsonObj<TSchema extends Schema>(
 	jsonSchema: TSchema,
 ) {
 	const jsonStr = jsonGzipArrayToJsonStr(jsonGzipArray);
-	return jsonSchema.parse(jsonStr);
+	const json = JSON.parse(jsonStr);
+	return jsonSchema.parse(json);
 }
 
 export function jsonGzipArrayToJsonStr(tsvGzip: Uint8Array): string {
-	const decompressed = gunzipSync(tsvGzip);
 	const decoder = new TextDecoder();
+	const decompressed = gunzipSync(tsvGzip);
 	const tsvText = decoder.decode(decompressed);
 	const trimText = tsvText.trim();
 
@@ -20,7 +21,7 @@ export function jsonGzipArrayToJsonStr(tsvGzip: Uint8Array): string {
 }
 
 export function jsonObjToJsonGzipArray<T extends object>(json: T): Uint8Array {
-	const jsonStr = json.toString();
+	const jsonStr = JSON.stringify(json);
 	const encoder = new TextEncoder();
 	const uint8Array = encoder.encode(jsonStr);
 	const compressed = gzipSync(uint8Array);

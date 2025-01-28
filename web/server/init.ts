@@ -55,6 +55,7 @@ import {
 	FILE_NAMES,
 	JAPAN_MARKET_PLACE_ID,
 	R2_BUCKET_NAME,
+	SP_API_BASE_URL,
 } from '~/lib/constants';
 
 import { gzipAndPutFile } from '~/lib/fetch-gzip';
@@ -94,16 +95,26 @@ const appBase = new Hono<{
 
 		console.log('get settlement report...');
 		const reports = await getAllSettlementReportsUntilRateLimit(api, []);
-		console.log('settlement report:', reports.length);
+		if (reports.isErr()) {
+			return new Response('get settlement reports was failed', {
+				status: 500,
+			});
+		}
+		console.log('settlement report:', reports.value.length);
 		console.log('get settlement report document...');
 		const reportResult = await getSettlementReportsDocumentUntilRateLimit(
 			api,
-			reports,
+			reports.value,
 		);
-		console.log('settlement report document:', reportResult.length);
+		if (reportResult.isErr()) {
+			return new Response('get settlement report documents was failed', {
+				status: 500,
+			});
+		}
+		console.log('settlement report document:', reportResult.value.length);
 		const reportDocument = await filterSettlementReportDocument(
 			[],
-			reportResult,
+			reportResult.value,
 		);
 		console.log(
 			'filtered settlement report document:',
@@ -123,7 +134,7 @@ const appBase = new Hono<{
 		const metaPutResult = await gzipAndPutFile(
 			userId,
 			FILE_NAMES.SETTLEMENT_REPORT_META,
-			reportResult.map(row => row.report),
+			reportResult.value.map(row => row.report),
 		);
 		if (!metaPutResult) {
 			return new Response('failed to put settlement report meta', {
@@ -195,7 +206,7 @@ const appBase = new Hono<{
 		const putResult = await gzipAndPutFile(
 			userId,
 			FILE_NAMES.SALES_TRAFFIC_REPORT,
-			reportDocument,
+			reportDocument.value,
 		);
 		if (!putResult) {
 			return new Response('put file was failed', {
@@ -226,12 +237,17 @@ const appBase = new Hono<{
 		console.log('get inventory summaries...');
 		const inventorySummaries =
 			await getAllInventorySummariesUntilRateLimit(api);
-		console.log('inventory summaries:', inventorySummaries.length);
+		if (inventorySummaries.isErr()) {
+			return new Response('get settlement reports was failed', {
+				status: 500,
+			});
+		}
+		console.log('inventory summaries:', inventorySummaries.value.length);
 
 		const putResult = await gzipAndPutFile(
 			userId,
 			FILE_NAMES.INVENTORY_SUMMARIES,
-			inventorySummaries,
+			inventorySummaries.value,
 		);
 
 		if (!putResult) {
@@ -255,7 +271,7 @@ export const apiApp = new Hono()
 function createApi<T extends object>(accessToken: string) {
 	// レポートapi
 	const api = createApiClient<T>({
-		baseUrl: process.env.API_BASE_URL,
+		baseUrl: SP_API_BASE_URL,
 	});
 	const middleware: Middleware = {
 		async onRequest({ request }) {

@@ -20,7 +20,12 @@ import { type ValueOf, waitRateLimitTime } from './utils';
 
 export async function getAllInventorySummariesRetryRateLimit(
 	api: Client<paths>,
-): Promise<InventorySummaries> {
+): Promise<
+	Result<
+		InventorySummaries,
+		components['schemas']['ErrorList'] | undefined | 'loop limit exceeded'
+	>
+> {
 	// 事前に定義
 	let nextToken: string | undefined = undefined;
 	const allSummaries: components['schemas']['InventorySummaries'] = [];
@@ -49,8 +54,8 @@ export async function getAllInventorySummariesRetryRateLimit(
 			continue;
 		} else {
 			// それ以外のエラーならループ終了
-			console.error('loop terminated incorrectly!!!');
-			break;
+			console.error(error, response);
+			return new Err(error);
 		}
 
 		if (nextToken === undefined) {
@@ -61,21 +66,23 @@ export async function getAllInventorySummariesRetryRateLimit(
 		// ループ回数が制限を超えた場合はエラーを出力
 		loopCount++;
 		if (loopCount >= maxLoopCount) {
-			console.error(
-				'getInventorySummariesWithRateLimit: loop limit exceeded',
-			);
-			break;
+			return new Err('loop limit exceeded');
 		}
 
 		await waitRateLimitTime(response, 65);
 	}
 
-	return apiSummariesToSchemaSummaries(allSummaries);
+	return new Ok(apiSummariesToSchemaSummaries(allSummaries));
 }
 
 export async function getAllInventorySummariesUntilRateLimit(
 	api: Client<paths>,
-): Promise<InventorySummaries> {
+): Promise<
+	Result<
+		InventorySummaries,
+		components['schemas']['ErrorList'] | undefined | 'loop limit exceeded'
+	>
+> {
 	// 事前に定義
 	let nextToken: string | undefined = undefined;
 	const allSummaries: components['schemas']['InventorySummaries'] = [];
@@ -101,6 +108,7 @@ export async function getAllInventorySummariesUntilRateLimit(
 			if (response.status === 429) {
 				// 429出なければエラー
 				console.error(error, response);
+				return new Err(error?.errors);
 			}
 			break;
 		}
@@ -108,14 +116,11 @@ export async function getAllInventorySummariesUntilRateLimit(
 		// ループ回数が制限を超えた場合はエラーを出力
 		loopCount++;
 		if (loopCount >= maxLoopCount) {
-			console.error(
-				'getInventorySummariesWithRateLimit: loop limit exceeded',
-			);
-			break;
+			return new Err('loop limit exceeded');
 		}
 	}
 
-	return apiSummariesToSchemaSummaries(allSummaries);
+	return new Ok(apiSummariesToSchemaSummaries(allSummaries));
 }
 
 // 取得したデータをschemaで変換

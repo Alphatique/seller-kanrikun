@@ -17,7 +17,7 @@ import type { Client } from 'openapi-fetch';
 import Papa from 'papaparse';
 
 import type { Account } from '@seller-kanrikun/db/schema';
-import type { paths } from '@seller-kanrikun/sp-api/schema/reports';
+import type { components, paths } from '@seller-kanrikun/sp-api/schema/reports';
 
 import {
 	type SalesAndTrafficReportDocument,
@@ -27,11 +27,16 @@ import {
 import { JAPAN_MARKET_PLACE_ID } from './constants';
 import { type ValueOf, waitRateLimitTime } from './utils';
 
+interface ErrorResponse {
+	error: components['schemas']['ErrorList'] | undefined;
+	response: Response;
+}
+
 export async function getAllSalesTrafficReportsRetryRateLimit(
 	api: Client<paths>,
 	start: Date,
 	end: Date,
-): Promise<Result<string[], undefined>> {
+): Promise<Result<string[], components['schemas']['ErrorList'] | undefined>> {
 	let current = start;
 	const reportIds: string[] = [];
 	while (true) {
@@ -51,7 +56,7 @@ export async function getAllSalesTrafficReportsRetryRateLimit(
 				await new Promise(resolve => setTimeout(resolve, 120 * 1000));
 			} else {
 				console.error(data, error, response);
-				return new Err(undefined);
+				return new Err(error);
 			}
 		}
 
@@ -72,7 +77,7 @@ export async function createAllSalesTrafficReportsUntilRateLimit(
 	api: Client<paths>,
 	start: Date,
 	end: Date,
-): Promise<Result<string[], undefined>> {
+): Promise<Result<string[], components['schemas']['ErrorList'] | undefined>> {
 	let current = start;
 
 	const reportIds: string[] = [];
@@ -90,7 +95,7 @@ export async function createAllSalesTrafficReportsUntilRateLimit(
 			// データがなくなれば終了
 			if (response.status !== 429) {
 				// 429じゃなければエラー
-				return new Err(undefined);
+				return new Err(error);
 			}
 			break;
 		}
@@ -109,7 +114,7 @@ export async function createAllSalesTrafficReportsUntilRateLimit(
 export async function getAllCreatedReportDocumentIdsRetryRateLimit(
 	api: Client<paths>,
 	reportIds: string[],
-): Promise<Result<string[], undefined>> {
+): Promise<Result<string[], components['schemas']['ErrorList'] | undefined>> {
 	const result = [];
 	const maxLoopCount = 500;
 	for (const reportId of reportIds) {
@@ -136,7 +141,7 @@ export async function getAllCreatedReportDocumentIdsRetryRateLimit(
 				}
 			} else {
 				if (response.status !== 429) {
-					return new Err(undefined);
+					return new Err(error);
 				}
 				await new Promise(resolve => setTimeout(resolve, 30 * 1000));
 			}
@@ -161,13 +166,21 @@ export async function getSalesTrafficReportDocumentRetryRateLimit(
 	api: Client<paths>,
 	reportDocumentId: string,
 	rateLimitWaitTime: number,
-): Promise<Result<SalesAndTrafficReportDocument, Response>> {
+): Promise<
+	Result<
+		SalesAndTrafficReportDocument,
+		components['schemas']['ErrorList'] | undefined
+	>
+> {
 	const result: SalesAndTrafficReportDocument = [];
 
 	const documentResult = await getReportDocument(api, reportDocumentId);
 
-	if (!documentResult.isOk()) {
-		if (documentResult.error.status === 429) {
+	if (documentResult.isErr()) {
+		if (documentResult.error === 'report-document was not GZIP') {
+			return new Err(undefined);
+		}
+		if (documentResult.error.response.status === 429) {
 			// レートリミットならリトライ
 			console.warn(documentResult);
 			await new Promise(resolve =>
@@ -180,7 +193,7 @@ export async function getSalesTrafficReportDocumentRetryRateLimit(
 			);
 		} else {
 			// 429じゃなければエラー
-			return new Err(documentResult.error);
+			return new Err(documentResult.error.error);
 		}
 	}
 
@@ -222,7 +235,12 @@ export async function getAllSalesTrafficReportDocumentRetryRateLimit(
 	api: Client<paths>,
 	reportDocumentIds: string[],
 	rateLimitWaitTime: number,
-): Promise<Result<SalesAndTrafficReportDocument, undefined>> {
+): Promise<
+	Result<
+		SalesAndTrafficReportDocument,
+		components['schemas']['ErrorList'] | undefined
+	>
+> {
 	const result: SalesAndTrafficReportDocument = [];
 
 	for (const reportDocumentId in reportDocumentIds) {
@@ -265,7 +283,7 @@ export async function createSalesTrafficReportRetryRateLimit(
 	start: Date,
 	end: Date,
 	rateLimitWaitTime: number,
-): Promise<Result<string, undefined>> {
+): Promise<Result<string, components['schemas']['ErrorList'] | undefined>> {
 	const { data, error, response } = await createSalesTrafficReport(
 		api,
 		start,
@@ -291,7 +309,7 @@ export async function createSalesTrafficReportRetryRateLimit(
 	} else {
 		// 429じゃなければエラー
 		console.error(data, error, response);
-		return new Err(undefined);
+		return new Err(error);
 	}
 }
 
@@ -310,7 +328,7 @@ export async function getCreatedReportDocumentIdRetryRateLimit(
 	reportId: string,
 	rateLimitWaitTime: number,
 	retryWaitTime: number,
-): Promise<string | null> {
+): Promise<Result<string | null, 'FATAL'>> {
 	const { data, error, response } = await getCreatedReport(api, reportId);
 
 	const status = data?.processingStatus;
@@ -318,17 +336,17 @@ export async function getCreatedReportDocumentIdRetryRateLimit(
 		if (status === 'DONE') {
 			const reportDocumentId = data.reportDocumentId;
 			if (reportDocumentId) {
-				return reportDocumentId;
+				return new Ok(reportDocumentId);
 			} else {
 				console.error('reportDocumentId was undefined');
-				return null;
+				return new Err('FATAL');
 			}
 		} else if (status === 'FATAL') {
 			console.error(data, response);
-			return null;
+			return new Err('FATAL');
 		} else if (status === 'CANCELLED') {
 			console.warn('create report was canceled');
-			return null;
+			return new Ok(null);
 		}
 		await new Promise(resolve => setTimeout(resolve, retryWaitTime));
 
@@ -351,13 +369,13 @@ export async function getCreatedReportDocumentIdRetryRateLimit(
 		);
 	}
 	console.error(data, error, response);
-	return null;
+	return new Err('FATAL');
 }
 
 async function getReportDocument(
 	api: Client<paths>,
 	reportDocumentId: string,
-): Promise<Result<Response, Response>> {
+): Promise<Result<Response, ErrorResponse | 'report-document was not GZIP'>> {
 	const { data, error, response } = await api.GET(
 		'/reports/2021-06-30/documents/{reportDocumentId}',
 		{
@@ -376,12 +394,15 @@ async function getReportDocument(
 			return new Ok(await fetch(url));
 		} else {
 			console.error(
-				'sales-traffic-report-document was not GZIP',
+				'sales-traffic-report-document was not GZIP: ',
 				compressionAlgorithm,
 			);
-			return new Err(response);
+			return new Err('report-document was not GZIP');
 		}
 	} else {
-		return new Err(response);
+		return new Err({
+			error,
+			response,
+		});
 	}
 }
