@@ -55,7 +55,7 @@ import {
 	FILE_NAMES,
 	JAPAN_MARKET_PLACE_ID,
 	R2_BUCKET_NAME,
-	SP_API_BASE_URL,
+	SP_SELLER_KANRIKUN_BASE_URL,
 } from '~/lib/constants';
 
 import { gzipAndPutFile } from '~/lib/fetch-gzip';
@@ -271,7 +271,7 @@ export const apiApp = new Hono()
 function createApi<T extends object>(accessToken: string) {
 	// レポートapi
 	const api = createApiClient<T>({
-		baseUrl: SP_API_BASE_URL,
+		baseUrl: SP_SELLER_KANRIKUN_BASE_URL,
 	});
 	const middleware: Middleware = {
 		async onRequest({ request }) {

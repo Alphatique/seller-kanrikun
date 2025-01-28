@@ -6,7 +6,7 @@ import { passkey } from 'better-auth/plugins/passkey';
 import { createClient } from '@seller-kanrikun/db';
 
 export const auth = betterAuth({
-	baseURL: process.env.API_BASE_URL,
+	baseURL: process.env.SELLER_KANRIKUN_BASE_URL,
 	secret: process.env.BETTER_AUTH_SECRET,
 	database: drizzleAdapter(
 		createClient({

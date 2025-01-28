@@ -52,7 +52,7 @@ import {
 	FILE_NAMES,
 	JAPAN_MARKET_PLACE_ID,
 	R2_BUCKET_NAME,
-	SP_API_BASE_URL,
+	SP_SELLER_KANRIKUN_BASE_URL,
 } from '~/lib/constants';
 
 import {
@@ -136,7 +136,7 @@ export const app = new Hono()
 
 			// レポートAPI
 			const api = createApiClient<reportsPaths>({
-				baseUrl: SP_API_BASE_URL,
+				baseUrl: SP_SELLER_KANRIKUN_BASE_URL,
 			});
 
 			const tokenMiddleware: Middleware = {
@@ -258,7 +258,7 @@ export const app = new Hono()
 
 			// レポートAPI
 			const reportsApi = createApiClient<reportsPaths>({
-				baseUrl: SP_API_BASE_URL,
+				baseUrl: SP_SELLER_KANRIKUN_BASE_URL,
 			});
 
 			const tokenMiddleware: Middleware = {
@@ -408,7 +408,7 @@ export const app = new Hono()
 				},
 			};
 			const api = createApiClient<inventoryPaths>({
-				baseUrl: SP_API_BASE_URL,
+				baseUrl: SP_SELLER_KANRIKUN_BASE_URL,
 			});
 			api.use(tokenMiddleware);
 			const inventorySummaries =
@@ -453,7 +453,7 @@ async function fetchCron(path: string, userId: string | undefined = undefined) {
 		headers['X-Cron-UserId'] = userId;
 	}
 
-	return fetch(`${process.env.API_BASE_URL}/api/cron${path}`, {
+	return fetch(`${process.env.SELLER_KANRIKUN_BASE_URL}/api/cron${path}`, {
 		headers: headers,
 	});
 }

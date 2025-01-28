@@ -12,7 +12,7 @@ import {
 
 import { authMiddleware, dbMiddleware } from './middleware';
 
-const redirectURI = `${process.env.API_BASE_URL}/api/link-account/callback`;
+const redirectURI = `${process.env.SELLER_KANRIKUN_BASE_URL}/api/link-account/callback`;
 const tokenEndpoint = 'https://api.amazon.co.jp/auth/o2/token';
 
 export const app = new Hono()

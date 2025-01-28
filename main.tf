@@ -36,7 +36,7 @@ resource "vercel_project" "seller-kanrikun" {
     target = ["production", "preview"]
     value  = var.DOTENV_PRIVATE_KEY
     }, {
-    key    = "API_BASE_URL"
+    key    = "SELLER_KANRIKUN_BASE_URL"
     target = ["production"]
     value  = "https://seller-kanrikun.alphatique.co.jp"
     }, {

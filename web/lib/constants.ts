@@ -1,6 +1,7 @@
 export const R2_BUCKET_NAME = 'seller-kanrikun';
 export const JAPAN_MARKET_PLACE_ID = 'A1VC38T7YXB528';
-export const SP_API_BASE_URL = 'https://sellingpartnerapi-fe.amazon.com';
+export const SP_SELLER_KANRIKUN_BASE_URL =
+	'https://sellingpartnerapi-fe.amazon.com';
 export const FILE_NAMES = {
 	SETTLEMENT_REPORT_DOCUMENT: 'settlement-report-document.json.gz',
 	SETTLEMENT_REPORT_META: 'settlement-report-meta.json.gz',
