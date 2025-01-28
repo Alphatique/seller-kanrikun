@@ -22,7 +22,10 @@ import {
 	TableRow,
 } from '@seller-kanrikun/ui/components/table';
 
-import { jsonGzipArrayToJsonObj } from '@seller-kanrikun/data-operation/json-gzip';
+import {
+	jsonGzipArrayToJsonObj,
+	jsonObjToJsonGzipArray,
+} from '@seller-kanrikun/data-operation/json-gzip';
 import { DatePickerWithRange } from '~/components/date-range';
 import { InputExcel } from '~/components/input-excel';
 import { fetchGunzipStrApi } from '~/lib/fetch-gzip';
@@ -100,13 +103,13 @@ export function InputPriceUpload() {
 			data: xlsxData,
 		};
 		const addedData = addCostPrices(existData.current, updateRequest);
-		const tsvGzipped = tsvObjToTsvGzip(addedData);
+		const jsonGzipped = jsonObjToJsonGzipArray(addedData);
 
 		console.log('tsvGzipped:', addedData);
 
 		const response = await fetch('/api/cost-price', {
 			method: 'PUT',
-			body: tsvGzipped,
+			body: jsonGzipped,
 		});
 
 		if (!response.ok) {
