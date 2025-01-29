@@ -22,6 +22,7 @@
 		"@seller-kanrikun/ui": "workspace:*",
 		"@types/papaparse": "^5.3.15",
 		"@types/wicg-file-system-access": "^2023.10.5",
+		"@vercel/analytics": "^1.4.1",
 		"eslint-plugin-neverthrow": "^1.1.4",
 		"fflate": "^0.8.2",
 		"hono": "^4.6.14",
