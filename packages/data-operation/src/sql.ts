@@ -1,7 +1,7 @@
 export const calcPlbsSql = /*sql*/ `
 SELECT
     coalesce(p.date, c.date) AS date,
-    coalesce(c.CostPrice, 0) AS CostPrice,
+    coalesce(c.costPrice, 0) AS costPrice,
     p.principal,
     p.principalTax,
     p.shipping,
@@ -55,7 +55,7 @@ GROUP BY date_trunc('month', postedDate)
 FULL OUTER JOIN (
     SELECT
         date_trunc('month', r.postedDate) AS date,
-        SUM(cp."price") AS CostPrice
+        SUM(cp.price) AS costPrice
     FROM settlementReport AS r
     -- TODO: inventoryを取得した時期のsku/asinを使うように変更
     JOIN inventorySummaries AS inv ON r.sku = inv.sellerSku

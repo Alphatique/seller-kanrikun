@@ -8,84 +8,6 @@ import type {
 	PlData,
 } from '../types/pl-bs';
 
-// apache-arrowのまま使いたかったが、schema定義ができなかったので、jsの配列に変換して処理
-export function reportArrowTableToArrays(
-	reportData: Table,
-): FilteredSettlementReport[] | null {
-	const dateCol: string[] = reportData.getChild('date')?.toArray();
-	const CostPrice = reportData.getChild('CostPrice')?.toArray();
-	const principalCol = reportData.getChild('principal')?.toArray();
-	const principalTaxCol = reportData.getChild('principalTax')?.toArray();
-	const shippingCol = reportData.getChild('shipping')?.toArray();
-	const shippingTaxCol = reportData.getChild('shippingTax')?.toArray();
-	const refundCol = reportData.getChild('refund')?.toArray();
-	const promotionCol = reportData.getChild('promotion')?.toArray();
-	const commissionFeeCol = reportData.getChild('commissionFee')?.toArray();
-	const fbaShippingFeeCol = reportData.getChild('fbaShippingFee')?.toArray();
-	const inventoryStorageFeeCol = reportData
-		.getChild('inventoryStorageFee')
-		?.toArray();
-	const inventoryUpdateFeeCol = reportData
-		.getChild('inventoryUpdateFee')
-		?.toArray();
-	const shippingReturnFeeCol = reportData
-		.getChild('shippingReturnFee')
-		?.toArray();
-	const subscriptionFeeCol = reportData
-		.getChild('accountSubscriptionFee')
-		?.toArray();
-	const accountsReceivableCol = reportData
-		.getChild('accountsReceivable')
-		?.toArray();
-	if (
-		!dateCol ||
-		!CostPrice ||
-		!principalCol ||
-		!principalTaxCol ||
-		!shippingCol ||
-		!shippingTaxCol ||
-		!refundCol ||
-		!promotionCol ||
-		!commissionFeeCol ||
-		!fbaShippingFeeCol ||
-		!inventoryStorageFeeCol ||
-		!inventoryUpdateFeeCol ||
-		!shippingReturnFeeCol ||
-		!subscriptionFeeCol ||
-		!accountsReceivableCol
-	) {
-		console.error('Missing columns in reportData');
-		return null;
-	}
-
-	// TODO: 型変換ミスを直す
-	console.log('reportData', refundCol);
-	console.log('reportData', reportData.getChild('CostPrice')?.toString());
-	console.log('reportData', reportData.getChild('CostPrice'));
-
-	const result: FilteredSettlementReport[] = dateCol.map((date, i) => ({
-		date: date,
-		CostPrice: CostPrice[i],
-		principal: principalCol[i],
-		principalTax: principalTaxCol[i],
-		shipping: shippingCol[i],
-		shippingTax: shippingTaxCol[i],
-		refund: refundCol[i],
-		promotion: promotionCol[i],
-		commissionFee: commissionFeeCol[i],
-		fbaShippingFee: fbaShippingFeeCol[i],
-		inventoryStorageFee: inventoryStorageFeeCol[i],
-		inventoryUpdateFee: inventoryUpdateFeeCol[i],
-		shippingReturnFee: shippingReturnFeeCol[i],
-		accountSubscriptionFee: subscriptionFeeCol[i],
-		accountsReceivable: accountsReceivableCol[i],
-	}));
-
-	console.log('reportData', result);
-
-	return result;
-}
-
 // 損益計算書データ
 export function calcPlbsWithTax(
 	reportData: FilteredSettlementReport[],
@@ -142,7 +64,7 @@ export function calcPlData(
 	// 純売上 = 売上 - 返品額
 	const netSales = sales - reportData.refund;
 	// 粗利益 = 純売上 - 原価
-	const grossProfit = netSales - reportData.CostPrice;
+	const grossProfit = netSales - reportData.costPrice;
 	// 販売費および一般管理費
 	const sga = calcSellingGeneralAndAdministrativeExpenses(
 		reportData,

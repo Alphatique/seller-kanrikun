@@ -9,7 +9,6 @@ import { useSession } from '@seller-kanrikun/auth/client';
 import {
 	calcPlbsWithTax,
 	calcPlbsWithoutTax,
-	reportArrowTableToArrays,
 } from '@seller-kanrikun/data-operation/calc-pl-bs';
 import { calcPlbsSql } from '@seller-kanrikun/data-operation/sql';
 import type {
@@ -99,25 +98,28 @@ export function PlbsTableFilter() {
 				const formatData: FilteredSettlementReport[] = [];
 				for (let i = 0; i < filteredResponse.numRows; i++) {
 					const record = filteredResponse.get(i);
+					console.log(record?.toString());
 					const json = record?.toJSON();
 
 					// TODO: zodでやりたい
 					const data: FilteredSettlementReport = {
 						date: json?.date,
-						CostPrice: Number(json?.CostPrice),
-						principal: json?.principal,
-						principalTax: json?.principalTax,
-						shipping: json?.shipping,
-						shippingTax: json?.shippingTax,
-						refund: json?.refund,
-						promotion: json?.promotion,
-						commissionFee: json?.commissionFee,
-						fbaShippingFee: json?.fbaShippingFee,
-						inventoryStorageFee: json?.inventoryStorageFee,
-						inventoryUpdateFee: json?.inventoryUpdateFee,
-						shippingReturnFee: json?.shippingReturnFee,
-						accountSubscriptionFee: json?.accountSubscriptionFee,
-						accountsReceivable: json?.accountsReceivable,
+						costPrice: Number(json?.costPrice),
+						principal: Number(json?.principal),
+						principalTax: Number(json?.principalTax),
+						shipping: Number(json?.shipping),
+						shippingTax: Number(json?.shippingTax),
+						refund: Number(json?.refund),
+						promotion: Number(json?.promotion),
+						commissionFee: Number(json?.commissionFee),
+						fbaShippingFee: Number(json?.fbaShippingFee),
+						inventoryStorageFee: Number(json?.inventoryStorageFee),
+						inventoryUpdateFee: Number(json?.inventoryUpdateFee),
+						shippingReturnFee: Number(json?.shippingReturnFee),
+						accountSubscriptionFee: Number(
+							json?.accountSubscriptionFee,
+						),
+						accountsReceivable: Number(json?.accountsReceivable),
 					};
 					formatData.push(data);
 				}
@@ -136,6 +138,8 @@ export function PlbsTableFilter() {
 			withoutTax: calcPlbsWithoutTax(filteredData),
 		};
 	}, [filteredData]);
+
+	console.log(plbsWithTax);
 
 	const groupedDataIndexes: Record<string, number[]> = useMemo(
 		() => {
