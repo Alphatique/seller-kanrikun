@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `salesTrafficMeta_userId_unique` ON `salesTrafficMeta` (`userId`);
