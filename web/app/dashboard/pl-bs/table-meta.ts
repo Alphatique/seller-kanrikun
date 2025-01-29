@@ -52,7 +52,7 @@ export const plTableWithTaxInfo: PlbsTableMetaData[] = [
 		indent: 1,
 	},
 	{
-		key: 'CostPrice',
+		key: 'costPrice',
 		head: '原価',
 		indent: 1,
 	},
@@ -146,7 +146,7 @@ export const plTableWithoutTaxInfo: PlbsTableMetaData[] = [
 		indent: 1,
 	},
 	{
-		key: 'CostPrice',
+		key: 'costPrice',
 		head: '原価',
 		indent: 1,
 	},
