@@ -85,9 +85,9 @@ export function PlbsTableFilter() {
 			Promise.all(promises).then(async () => {
 				// テーブルが作成されているか確認
 				const checkedTable = await checkTables(myDuckDB, [
-					'settlement_report',
-					'inventory_summaries',
-					'cost_price',
+					'settlementReport',
+					'inventorySummaries',
+					'costPrice',
 				]);
 				if (checkedTable.length !== 3) return;
 

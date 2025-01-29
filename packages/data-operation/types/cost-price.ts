@@ -1,14 +1,14 @@
 import { z } from 'zod';
 
-export const costPriceSchema = z.array(
-	z.object({
-		asin: z.string(),
-		startDate: z.coerce.date(),
-		endDate: z.coerce.date(),
-		price: z.number(),
-	}),
-);
+export const costPriceSchema = z.object({
+	asin: z.string(),
+	startDate: z.coerce.date(),
+	endDate: z.coerce.date(),
+	price: z.number(),
+});
+export const costPriceArraySchema = z.array(costPriceSchema);
 export type CostPrice = z.infer<typeof costPriceSchema>;
+export type CostPriceArray = z.infer<typeof costPriceArraySchema>;
 
 export const updateCostPriceRequestSchema = z.object({
 	date: z.object({

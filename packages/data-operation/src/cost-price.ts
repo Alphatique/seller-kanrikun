@@ -1,13 +1,17 @@
 import { isAfter, isBefore } from 'date-fns';
 
-import type { CostPrice, UpdateCostPriceRequest } from '../types/cost-price';
+import type {
+	CostPrice,
+	CostPriceArray,
+	UpdateCostPriceRequest,
+} from '../types/cost-price';
 
 export function addCostPrices(
-	existData: CostPrice,
+	existData: CostPriceArray,
 	requestData: UpdateCostPriceRequest,
-): CostPrice {
-	// リクエストをtsvにする形式に変換
-	const requestTsv = updateRequestToTsv(requestData);
+): CostPriceArray {
+	// リクエストをCostPriceにする形式に変換
+	const request = requestToCostPrice(requestData);
 	// 削除するASINリスト
 	const asinList = requestData.data.map(row => row.asin);
 	// 既存のデータからリクエストの期間を削除
@@ -19,23 +23,25 @@ export function addCostPrices(
 	);
 
 	// 既存データとリクエストデータを結合
-	const mergedData = [...existSplit, ...requestTsv];
+	const mergedData = [...existSplit, ...request];
 	// asin, price, startDate の順でソート
 	const sortedData = sortByAsinPriceDate(mergedData);
 	// 被っているデータのマージ
 	const resultArray = mergeSameData(sortedData);
+
+	console.log(resultArray);
 
 	return resultArray;
 }
 
 // 特定の期間のデータを削除する関数
 function splitOverlaps(
-	existData: CostPrice,
+	existData: CostPriceArray,
 	reqStart: Date,
 	reqEnd: Date,
 	asinList: string[],
-): CostPrice {
-	const resultArray: CostPrice = [];
+): CostPriceArray {
+	const resultArray: CostPriceArray = [];
 
 	for (const row of existData) {
 		// ASINリストに含まれていない場合はそのまま追加
@@ -70,9 +76,11 @@ function splitOverlaps(
 	return resultArray;
 }
 
-// リクエストデータをTSVデータに変換する関数
-function updateRequestToTsv(requestData: UpdateCostPriceRequest): CostPrice {
-	const resultArray: CostPrice = [];
+// リクエストデータをCostPrice型に変換する関数
+function requestToCostPrice(
+	requestData: UpdateCostPriceRequest,
+): CostPriceArray {
+	const resultArray: CostPriceArray = [];
 
 	for (const row of requestData.data) {
 		const { date } = requestData;
@@ -89,7 +97,8 @@ function updateRequestToTsv(requestData: UpdateCostPriceRequest): CostPrice {
 }
 
 // ASIN, price, startDate の順でソートする関数
-function sortByAsinPriceDate(data: CostPrice): CostPrice {
+function sortByAsinPriceDate(data: CostPriceArray): CostPriceArray {
+	console.log(data);
 	return data.sort((a, b) => {
 		// 1) ASIN の文字列比較
 		if (a.asin !== b.asin) {
@@ -106,8 +115,8 @@ function sortByAsinPriceDate(data: CostPrice): CostPrice {
 	});
 }
 
-function mergeSameData(sortedData: CostPrice): CostPrice {
-	const resultArray: CostPrice = [];
+function mergeSameData(sortedData: CostPriceArray): CostPriceArray {
+	const resultArray: CostPriceArray = [];
 	for (const current of sortedData) {
 		// 直前のデータを取得
 		const last = resultArray[resultArray.length - 1];

@@ -59,11 +59,11 @@ async function createTable(
 	// データを登録
 	await myDuckDB.db.registerFileText(fileName, data);
 	// 既存のテーブルを削除
-	await myDuckDB.c.query(`DROP TABLE IF EXISTS ${tableName};`);
+	await myDuckDB.c.query(/*sql*/ `DROP TABLE IF EXISTS ${tableName};`);
 	// テーブルを作成
-	await myDuckDB.c.query(
-		`CREATE TABLE ${tableName} AS SELECT * FROM "${fileName}";`,
-	);
+	await myDuckDB.c.query(/*sql*/ `
+		CREATE TABLE ${tableName} AS SELECT * FROM "${fileName}";
+	`);
 }
 
 export async function createSettlementReportTable(
@@ -74,20 +74,34 @@ export async function createSettlementReportTable(
 	await createTable(
 		myDuckDB,
 		reportData,
-		'settlement-report.tsv',
-		'settlement_report',
+		'settlement-report.json',
+		'settlementReport',
 	);
 	// インデックスの作成と型の変更
 	await myDuckDB.c.query(/*sql*/ `
-		-- とりあえずposted-dateにインデックスはっとく
-		CREATE UNIQUE INDEX report_id ON settlement_report ("posted-date");
-		-- -の値がある場合VARCHARになるので一部DOUBLEに変換。Int系でもかも
-		ALTER TABLE settlement_report ALTER COLUMN "shipment-fee-amount" SET DATA TYPE DOUBLE;
-		ALTER TABLE settlement_report ALTER COLUMN "order-fee-amount" SET DATA TYPE DOUBLE;
-		ALTER TABLE settlement_report ALTER COLUMN "misc-fee-amount" SET DATA TYPE DOUBLE;
-		ALTER TABLE settlement_report ALTER COLUMN "other-amount" SET DATA TYPE DOUBLE;
-		ALTER TABLE settlement_report ALTER COLUMN "direct-payment-amount" SET DATA TYPE DOUBLE;
-		`);
+		ALTER TABLE settlementReport ALTER COLUMN postedDate SET DATA TYPE DATE;
+		CREATE INDEX reportId ON settlementReport (postedDate);
+
+		ALTER TABLE settlementReport ADD COLUMN IF NOT EXISTS priceAmount INT NULL;
+		ALTER TABLE settlementReport ADD COLUMN IF NOT EXISTS itemRelatedFeeAmount INT NULL;
+		ALTER TABLE settlementReport ADD COLUMN IF NOT EXISTS promotionAmount INT NULL;
+		ALTER TABLE settlementReport ADD COLUMN IF NOT EXISTS shipmentFeeAmount INT NULL;
+		ALTER TABLE settlementReport ADD COLUMN IF NOT EXISTS orderFeeAmount INT NULL;
+		ALTER TABLE settlementReport ADD COLUMN IF NOT EXISTS miscFeeAmount INT NULL;
+		ALTER TABLE settlementReport ADD COLUMN IF NOT EXISTS otherFeeAmount INT NULL;
+		ALTER TABLE settlementReport ADD COLUMN IF NOT EXISTS otherAmount INT NULL;
+		ALTER TABLE settlementReport ADD COLUMN IF NOT EXISTS priceType Utf8 NULL;
+		ALTER TABLE settlementReport ADD COLUMN IF NOT EXISTS promotionType Utf8 NULL;
+		ALTER TABLE settlementReport ADD COLUMN IF NOT EXISTS itemRelatedFeeType Utf8 NULL;
+		ALTER TABLE settlementReport ADD COLUMN IF NOT EXISTS otherFeeReasonDescription Utf8 NULL;
+		ALTER TABLE settlementReport ADD COLUMN IF NOT EXISTS depositDate DATE NULL;
+		ALTER TABLE settlementReport ADD COLUMN IF NOT EXISTS currency Utf8 NULL;
+		ALTER TABLE settlementReport ADD COLUMN IF NOT EXISTS marketplaceName Utf8 NULL;
+		ALTER TABLE settlementReport ADD COLUMN IF NOT EXISTS quantityPurchased INT NULL;
+		ALTER TABLE settlementReport ADD COLUMN IF NOT EXISTS promotionId Utf8 NULL;
+	`);
+	const table = await myDuckDB.c.query('SELECT * FROM settlementReport');
+	console.log(table);
 }
 
 export async function createSalesTrafficReportTable(
@@ -97,8 +111,8 @@ export async function createSalesTrafficReportTable(
 	await createTable(
 		myDuckDB,
 		reportData,
-		'sales-traffic-report.tsv',
-		'SALES_TRAFFIC_REPORT_report',
+		'sales-traffic-report.json',
+		'salesTrafficReport',
 	);
 }
 
@@ -109,8 +123,8 @@ export async function createInventoryTable(
 	await createTable(
 		myDuckDB,
 		inventoryData,
-		'inventory-summaries.tsv',
-		'inventory_summaries',
+		'inventory-summaries.json',
+		'inventorySummaries',
 	);
 }
 
@@ -118,7 +132,11 @@ export async function createCostPriceTable(
 	myDuckDB: MyDuckDB,
 	costPriceData: string,
 ) {
-	await createTable(myDuckDB, costPriceData, 'cost-price.tsv', 'cost_price');
+	await createTable(myDuckDB, costPriceData, 'cost-price.json', 'costPrice');
+	await myDuckDB.c.query(/*sql*/ `
+		ALTER TABLE costPrice ALTER COLUMN startDate SET DATA TYPE DATE;
+		ALTER TABLE costPrice ALTER COLUMN endDate SET DATA TYPE DATE;
+	`);
 }
 
 // テーブルがあるかチェック。もうちょっといい方法募集

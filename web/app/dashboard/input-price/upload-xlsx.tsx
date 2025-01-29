@@ -8,8 +8,9 @@ import * as XLSX from 'xlsx';
 import { addCostPrices } from '@seller-kanrikun/data-operation/cost-price';
 import { tsvObjToTsvGzip } from '@seller-kanrikun/data-operation/tsv-gzip';
 import {
-	type CostPrice,
+	type CostPriceArray,
 	type UpdateCostPriceRequest,
+	costPriceArraySchema,
 	costPriceSchema,
 } from '@seller-kanrikun/data-operation/types/cost-price';
 import { Button } from '@seller-kanrikun/ui/components/button';
@@ -74,13 +75,15 @@ export function InputPriceUpload() {
 	const { data: loadedData } = useSWR('/api/cost-price', async url => {
 		const str = await fetchGunzipStrApi(url);
 
-		return costPriceSchema.parse(str);
+		const paresed: CostPriceArray = costPriceArraySchema.parse(
+			JSON.parse(str),
+		);
+		return paresed;
 	});
 
 	console.log(loadedData);
-
 	// 更新後のデータを保持するためにrefで保持
-	const existData = useRef<CostPrice | undefined>(loadedData);
+	const existData = useRef<CostPriceArray | undefined>(loadedData);
 
 	const [date, setDate] = useState<DateRange | undefined>({
 		from: new Date(),
@@ -90,8 +93,20 @@ export function InputPriceUpload() {
 
 	const handleUpload = async () => {
 		// 既存データ、アップロードデータ、日付があるか確認
-		if (!(existData.current && xlsxData && date && date.from && date.to))
+		if (
+			!(
+				(loadedData || existData.current) &&
+				xlsxData &&
+				date &&
+				date.from &&
+				date.to
+			)
+		)
 			return;
+
+		if (existData.current === undefined && loadedData !== undefined) {
+			existData.current = loadedData;
+		}
 
 		// 日付をUTCに変換
 		const utcFrom = new Date(date.from.toISOString());
@@ -102,10 +117,10 @@ export function InputPriceUpload() {
 			date: { from: utcFrom, to: utcTo },
 			data: xlsxData,
 		};
-		const addedData = addCostPrices(existData.current, updateRequest);
+		const addedData = addCostPrices(existData.current!, updateRequest);
 		const jsonGzipped = jsonObjToJsonGzipArray(addedData);
 
-		console.log('tsvGzipped:', addedData);
+		console.log('gzipped:', addedData);
 
 		const response = await fetch('/api/cost-price', {
 			method: 'PUT',

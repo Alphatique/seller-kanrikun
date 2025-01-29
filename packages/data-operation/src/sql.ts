@@ -18,53 +18,52 @@ SELECT
 FROM (
 SELECT
     -- date_truncはduckdbの関数
-    date_trunc('month', "posted-date") AS date,　
-    SUM("price-amount") FILTER ("transaction-type" = 'Order' AND "price-type" = 'Principal') AS principal,
-    SUM("price-amount") FILTER ("transaction-type" = 'Order' AND "price-type" = 'Tax') AS principalTax,
-    SUM("price-amount") FILTER ("transaction-type" = 'Order' AND "price-type" = 'Shipping') AS shipping,
-    SUM("price-amount") FILTER ("transaction-type" = 'Order' AND "price-type" = 'ShippingTax') AS shippingTax,
+    date_trunc('month', postedDate) AS date,
+    SUM(priceAmount) FILTER (transactionType = 'Order' AND priceType = 'Principal') AS principal,
+    SUM(priceAmount) FILTER (transactionType = 'Order' AND priceType = 'Tax') AS principalTax,
+    SUM(priceAmount) FILTER (transactionType = 'Order' AND priceType = 'Shipping') AS shipping,
+    SUM(priceAmount) FILTER (transactionType = 'Order' AND priceType = 'ShippingTax') AS shippingTax,
     -- 価格合計
-    COALESCE(SUM("price-amount") FILTER ("transaction-type" = 'Refund'), 0)
+    COALESCE(SUM(priceAmount) FILTER (transactionType = 'Refund'), 0)
     -- 手数料合計
-    + COALESCE(SUM("item-related-fee-amount") FILTER ("transaction-type" = 'Refund'))
+    + COALESCE(SUM(itemRelatedFeeAmount) FILTER (transactionType = 'Refund'))
     -- TaxDiscountプロモーションを除外したプロモーション合計
-    + COALESCE(SUM("promotion-amount") FILTER ("transaction-type" = 'Refund' AND "promotion-type" != 'TaxDiscount'))
+    + COALESCE(SUM(promotionAmount) FILTER (transactionType = 'Refund' AND promotionType != 'TaxDiscount'))
      AS refund,
-    SUM("price-amount") FILTER ("transaction-type" = 'Shipping') AS promotion,
-    SUM("item-related-fee-amount") FILTER ("transaction-type" = 'Order' AND "item-related-fee-type" = 'Commission') AS commissionFee,
-    SUM("item-related-fee-amount") FILTER ("transaction-type" = 'Order' AND "item-related-fee-type" = 'FBAPerUnitFulfillmentFee') AS fbaShippingFee,
-    SUM("item-related-fee-amount") FILTER ("transaction-type" = 'Storage Fee') AS inventoryStorageFee,
-    SUM("other-amount") FILTER ("transaction-type" = 'StorageRenewalBilling') AS inventoryUpdateFee,
-    SUM("other-amount") FILTER ("transaction-type" = 'Order' AND "other-fee-reason-description" = 'ShippingChargeback') AS shippingReturnFee,
-    SUM("other-amount") FILTER ("transaction-type" = 'Subscription Fee') AS accountSubscriptionFee,
-    COALESCE(SUM("shipment-fee-amount"), 0)
-    + COALESCE(SUM("order-fee-amount"), 0)
-    + COALESCE(SUM("price-amount"), 0)
-    + COALESCE(SUM("item-related-fee-amount"), 0)
-    + COALESCE(SUM("misc-fee-amount"), 0)
-    + COALESCE(SUM("other-fee-amount"), 0)
-    + COALESCE(SUM("promotion-amount"), 0)
-    + COALESCE(SUM("direct-payment-amount"), 0)
-    + COALESCE(SUM("other-amount"), 0)
+    SUM(priceAmount) FILTER (transactionType = 'Shipping') AS promotion,
+    SUM(itemRelatedFeeAmount) FILTER (transactionType = 'Order' AND itemRelatedFeeType = 'Commission') AS commissionFee,
+    SUM(itemRelatedFeeAmount) FILTER (transactionType = 'Order' AND itemRelatedFeeType = 'FBAPerUnitFulfillmentFee') AS fbaShippingFee,
+    SUM(itemRelatedFeeAmount) FILTER (transactionType = 'Storage Fee') AS inventoryStorageFee,
+    SUM(otherAmount) FILTER (transactionType = 'StorageRenewalBilling') AS inventoryUpdateFee,
+    SUM(otherAmount) FILTER (transactionType = 'Order' AND otherFeeReasonDescription = 'ShippingChargeback') AS shippingReturnFee,
+    SUM(otherAmount) FILTER (transactionType = 'Subscription Fee') AS accountSubscriptionFee,
+    COALESCE(SUM(shipmentFeeAmount), 0)
+    + COALESCE(SUM(orderFeeAmount), 0)
+    + COALESCE(SUM(priceAmount), 0)
+    + COALESCE(SUM(itemRelatedFeeAmount), 0)
+    + COALESCE(SUM(miscFeeAmount), 0)
+    + COALESCE(SUM(otherFeeAmount), 0)
+    + COALESCE(SUM(promotionAmount), 0)
+    + COALESCE(SUM(otherAmount), 0)
     AS accountsReceivable
-FROM settlement_report
+FROM settlementReport
 -- posted-dateがNULLの行はスキップ
-WHERE "posted-date" IS NOT NULL
+WHERE postedDate IS NOT NULL
 -- 月ごとにグループ化
-GROUP BY date_trunc('month', "posted-date")
+GROUP BY date_trunc('month', postedDate)
 ) AS p
 FULL OUTER JOIN (
     SELECT
-        date_trunc('month', r."posted-date") AS date,
+        date_trunc('month', r.postedDate) AS date,
         SUM(cp."price") AS CostPrice
-    FROM settlement_report AS r
+    FROM settlementReport AS r
     -- TODO: inventoryを取得した時期のsku/asinを使うように変更
-    JOIN inventory_summaries AS inv ON r.sku = inv.sellerSku
-    JOIN cost_price AS cp ON inv.asin = cp.asin
-        AND r."posted-date" >= cp.startDate
-        AND r."posted-date" <= cp.endDate
-    WHERE "posted-date" IS NOT NULL
-    GROUP BY date_trunc('month', r."posted-date")
+    JOIN inventorySummaries AS inv ON r.sku = inv.sellerSku
+    JOIN costPrice AS cp ON inv.asin = cp.asin
+        AND r.postedDate >= cp.startDate
+        AND r.postedDate <= cp.endDate
+    WHERE postedDate IS NOT NULL
+    GROUP BY date_trunc('month', r.postedDate)
 ) AS c
 ON p.date = c.date
 `;
@@ -92,12 +91,12 @@ SELECT
     pageViews,
     sessions / units AS sessionCvr,
     pageViews / units AS pageViewCvr
-FROM SALES_TRAFFIC_REPORT_report) as r
+FROM salesTrafficReport) as r
 LEFT OUTER JOIN (
     SELECT
         asin,
         productName AS name
-    FROM inventory_summaries
+    FROM inventorySummaries
 ) as i
 ON r.asin = i.asin
 `;
