@@ -1,4 +1,8 @@
 import './globals.css';
+import type { Metadata } from 'next';
+
+// ① これを追加
+import { VercelAnalytics } from './vercel-analytics';
 
 export const metadata: Metadata = {
 	title: 'セラー管理くん',
@@ -32,10 +36,18 @@ export const metadata: Metadata = {
 	},
 };
 
+interface LayoutProps {
+	children: React.ReactNode;
+}
+
 export default function RootLayout({ children }: LayoutProps) {
 	return (
 		<html lang='ja'>
-			<body className='antialiased'>{children}</body>
+			<body className='antialiased'>
+				{children}
+				{/* ② ここに VercelAnalytics を呼び出す */}
+				<VercelAnalytics />
+			</body>
 		</html>
 	);
 }
