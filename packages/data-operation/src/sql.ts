@@ -83,8 +83,8 @@ SELECT
     r.pageViewCvr
 FROM (
 SELECT
-    asin,
-    startDate AS date,
+    parentAsin AS asin,
+    dataStartTime AS date,
     orderedProductSalesAmount AS sales,
     unitsOrdered AS units,
     sales / units AS averagePrice,

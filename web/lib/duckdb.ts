@@ -114,6 +114,14 @@ export async function createSalesTrafficReportTable(
 		'sales-traffic-report.json',
 		'salesTrafficReport',
 	);
+	await myDuckDB.c.query(/*sql*/ `
+		ALTER TABLE salesTrafficReport ALTER COLUMN dataStartTime SET DATA TYPE DATE;
+		ALTER TABLE salesTrafficReport ALTER COLUMN dataEndTime SET DATA TYPE DATE;
+	`);
+	const table = await myDuckDB.c.query(
+		/*sql*/ 'SELECT * FROM salesTrafficReport',
+	);
+	console.log(table);
 }
 
 export async function createInventoryTable(
