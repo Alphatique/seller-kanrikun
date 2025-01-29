@@ -9,10 +9,12 @@
 	"scripts": {
 		"push": "dotenvx run -f ../../.env -- drizzle-kit push",
 		"studio": "dotenvx run -f ../../.env -- drizzle-kit studio",
+		"generate": "dotenvx run -f ../../.env -- drizzle-kit generate",
+		"check": "dotenvx run -f ../../.env -- drizzle-kit check",
 		"typecheck": "tsc"
 	},
 	"devDependencies": {
-		"drizzle-kit": "^0.28.0"
+		"drizzle-kit": "^0.28.1"
 	},
 	"dependencies": {
 		"@libsql/client": "^0.14.0",
