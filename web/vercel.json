@@ -1,0 +1,23 @@
+{
+	"functions": {
+		"/api/init/sales-traffic-report": {
+			"maxDuration": 60
+		},
+		"/api/cron/settlement-report": {
+			"maxDuration": 300
+		},
+		"api/cron/inventory-summaries": {
+			"maxDuration": 300
+		}
+	},
+	"crons": [
+		{
+			"path": "/api/cron/settlement-report",
+			"schedule": "* 0 * * *"
+		},
+		{
+			"path": "/api/cron/inventory-summaries",
+			"schedule": "* 0 * * *"
+		}
+	]
+}

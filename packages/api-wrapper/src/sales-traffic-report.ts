@@ -32,6 +32,30 @@ interface ErrorResponse {
 	response: Response;
 }
 
+export function getDataStartEndAt(data: SalesAndTrafficReportDocument): Result<
+	{
+		start: Date;
+		end: Date;
+	},
+	'length was zero'
+> {
+	if (data.length === 0) {
+		return new Err('length was zero');
+	}
+
+	const start = data.reduce(
+		(min, row) => (row.dataStartTime < min ? row.dataStartTime : min),
+		data[0].dataStartTime,
+	);
+
+	const end = data.reduce(
+		(max, row) => (row.dataEndTime > max ? row.dataEndTime : max),
+		data[0].dataEndTime,
+	);
+
+	return new Ok({ start, end });
+}
+
 export async function getAllSalesTrafficReportsRetryRateLimit(
 	api: Client<paths>,
 	start: Date,
@@ -199,6 +223,40 @@ export async function getSalesTrafficReportDocumentRetryRateLimit(
 
 	const response = documentResult.value;
 
+	return new Ok(await parseSalesTrafficReportDocument(response));
+}
+export async function getSalesTrafficReportDocumentUntilRateLimit(
+	api: Client<paths>,
+	reportDocumentId: string,
+): Promise<
+	Result<
+		SalesAndTrafficReportDocument | undefined,
+		components['schemas']['ErrorList'] | undefined
+	>
+> {
+	const documentResult = await getReportDocument(api, reportDocumentId);
+
+	if (documentResult.isErr()) {
+		if (documentResult.error === 'report-document was not GZIP') {
+			return new Err(undefined);
+		}
+		if (documentResult.error.response.status === 429) {
+			// レートリミットなら終了
+			return new Ok(undefined);
+		} else {
+			// 429じゃなければエラー
+			return new Err(documentResult.error.error);
+		}
+	}
+
+	const response = documentResult.value;
+
+	return new Ok(await parseSalesTrafficReportDocument(response));
+}
+
+async function parseSalesTrafficReportDocument(response: Response) {
+	const result: SalesAndTrafficReportDocument = [];
+
 	const gzipData = await response.arrayBuffer();
 	const decompressed = gunzipSync(new Uint8Array(gzipData));
 	const decoder = new TextDecoder();
@@ -229,8 +287,9 @@ export async function getSalesTrafficReportDocumentRetryRateLimit(
 		});
 	}
 
-	return new Ok(result);
+	return result;
 }
+
 export async function getAllSalesTrafficReportDocumentRetryRateLimit(
 	api: Client<paths>,
 	reportDocumentIds: string[],
@@ -251,6 +310,37 @@ export async function getAllSalesTrafficReportDocumentRetryRateLimit(
 				rateLimitWaitTime,
 			);
 		if (reportDocument.isOk()) {
+			result.push(...reportDocument.value);
+		} else {
+			console.error(reportDocument.error);
+			break;
+		}
+	}
+
+	return new Ok(result);
+}
+
+export async function getAllSalesTrafficReportDocumentUntilRateLimit(
+	api: Client<paths>,
+	reportDocumentIds: string[],
+): Promise<
+	Result<
+		SalesAndTrafficReportDocument,
+		components['schemas']['ErrorList'] | undefined
+	>
+> {
+	const result: SalesAndTrafficReportDocument = [];
+
+	for (const reportDocumentId of reportDocumentIds) {
+		const reportDocument =
+			await getSalesTrafficReportDocumentUntilRateLimit(
+				api,
+				reportDocumentId,
+			);
+		if (reportDocument.isOk()) {
+			if (reportDocument.value === undefined) {
+				break;
+			}
 			result.push(...reportDocument.value);
 		} else {
 			console.error(reportDocument.error);

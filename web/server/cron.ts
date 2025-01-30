@@ -76,19 +76,6 @@ import {
 export const app = new Hono()
 	.use(dbMiddleware)
 	.use(cronAuthMiddleware)
-	.get('/', async c => {
-		const promises = [
-			fetchCron('/settlement-report'),
-			fetchCron('/sales-traffic-report'),
-			fetchCron('/inventory-summaries'),
-		];
-
-		await Promise.all(promises);
-
-		return new Response('ok', {
-			status: 200,
-		});
-	})
 	.get('/settlement-report', async c => {
 		const db = c.var.db;
 		const accounts = await getAccountsByProviderId(db, 'seller-central');
@@ -100,9 +87,7 @@ export const app = new Hono()
 			);
 			if (!(initRes.status === 200 || initRes.status === 409)) {
 				console.error('init was failed:', account.userId);
-				return new Response('init settlement-report was failed', {
-					status: 500,
-				});
+				return c.text('init settlement-report was failed', 500);
 			}
 
 			let [accessToken, expiresAt] =
@@ -115,17 +100,13 @@ export const app = new Hono()
 			);
 			if (reportMetaResult.isErr()) {
 				console.error(reportMetaResult.error, account.userId);
-				return new Response('get exist report meta was failed', {
-					status: 500,
-				});
+				return c.text('get exist report meta was failed', 500);
 			}
 			const reportMetaArray =
 				await reportMetaResult.value.Body?.transformToByteArray();
 			if (!reportMetaArray) {
 				console.error('exist meta data was not found:', account.userId);
-				return new Response('exist meta data was not found', {
-					status: 500,
-				});
+				return c.text('exist meta data was not found', 500);
 			}
 			const reportMetas: SettlementReportMetas = jsonGzipArrayToJsonObj(
 				reportMetaArray,
@@ -160,9 +141,7 @@ export const app = new Hono()
 			);
 
 			if (reports.isErr()) {
-				return new Response('get settlemenet reports was failed', {
-					status: 500,
-				});
+				return c.text('get settlemenet reports was failed', 500);
 			}
 
 			const reportResult =
@@ -172,11 +151,9 @@ export const app = new Hono()
 				);
 
 			if (reportResult.isErr()) {
-				return new Response(
+				return c.text(
 					'get settlemenet report documents was failed',
-					{
-						status: 500,
-					},
+					500,
 				);
 			}
 
@@ -195,12 +172,7 @@ export const app = new Hono()
 					'failed to put settlement report document:',
 					account.userId,
 				);
-				return new Response(
-					'failed to put settlement report document',
-					{
-						status: 500,
-					},
-				);
+				return c.text('failed to put settlement report document', 500);
 			}
 
 			const metaPutResult = await gzipAndPutFile(
@@ -213,21 +185,17 @@ export const app = new Hono()
 					'failed to put settlement report meta:',
 					account.userId,
 				);
-				return new Response('failed to put settlement report meta', {
-					status: 500,
-				});
+				return c.text('failed to put settlement report meta', 500);
 			}
 			console.log('success:', account.userId);
-			return new Response('ok', {
+			return c.text('ok', {
 				status: 200,
 			});
 		});
 
 		await Promise.all(promises);
 
-		return new Response('finish', {
-			status: 200,
-		});
+		return c.text('finish', 200);
 	})
 	.get('/sales-traffic-report', accessTokenMiddleware, async c => {
 		const db = c.var.db;
@@ -247,9 +215,7 @@ export const app = new Hono()
 
 			if (!(initRes.status === 200 || initRes.status === 409)) {
 				console.error('init was failed:', account.userId);
-				return new Response('init sales-traffic-report was failed', {
-					status: 500,
-				});
+				return c.text('init sales-traffic-report was failed', 500);
 			}
 			let [accessToken, expiresAt] =
 				await getSpApiAccessTokenAndExpiresAt(account.userId, db);
@@ -295,12 +261,9 @@ export const app = new Hono()
 						account.userId,
 					);
 					console.error('create report was failed:', account.userId);
-					return new Response(
-						'init sales-traffic-report was failed',
-						{
-							status: 500,
-						},
-					);
+					return c.text('init sales-traffic-report was failed', {
+						status: 500,
+					});
 				}
 
 				await new Promise(resolve => setTimeout(resolve, 60 * 1000));
@@ -317,7 +280,7 @@ export const app = new Hono()
 						'failed to get report document id',
 						account.userId,
 					);
-					return new Response('failed to get report document id', {
+					return c.text('failed to get report document id', {
 						status: 500,
 					});
 				}
@@ -336,7 +299,7 @@ export const app = new Hono()
 							'failed to get report document',
 							account.userId,
 						);
-						return new Response('failed to get report document', {
+						return c.text('failed to get report document', {
 							status: 500,
 						});
 					}
@@ -366,9 +329,7 @@ export const app = new Hono()
 
 		await Promise.all(promises);
 
-		return new Response('ok', {
-			status: 200,
-		});
+		return c.text('ok', 200);
 	})
 	.get('/inventory-summaries', async c => {
 		const db = c.var.db;
@@ -382,9 +343,7 @@ export const app = new Hono()
 
 			if (!(initRes.status === 200 || initRes.status === 409)) {
 				console.error('init was failed:', account.userId);
-				return new Response('init inventory-summaries was failed', {
-					status: 500,
-				});
+				return c.text('init inventory-summaries was failed', 500);
 			}
 
 			let [accessToken, expiresAt] =
@@ -413,9 +372,7 @@ export const app = new Hono()
 				await getAllInventorySummariesRetryRateLimit(api);
 
 			if (inventorySummaries.isErr()) {
-				return new Response('get inventory-summaries was failed', {
-					status: 500,
-				});
+				return c.text('get inventory-summaries was failed', 500);
 			}
 
 			const putResult = await gzipAndPutFile(
@@ -425,21 +382,15 @@ export const app = new Hono()
 			);
 			if (!putResult) {
 				console.error('put file was failed:', account.userId);
-				return new Response('put file was failed', {
-					status: 500,
-				});
+				return c.text('put file was failed', 500);
 			}
 			console.log('success:', account.userId);
-			return new Response('ok', {
-				status: 200,
-			});
+			return c.text('ok', 200);
 		});
 
 		await Promise.all(promises);
 
-		return new Response('ok', {
-			status: 200,
-		});
+		return c.text('ok', 200);
 	});
 
 async function fetchCron(path: string, userId: string | undefined = undefined) {

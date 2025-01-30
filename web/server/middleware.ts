@@ -8,33 +8,6 @@ import { type User, user } from '@seller-kanrikun/db/schema';
 
 import { getSpApiAccessToken } from '~/lib/token';
 
-export const userHeaderMiddleware = createMiddleware<{
-	Variables: {
-		user: typeof auth.$Infer.Session.user;
-	} & (typeof dbMiddleware extends MiddlewareHandler<infer Env>
-		? Env['Variables']
-		: // biome-ignore lint/complexity/noBannedTypes:
-			{});
-}>(async (c, next) => {
-	if (!c.var.db) throw new Error();
-	const cronUserIdHeader = c.req.header('X-Cron-UserId');
-	if (!cronUserIdHeader) {
-		return c.text('Unauthorized', 401);
-	}
-
-	const result = await c.var.db
-		.select()
-		.from(user)
-		.where(eq(user.id, cronUserIdHeader))
-		.limit(1);
-	if (result.length <= 0) {
-		return c.text('Forbidden', 403);
-	}
-
-	c.set('user', result[0]);
-	await next();
-});
-
 export const cronAuthMiddleware = createMiddleware(async (c, next) => {
 	const authorizationHeader = c.req.header('authorization');
 

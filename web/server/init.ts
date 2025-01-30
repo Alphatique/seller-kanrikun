@@ -29,10 +29,12 @@ import {
 	createSalesTrafficReportRetryRateLimit,
 	getAllCreatedReportDocumentIdsRetryRateLimit,
 	getAllSalesTrafficReportDocumentRetryRateLimit,
+	getAllSalesTrafficReportDocumentUntilRateLimit,
 	getAllSalesTrafficReportsRetryRateLimit,
 	getCreatedReport,
 	getCreatedReportDocumentIdRetryRateLimit,
 	getSalesTrafficReportDocumentRetryRateLimit,
+	getSalesTrafficReportDocumentUntilRateLimit,
 } from '@seller-kanrikun/api-wrapper/sales-traffic-report';
 import type { SalesAndTrafficReportDocument } from '@seller-kanrikun/api-wrapper/schema/sales-traffic-report';
 import {
@@ -67,7 +69,6 @@ import {
 	authMiddleware,
 	cronAuthMiddleware,
 	dbMiddleware,
-	userHeaderMiddleware,
 } from './middleware';
 
 const salesTrafficReportLimit = 7;
@@ -77,16 +78,6 @@ export const app = new Hono()
 	.use(dbMiddleware)
 	.use(authMiddleware)
 	.use(accessTokenMiddleware)
-	.get('/test', async c => {
-		waitUntil(
-			(async () => {
-				await new Promise(resolve => setTimeout(resolve, 10 * 1000));
-				console.log('waited');
-				return;
-			})(),
-		);
-		return c.text('test', 200);
-	})
 	.get('/cost-price', async c => {
 		const userId = c.var.user.id;
 		const exist = await existFile(
@@ -234,6 +225,51 @@ export const app = new Hono()
 				status: 500,
 			});
 		}
+
+		waitUntil(
+			(async () => {
+				const reportDocumentIds =
+					await getAllCreatedReportDocumentIdsRetryRateLimit(
+						api,
+						reportIds.value,
+					);
+				if (reportDocumentIds.isErr()) {
+					console.error(
+						'erro get report document ids:',
+						reportDocumentIds.error,
+					);
+					return;
+				}
+
+				const reportDocument =
+					await getAllSalesTrafficReportDocumentUntilRateLimit(
+						api,
+						reportDocumentIds.value,
+					);
+
+				if (reportDocument.isErr()) {
+					console.error(
+						'erro get report document:',
+						reportDocument.error,
+					);
+					return;
+				}
+
+				// レポート作成まで時間がかかるため、一度空白でput
+				const firstPutResult = await gzipAndPutFile(
+					userId,
+					FILE_NAMES.SALES_TRAFFIC_REPORT,
+					reportDocument.value,
+				);
+				if (!firstPutResult) {
+					console.error('failed to first put');
+					return;
+				}
+
+				console.log('success to put report document');
+				return;
+			})(),
+		);
 
 		return new Response('ok', {
 			status: 200,
