@@ -58,13 +58,14 @@ CREATE TABLE `plbsData` (
 CREATE TABLE `salesTrafficMeta` (
 	`id` text PRIMARY KEY NOT NULL,
 	`userId` text NOT NULL,
-	`saveStartAt` integer NOT NULL,
-	`saveEndAt` integer NOT NULL,
+	`dataStartAt` integer NOT NULL,
+	`dataEndAt` integer NOT NULL,
 	`createdAt` integer NOT NULL,
 	`updatedAt` integer NOT NULL,
 	FOREIGN KEY (`userId`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
+CREATE UNIQUE INDEX `salesTrafficMeta_userId_unique` ON `salesTrafficMeta` (`userId`);--> statement-breakpoint
 CREATE TABLE `session` (
 	`id` text PRIMARY KEY NOT NULL,
 	`expiresAt` integer NOT NULL,

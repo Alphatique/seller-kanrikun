@@ -30,8 +30,8 @@ export const salesTrafficMeta = sqliteTable('salesTrafficMeta', {
 		.notNull()
 		.references(() => user.id)
 		.unique(),
-	saveStartAt: integer('saveStartAt', { mode: 'timestamp' }).notNull(),
-	saveEndAt: integer('saveEndAt', { mode: 'timestamp' }).notNull(),
+	dataStartAt: integer('dataStartAt', { mode: 'timestamp' }).notNull(),
+	dataEndAt: integer('dataEndAt', { mode: 'timestamp' }).notNull(),
 	createdAt: integer('createdAt', { mode: 'timestamp' }).notNull(),
 	updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull(),
 });

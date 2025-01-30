@@ -1,7 +1,7 @@
 {
 	"version": "6",
 	"dialect": "sqlite",
-	"id": "f723eee0-ad37-4b37-aea4-9cb67e7ab3ac",
+	"id": "e1291f92-ec4a-4a77-b7d3-7080e5ed261b",
 	"prevId": "00000000-0000-0000-0000-000000000000",
 	"tables": {
 		"account": {
@@ -388,15 +388,15 @@
 					"notNull": true,
 					"autoincrement": false
 				},
-				"saveStartAt": {
-					"name": "saveStartAt",
+				"dataStartAt": {
+					"name": "dataStartAt",
 					"type": "integer",
 					"primaryKey": false,
 					"notNull": true,
 					"autoincrement": false
 				},
-				"saveEndAt": {
-					"name": "saveEndAt",
+				"dataEndAt": {
+					"name": "dataEndAt",
 					"type": "integer",
 					"primaryKey": false,
 					"notNull": true,
@@ -417,7 +417,13 @@
 					"autoincrement": false
 				}
 			},
-			"indexes": {},
+			"indexes": {
+				"salesTrafficMeta_userId_unique": {
+					"name": "salesTrafficMeta_userId_unique",
+					"columns": ["userId"],
+					"isUnique": true
+				}
+			},
 			"foreignKeys": {
 				"salesTrafficMeta_userId_user_id_fk": {
 					"name": "salesTrafficMeta_userId_user_id_fk",
