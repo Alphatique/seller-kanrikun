@@ -18,6 +18,10 @@
 		{
 			"path": "/api/cron/inventory-summaries",
 			"schedule": "* 0 * * *"
+		},
+		{
+			"path": "/api/cron/sales-traffic-report",
+			"schedule": "* 1 * * *"
 		}
 	]
 }

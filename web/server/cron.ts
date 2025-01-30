@@ -81,15 +81,6 @@ export const app = new Hono()
 		const accounts = await getAccountsByProviderId(db, 'seller-central');
 
 		const promises = accounts.map(async account => {
-			const initRes = await fetchCron(
-				'/init/settlement-report',
-				account.userId,
-			);
-			if (!(initRes.status === 200 || initRes.status === 409)) {
-				console.error('init was failed:', account.userId);
-				return c.text('init settlement-report was failed', 500);
-			}
-
 			let [accessToken, expiresAt] =
 				await getSpApiAccessTokenAndExpiresAt(account.userId, db);
 
@@ -203,20 +194,10 @@ export const app = new Hono()
 
 		const now = new Date();
 		const sunDay = startOfWeek(now, { weekStartsOn: 1 });
-		const endDate = subWeeks(now, 3); //subYears(now, 2);
 		// 昨日
-		let current = subDays(sunDay, 1);
+		const current = subDays(sunDay, 1);
 
 		const promises = accounts.map(async account => {
-			const initRes = await fetchCron(
-				'/init/sales-traffic-report',
-				account.userId,
-			);
-
-			if (!(initRes.status === 200 || initRes.status === 409)) {
-				console.error('init was failed:', account.userId);
-				return c.text('init sales-traffic-report was failed', 500);
-			}
 			let [accessToken, expiresAt] =
 				await getSpApiAccessTokenAndExpiresAt(account.userId, db);
 
@@ -243,75 +224,66 @@ export const app = new Hono()
 			reportsApi.use(tokenMiddleware);
 
 			const result: SalesAndTrafficReportDocument = [];
-			while (true) {
-				// 一日前
-				const lastDay = subDays(current, 1);
+			// 一日前
+			const lastDay = subDays(current, 1);
 
-				const reportId = await createSalesTrafficReportRetryRateLimit(
-					reportsApi,
-					lastDay,
-					current,
-					120 * 1000,
+			const reportId = await createSalesTrafficReportRetryRateLimit(
+				reportsApi,
+				lastDay,
+				current,
+				120 * 1000,
+			);
+			if (reportId.isErr()) {
+				console.error(
+					'failed to create report: ',
+					reportId.error,
+					', ',
+					account.userId,
 				);
-				if (reportId.isErr()) {
-					console.error(
-						'failed to create report: ',
-						reportId.error,
-						', ',
-						account.userId,
-					);
-					console.error('create report was failed:', account.userId);
-					return c.text('init sales-traffic-report was failed', {
-						status: 500,
-					});
-				}
+				console.error('create report was failed:', account.userId);
+				return c.text('create report was failed', {
+					status: 500,
+				});
+			}
 
-				await new Promise(resolve => setTimeout(resolve, 60 * 1000));
-				const reportDocumentId =
-					await getCreatedReportDocumentIdRetryRateLimit(
+			await new Promise(resolve => setTimeout(resolve, 60 * 1000));
+			const reportDocumentId =
+				await getCreatedReportDocumentIdRetryRateLimit(
+					reportsApi,
+					reportId.value,
+					30 * 1000,
+					0.5 * 1000,
+				);
+
+			if (reportDocumentId.isErr()) {
+				console.error(
+					'failed to get report document id',
+					account.userId,
+				);
+				return c.text('failed to get report document id', {
+					status: 500,
+				});
+			}
+			if (reportDocumentId.value === null) {
+				console.warn('report document id was null');
+			} else {
+				const documentResult =
+					await getSalesTrafficReportDocumentRetryRateLimit(
 						reportsApi,
-						reportId.value,
-						30 * 1000,
-						0.5 * 1000,
+						reportDocumentId.value,
+						120 * 1000,
 					);
 
-				if (reportDocumentId.isErr()) {
+				if (documentResult.isErr()) {
 					console.error(
-						'failed to get report document id',
+						'failed to get report document',
 						account.userId,
 					);
-					return c.text('failed to get report document id', {
+					return c.text('failed to get report document', {
 						status: 500,
 					});
 				}
-				if (reportDocumentId.value === null) {
-					console.warn('report document id was null');
-				} else {
-					const documentResult =
-						await getSalesTrafficReportDocumentRetryRateLimit(
-							reportsApi,
-							reportDocumentId.value,
-							120 * 1000,
-						);
-
-					if (documentResult.isErr()) {
-						console.error(
-							'failed to get report document',
-							account.userId,
-						);
-						return c.text('failed to get report document', {
-							status: 500,
-						});
-					}
-					result.push(...documentResult.value);
-				}
-
-				// 現在を更新
-				current = lastDay;
-				// 終了日を超えたら終了
-				if (isBefore(current, endDate)) {
-					break;
-				}
+				result.push(...documentResult.value);
 			}
 
 			const putResult = await gzipAndPutFile(
@@ -336,16 +308,6 @@ export const app = new Hono()
 		const accounts = await getAccountsByProviderId(db, 'seller-central');
 
 		const promises = accounts.map(async account => {
-			const initRes = await fetchCron(
-				'/init/inventory-summaries',
-				account.userId,
-			);
-
-			if (!(initRes.status === 200 || initRes.status === 409)) {
-				console.error('init was failed:', account.userId);
-				return c.text('init inventory-summaries was failed', 500);
-			}
-
 			let [accessToken, expiresAt] =
 				await getSpApiAccessTokenAndExpiresAt(account.userId, db);
 
@@ -392,17 +354,3 @@ export const app = new Hono()
 
 		return c.text('ok', 200);
 	});
-
-async function fetchCron(path: string, userId: string | undefined = undefined) {
-	const headers: Record<string, string> = {
-		authorization: `Bearer ${process.env.CRON_SECRET!}`,
-	};
-
-	if (userId) {
-		headers['X-Cron-UserId'] = userId;
-	}
-
-	return fetch(`${process.env.SELLER_KANRIKUN_BASE_URL}/api/cron${path}`, {
-		headers: headers,
-	});
-}
