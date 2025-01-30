@@ -1,6 +1,7 @@
 import { writeFile } from 'node:fs/promises';
 import { Readable } from 'node:stream';
 import type { ReadableStream as WebReadableStream } from 'node:stream/web';
+import { waitUntil } from '@vercel/functions';
 import { Hono } from 'hono';
 import createApiClient from 'openapi-fetch';
 import type { Middleware } from 'openapi-fetch';
@@ -47,6 +48,7 @@ import {
 	putFile,
 } from '@seller-kanrikun/data-operation/r2';
 import { InventorySummary } from '@seller-kanrikun/data-operation/types/inventory';
+import type { User } from '@seller-kanrikun/db/schema';
 import type { paths as catalogPaths } from '@seller-kanrikun/sp-api/schema/catalog-items';
 import type { paths as inventoryPaths } from '@seller-kanrikun/sp-api/schema/fba-inventory';
 import type { paths as reportsPaths } from '@seller-kanrikun/sp-api/schema/reports';
@@ -57,11 +59,9 @@ import {
 	R2_BUCKET_NAME,
 	SP_SELLER_KANRIKUN_BASE_URL,
 } from '~/lib/constants';
-
 import { gzipAndPutFile } from '~/lib/fetch-gzip';
 import { getSpApiAccessTokenAndExpiresAt } from '~/lib/token';
 
-import type { User } from '@seller-kanrikun/db/schema';
 import {
 	accessTokenMiddleware,
 	authMiddleware,
@@ -70,10 +70,23 @@ import {
 	userHeaderMiddleware,
 } from './middleware';
 
+const salesTrafficReportLimit = 7;
+const settlementReportLimit = 15 - salesTrafficReportLimit;
+
 export const app = new Hono()
 	.use(dbMiddleware)
 	.use(authMiddleware)
 	.use(accessTokenMiddleware)
+	.get('/test', async c => {
+		waitUntil(
+			(async () => {
+				await new Promise(resolve => setTimeout(resolve, 10 * 1000));
+				console.log('waited');
+				return;
+			})(),
+		);
+		return c.text('test', 200);
+	})
 	.get('/cost-price', async c => {
 		const userId = c.var.user.id;
 		const exist = await existFile(
@@ -128,9 +141,10 @@ export const app = new Hono()
 		}
 
 		let limitedReports = reports.value;
-		// sales-traffic用に7件は確保
-		const reportsLimit = 15 - 7;
-		if (reports.value.length > 15 - 7) {
+
+		// sales-traffic分余裕を持たせる
+		const reportsLimit = settlementReportLimit;
+		if (reports.value.length > settlementReportLimit) {
 			limitedReports = limitedReports.slice(0, reportsLimit);
 		}
 		console.log('settlement report:', reports.value.length);
@@ -200,53 +214,27 @@ export const app = new Hono()
 			subDays(new Date(), 1),
 			subWeeks(new Date(), 2),
 		);
+
 		if (reportIds.isErr()) {
 			return new Response('failed to create sales traffic report', {
 				status: 500,
 			});
 		}
 		console.log('sales traffic reports:', reportIds);
-		console.log('get created sales traffic reports...');
-		const reportDocumentIds =
-			await getAllCreatedReportDocumentIdsRetryRateLimit(
-				api,
-				reportIds.value,
-			);
-		if (reportDocumentIds.isErr()) {
-			return new Response('failed to get created sales traffic report', {
-				status: 500,
-			});
-		}
-		console.log(
-			'sales traffic report documet ids:',
-			reportDocumentIds.value,
-		);
-		console.log('get sales traffic report document...');
-		const reportDocument =
-			await getAllSalesTrafficReportDocumentRetryRateLimit(
-				api,
-				reportDocumentIds.value,
-				120 * 1000,
-			);
-		if (reportDocument.isErr()) {
-			return new Response('failed to get sales traffic report document', {
-				status: 500,
-			});
-		}
-		console.log(
-			'sales traffic report document length',
-			reportDocument.value.length,
-		);
-		const putResult = await gzipAndPutFile(
+
+		// レポート作成まで時間がかかるため、一度空白でput
+		const firstPutResult = await gzipAndPutFile(
 			userId,
 			FILE_NAMES.SALES_TRAFFIC_REPORT,
-			reportDocument.value,
+			[],
 		);
-		if (!putResult) {
+		if (!firstPutResult) {
+			console.error('failed to first put');
 			return new Response('put file was failed', {
 				status: 500,
 			});
 		}
+
 		return new Response('ok', {
 			status: 200,
 		});
