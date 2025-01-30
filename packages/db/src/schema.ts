@@ -24,18 +24,6 @@ export const session = sqliteTable('session', {
 		.references(() => user.id),
 });
 
-export const salesTrafficMeta = sqliteTable('salesTrafficMeta', {
-	id: text('id').primaryKey(),
-	userId: text('userId')
-		.notNull()
-		.references(() => user.id)
-		.unique(),
-	dataStartAt: integer('dataStartAt', { mode: 'timestamp' }).notNull(),
-	dataEndAt: integer('dataEndAt', { mode: 'timestamp' }).notNull(),
-	createdAt: integer('createdAt', { mode: 'timestamp' }).notNull(),
-	updatedAt: integer('updatedAt', { mode: 'timestamp' }).notNull(),
-});
-
 export const account = sqliteTable('account', {
 	id: text('id').primaryKey(),
 	accountId: text('accountId').notNull(),

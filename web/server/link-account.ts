@@ -126,6 +126,19 @@ export const app = new Hono()
 				tokens.refresh_token,
 			);
 
+			await fetch(
+				`${process.env.SELLER_KANRIKUN_BASE_URL}/api/init/settlement-report`,
+			);
+			await fetch(
+				`${process.env.SELLER_KANRIKUN_BASE_URL}/api/init/sales-traffic-report`,
+			);
+			await fetch(
+				`${process.env.SELLER_KANRIKUN_BASE_URL}/api/init/inventory-summaries`,
+			);
+			await fetch(
+				`${process.env.SELLER_KANRIKUN_BASE_URL}/api/init/cost-price`,
+			);
+
 			await c.var.db.insert(account).values({
 				id: nanoid(),
 				accountId: selling_partner_id,

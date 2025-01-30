@@ -75,7 +75,6 @@ const salesTrafficReportLimit = 7;
 const settlementReportLimit = 15 - salesTrafficReportLimit;
 
 export const app = new Hono()
-	.use(dbMiddleware)
 	.use(authMiddleware)
 	.use(accessTokenMiddleware)
 	.get('/cost-price', async c => {
@@ -255,7 +254,6 @@ export const app = new Hono()
 					return;
 				}
 
-				// レポート作成まで時間がかかるため、一度空白でput
 				const firstPutResult = await gzipAndPutFile(
 					userId,
 					FILE_NAMES.SALES_TRAFFIC_REPORT,
