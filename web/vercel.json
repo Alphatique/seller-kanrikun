@@ -1,12 +1,6 @@
 {
 	"functions": {
-		"api/init/sales-traffic-report": {
-			"maxDuration": 60
-		},
-		"api/cron/settlement-report": {
-			"maxDuration": 300
-		},
-		"api/cron/inventory-summaries": {
+		"pages/api/**/*.ts": {
 			"maxDuration": 300
 		}
 	},
