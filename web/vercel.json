@@ -12,15 +12,15 @@
 	},
 	"crons": [
 		{
-			"path": "/api/cron/settlement-report",
+			"path": "api/cron/settlement-report",
 			"schedule": "* 0 * * *"
 		},
 		{
-			"path": "/api/cron/inventory-summaries",
+			"path": "api/cron/inventory-summaries",
 			"schedule": "* 0 * * *"
 		},
 		{
-			"path": "/api/cron/sales-traffic-report",
+			"path": "api/cron/sales-traffic-report",
 			"schedule": "* 1 * * *"
 		}
 	]
