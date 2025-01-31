@@ -75,6 +75,7 @@ const salesTrafficReportLimit = 7;
 const settlementReportLimit = 15 - salesTrafficReportLimit;
 
 export const app = new Hono()
+	.use(dbMiddleware)
 	.use(authMiddleware)
 	.use(accessTokenMiddleware)
 	.get('/cost-price', async c => {
