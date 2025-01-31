@@ -47,15 +47,14 @@ export async function getAllInventorySummariesRetryRateLimit(
 			allSummaries.push(...summaries);
 		}
 		if (error) {
-			console.warn(error);
-		} else if (response.status === 429) {
-			// レート制限のときは二分待って続行
-			await new Promise(resolve => setTimeout(resolve, 120 * 1000));
-			continue;
-		} else {
+			if (response.status === 429) {
+				// レート制限のときは二分待って続行
+				await new Promise(resolve => setTimeout(resolve, 120 * 1000));
+				continue;
+			}
 			// それ以外のエラーならループ終了
 			console.error(error, response);
-			return new Err(error);
+			return new Err(error.errors);
 		}
 
 		if (nextToken === undefined) {
