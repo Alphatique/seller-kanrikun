@@ -188,7 +188,7 @@ export const app = new Hono()
 
 		return c.text('finish', 200);
 	})
-	.get('/sales-traffic-report', accessTokenMiddleware, async c => {
+	.get('/sales-traffic-report', async c => {
 		const db = c.var.db;
 		const accounts = await getAccountsByProviderId(db, 'seller-central');
 
