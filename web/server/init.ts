@@ -14,6 +14,7 @@ import {
 	isBefore,
 	max,
 	min,
+	startOfDay,
 	startOfWeek,
 	subDays,
 	subWeeks,
@@ -85,6 +86,7 @@ export const app = new Hono()
 			userId,
 			FILE_NAMES.COST_PRICE,
 		);
+
 		if (exist) {
 			return new Response('already exists', {
 				status: 409,
@@ -150,19 +152,11 @@ export const app = new Hono()
 			});
 		}
 		console.log('settlement report document:', reportResult.value.length);
-		const reportDocument = await filterSettlementReportDocument(
-			[],
-			reportResult.value,
-		);
-		console.log(
-			'filtered settlement report document:',
-			reportDocument.length,
-		);
 
 		const documentPutResult = await gzipAndPutFile(
 			userId,
 			FILE_NAMES.SETTLEMENT_REPORT_DOCUMENT,
-			reportDocument,
+			reportResult.value.map(row => row.document),
 		);
 		if (!documentPutResult) {
 			return new Response('failed to put settlement report document', {
@@ -200,10 +194,11 @@ export const app = new Hono()
 		const accessToken = c.var.spApiAccessToken;
 		const api = createApi<reportsPaths>(accessToken);
 		console.log('create sales traffic reports...');
+		const nowStart = startOfDay(new Date());
 		const reportIds = await createAllSalesTrafficReportsUntilRateLimit(
 			api,
-			subDays(new Date(), 1),
-			subWeeks(new Date(), 2),
+			subDays(nowStart, 1),
+			subWeeks(nowStart, 2),
 		);
 
 		if (reportIds.isErr()) {

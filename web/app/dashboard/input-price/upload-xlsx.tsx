@@ -78,6 +78,7 @@ export function InputPriceUpload() {
 		const paresed: CostPriceArray = costPriceArraySchema.parse(
 			JSON.parse(str),
 		);
+		console.log(paresed);
 		return paresed;
 	});
 
