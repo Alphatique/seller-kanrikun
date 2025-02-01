@@ -70,7 +70,7 @@ export function Chart({
 			data.date = key;
 			result.push(data);
 		}
-		return result;
+		return result.reverse();
 	}, [sessionCvrData, selectData, selectsItems, dateRange, period]);
 
 	return (
