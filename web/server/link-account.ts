@@ -45,6 +45,34 @@ export const app = new Hono()
 
 		return c.redirect(url);
 	})
+	.get('/init-test', async c => {
+		console.log(process.env.R2_BUCKET_NAME);
+		await fetch(
+			`${process.env.SELLER_KANRIKUN_BASE_URL}/api/init/settlement-report`,
+			{
+				headers: c.req.raw.headers,
+			},
+		);
+		await fetch(
+			`${process.env.SELLER_KANRIKUN_BASE_URL}/api/init/sales-traffic-report`,
+			{
+				headers: c.req.raw.headers,
+			},
+		);
+		await fetch(
+			`${process.env.SELLER_KANRIKUN_BASE_URL}/api/init/inventory-summaries`,
+			{
+				headers: c.req.raw.headers,
+			},
+		);
+		await fetch(
+			`${process.env.SELLER_KANRIKUN_BASE_URL}/api/init/cost-price`,
+			{
+				headers: c.req.raw.headers,
+			},
+		);
+		return c.text('finish');
+	})
 	.get(
 		'/callback',
 		dbMiddleware,
@@ -126,18 +154,33 @@ export const app = new Hono()
 				tokens.refresh_token,
 			);
 
-			await fetch(
-				`${process.env.SELLER_KANRIKUN_BASE_URL}/api/init/settlement-report`,
-			);
-			await fetch(
-				`${process.env.SELLER_KANRIKUN_BASE_URL}/api/init/sales-traffic-report`,
-			);
-			await fetch(
-				`${process.env.SELLER_KANRIKUN_BASE_URL}/api/init/inventory-summaries`,
-			);
-			await fetch(
-				`${process.env.SELLER_KANRIKUN_BASE_URL}/api/init/cost-price`,
-			);
+			const promises = [
+				fetch(
+					`${process.env.SELLER_KANRIKUN_BASE_URL}/api/init/settlement-report`,
+					{
+						headers: c.req.raw.headers,
+					},
+				),
+				fetch(
+					`${process.env.SELLER_KANRIKUN_BASE_URL}/api/init/sales-traffic-report`,
+					{
+						headers: c.req.raw.headers,
+					},
+				),
+				fetch(
+					`${process.env.SELLER_KANRIKUN_BASE_URL}/api/init/inventory-summaries`,
+					{
+						headers: c.req.raw.headers,
+					},
+				),
+				fetch(
+					`${process.env.SELLER_KANRIKUN_BASE_URL}/api/init/cost-price`,
+					{
+						headers: c.req.raw.headers,
+					},
+				),
+			];
+			await Promise.all(promises);
 
 			await c.var.db.insert(account).values({
 				id: nanoid(),

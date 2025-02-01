@@ -108,6 +108,9 @@ export function InputPriceUpload() {
 		if (existData.current === undefined && loadedData !== undefined) {
 			existData.current = loadedData;
 		}
+		if (existData.current === undefined) {
+			return;
+		}
 
 		// 日付をUTCに変換
 		const utcFrom = new Date(date.from.toISOString());
@@ -118,7 +121,8 @@ export function InputPriceUpload() {
 			date: { from: utcFrom, to: utcTo },
 			data: xlsxData,
 		};
-		const addedData = addCostPrices(existData.current!, updateRequest);
+
+		const addedData = addCostPrices(existData.current, updateRequest);
 		const jsonGzipped = jsonObjToJsonGzipArray(addedData);
 
 		console.log('gzipped:', addedData);

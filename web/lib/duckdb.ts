@@ -142,6 +142,8 @@ export async function createCostPriceTable(
 ) {
 	await createTable(myDuckDB, costPriceData, 'cost-price.json', 'costPrice');
 	await myDuckDB.c.query(/*sql*/ `
+		ALTER TABLE costPrice ADD COLUMN IF NOT EXISTS startDate DATE NULL;
+		ALTER TABLE costPrice ADD COLUMN IF NOT EXISTS endDate DATE NULL;
 		ALTER TABLE costPrice ALTER COLUMN startDate SET DATA TYPE DATE;
 		ALTER TABLE costPrice ALTER COLUMN endDate SET DATA TYPE DATE;
 	`);

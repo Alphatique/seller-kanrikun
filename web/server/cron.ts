@@ -200,7 +200,7 @@ export const app = new Hono()
 				FILE_NAMES.SETTLEMENT_REPORT_META,
 				[
 					...existReportMetas,
-					...getReportResult.value.map(row => row.report),
+					...getReportResult.value.flatMap(row => row.report),
 				],
 			);
 			if (!metaPutResult) {

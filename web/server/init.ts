@@ -150,7 +150,7 @@ export const app = new Hono()
 		const documentPutResult = await gzipAndPutFile(
 			userId,
 			FILE_NAMES.SETTLEMENT_REPORT_DOCUMENT,
-			reportResult.value.map(row => row.document),
+			reportResult.value.flatMap(row => row.document),
 		);
 		if (!documentPutResult) {
 			return new Response('failed to put settlement report document', {
@@ -160,7 +160,7 @@ export const app = new Hono()
 		const metaPutResult = await gzipAndPutFile(
 			userId,
 			FILE_NAMES.SETTLEMENT_REPORT_META,
-			reportResult.value.map(row => row.report),
+			reportResult.value.flatMap(row => row.report),
 		);
 		if (!metaPutResult) {
 			return new Response('failed to put settlement report meta', {
