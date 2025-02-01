@@ -151,6 +151,6 @@ export const app = new Hono()
 				updatedAt: now,
 			});
 
-			return c.redirect('/dashboard');
+			return c.redirect('/link-account');
 		},
 	);
