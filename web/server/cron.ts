@@ -56,7 +56,6 @@ import type { paths as reportsPaths } from '@seller-kanrikun/sp-api/schema/repor
 import {
 	FILE_NAMES,
 	JAPAN_MARKET_PLACE_ID,
-	R2_BUCKET_NAME,
 	SP_SELLER_KANRIKUN_BASE_URL,
 } from '~/lib/constants';
 
@@ -95,7 +94,6 @@ export const app = new Hono()
 				await getSpApiAccessTokenAndExpiresAt(account.userId, db);
 
 			const reportMetaResult = await getFile(
-				R2_BUCKET_NAME,
 				account.userId,
 				FILE_NAMES.SETTLEMENT_REPORT_META,
 			);
@@ -157,7 +155,6 @@ export const app = new Hono()
 			}
 
 			const reportDocumentResult = await getFile(
-				R2_BUCKET_NAME,
 				account.userId,
 				FILE_NAMES.SETTLEMENT_REPORT_DOCUMENT,
 			);
@@ -234,7 +231,6 @@ export const app = new Hono()
 
 		const promises = accounts.map(async account => {
 			const existReportResult = await getFile(
-				R2_BUCKET_NAME,
 				account.userId,
 				FILE_NAMES.SALES_TRAFFIC_REPORT,
 			);
@@ -384,7 +380,6 @@ export const app = new Hono()
 		const accounts = await getAccountsByProviderId(db, 'seller-central');
 		const promises = accounts.map(async account => {
 			const existInventoryResult = await getFile(
-				R2_BUCKET_NAME,
 				account.userId,
 				FILE_NAMES.INVENTORY_SUMMARIES,
 			);

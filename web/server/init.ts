@@ -59,7 +59,6 @@ import type { paths as reportsPaths } from '@seller-kanrikun/sp-api/schema/repor
 import {
 	FILE_NAMES,
 	JAPAN_MARKET_PLACE_ID,
-	R2_BUCKET_NAME,
 	SP_SELLER_KANRIKUN_BASE_URL,
 } from '~/lib/constants';
 import { gzipAndPutFile } from '~/lib/fetch-gzip';
@@ -81,11 +80,7 @@ export const app = new Hono()
 	.use(accessTokenMiddleware)
 	.get('/cost-price', async c => {
 		const userId = c.var.user.id;
-		const exist = await existFile(
-			R2_BUCKET_NAME,
-			userId,
-			FILE_NAMES.COST_PRICE,
-		);
+		const exist = await existFile(userId, FILE_NAMES.COST_PRICE);
 
 		if (exist) {
 			return new Response('already exists', {
@@ -112,7 +107,6 @@ export const app = new Hono()
 		const userId = c.var.user.id;
 		// メタファイルがなければとする
 		const exist = await existFile(
-			R2_BUCKET_NAME,
 			userId,
 			FILE_NAMES.SETTLEMENT_REPORT_META,
 		);
@@ -180,11 +174,7 @@ export const app = new Hono()
 	})
 	.get('/sales-traffic-report', async c => {
 		const userId = c.var.user.id;
-		const exist = await existFile(
-			R2_BUCKET_NAME,
-			userId,
-			FILE_NAMES.SALES_TRAFFIC_REPORT,
-		);
+		const exist = await existFile(userId, FILE_NAMES.SALES_TRAFFIC_REPORT);
 		if (exist) {
 			return new Response('already exists', {
 				status: 409,
@@ -272,11 +262,7 @@ export const app = new Hono()
 	.get('/inventory-summaries', async c => {
 		const userId = c.var.user.id;
 
-		const exist = await existFile(
-			R2_BUCKET_NAME,
-			userId,
-			FILE_NAMES.INVENTORY_SUMMARIES,
-		);
+		const exist = await existFile(userId, FILE_NAMES.INVENTORY_SUMMARIES);
 		if (exist) {
 			return new Response('already exists', {
 				status: 409,

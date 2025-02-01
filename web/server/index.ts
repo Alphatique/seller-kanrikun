@@ -7,7 +7,7 @@ import {
 	getWriteOnlySignedUrl,
 } from '@seller-kanrikun/data-operation/r2';
 
-import { FILE_NAMES, R2_BUCKET_NAME } from '~/lib/constants';
+import { FILE_NAMES } from '~/lib/constants';
 
 import { app as cron } from './cron';
 import { app as init } from './init';
@@ -30,7 +30,6 @@ const route = app
 	.put('/cost-price', authMiddleware, async c => {
 		console.log('cost-price put');
 		const result = await getWriteOnlySignedUrl(
-			R2_BUCKET_NAME,
 			c.var.user.id,
 			FILE_NAMES.COST_PRICE,
 		);
@@ -67,11 +66,7 @@ const route = app
 				});
 			}
 
-			const url = await getReadOnlySignedUrl(
-				R2_BUCKET_NAME,
-				c.var.user.id,
-				fileName,
-			);
+			const url = await getReadOnlySignedUrl(c.var.user.id, fileName);
 
 			return new Response(null, {
 				status: 302,

@@ -11,8 +11,6 @@ import {
 	tsvGzipToTsvStr,
 } from '@seller-kanrikun/data-operation/tsv-gzip';
 
-import { R2_BUCKET_NAME } from './constants';
-
 export async function fetchGunzipStrApi(url: string) {
 	// データ取得
 	const response = await fetch(url);
@@ -30,11 +28,6 @@ export async function gzipAndPutFile(
 ) {
 	const gzippedArray = jsonObjToJsonGzipArray(data);
 
-	const putResult = await putFile(
-		R2_BUCKET_NAME,
-		userId,
-		fileName,
-		gzippedArray,
-	);
+	const putResult = await putFile(userId, fileName, gzippedArray);
 	return !(putResult === undefined);
 }

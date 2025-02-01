@@ -45,7 +45,6 @@ export const R2 = new S3Client({
 
 // 読み込み専用ダウンロード用url取得関数
 export async function getReadOnlySignedUrl(
-	bucketName: string,
 	userId: string,
 	dataName: string,
 	expiresIn = 60 * 60,
@@ -55,7 +54,7 @@ export async function getReadOnlySignedUrl(
 	return await getSignedUrl(
 		R2,
 		new GetObjectCommand({
-			Bucket: bucketName,
+			Bucket: process.env.R2_BUCKET_NAME,
 			Key: key,
 		}),
 		{ expiresIn },
@@ -64,7 +63,6 @@ export async function getReadOnlySignedUrl(
 
 // 書き込み専用アップロード用url取得関数
 export async function getWriteOnlySignedUrl(
-	bucketName: string,
 	userId: string,
 	dataName: string,
 	expiresIn = 60,
@@ -74,7 +72,7 @@ export async function getWriteOnlySignedUrl(
 	const url = await getSignedUrl(
 		R2,
 		new PutObjectCommand({
-			Bucket: bucketName,
+			Bucket: process.env.R2_BUCKET_NAME,
 			Key: key,
 		}),
 		{ expiresIn },
@@ -87,7 +85,6 @@ export async function getWriteOnlySignedUrl(
 
 // データを一時urlなしで取得
 export async function existFile(
-	bucketName: string,
 	userId: string,
 	fileName: string,
 ): Promise<boolean> {
@@ -95,7 +92,7 @@ export async function existFile(
 		const key = await generateR2Hash(userId, fileName);
 
 		const headParams: HeadObjectCommandInput = {
-			Bucket: bucketName,
+			Bucket: process.env.R2_BUCKET_NAME,
 			Key: key,
 		};
 
@@ -126,7 +123,6 @@ function isNotFoundError(
 	);
 }
 export async function getFile(
-	bucketName: string,
 	userId: string,
 	fileName: string,
 ): Promise<Result<GetObjectCommandOutput, undefined>> {
@@ -134,7 +130,7 @@ export async function getFile(
 		const key = await generateR2Hash(userId, fileName);
 
 		const getParams: GetObjectCommandInput = {
-			Bucket: bucketName,
+			Bucket: process.env.R2_BUCKET_NAME,
 			Key: key,
 		};
 
@@ -154,7 +150,6 @@ export async function getFile(
 
 // データを一時urlなしでアップロード
 export async function putFile(
-	bucketName: string,
 	userId: string,
 	fileName: string,
 	data: Uint8Array,
@@ -162,7 +157,7 @@ export async function putFile(
 	try {
 		const key = await generateR2Hash(userId, fileName);
 		const putParams: PutObjectCommandInput = {
-			Bucket: bucketName,
+			Bucket: process.env.R2_BUCKET_NAME,
 			Key: key,
 			Body: data,
 			ContentType: 'application/gzip',

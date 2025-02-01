@@ -1,4 +1,3 @@
-export const R2_BUCKET_NAME = 'seller-kanrikun';
 export const JAPAN_MARKET_PLACE_ID = 'A1VC38T7YXB528';
 export const SP_SELLER_KANRIKUN_BASE_URL =
 	'https://sellingpartnerapi-fe.amazon.com';
