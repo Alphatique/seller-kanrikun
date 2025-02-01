@@ -9,6 +9,7 @@ import {
 	isBefore,
 	max,
 	min,
+	startOfDay,
 	startOfWeek,
 	subDays,
 	subWeeks,
@@ -27,7 +28,11 @@ import {
 	getCreatedReportDocumentIdRetryRateLimit,
 	getSalesTrafficReportDocumentRetryRateLimit,
 } from '@seller-kanrikun/api-wrapper/sales-traffic-report';
-import type { SalesAndTrafficReportDocument } from '@seller-kanrikun/api-wrapper/schema/sales-traffic-report';
+import {
+	type SalesAndTrafficReportDocument,
+	salesAndTrafficReportDocument,
+	salesTrafficReportDocument,
+} from '@seller-kanrikun/api-wrapper/schema/sales-traffic-report';
 import {
 	filterSettlementReportDocument,
 	getAllSettlementReportsRetryRateLimit,
@@ -56,8 +61,13 @@ import {
 } from '~/lib/constants';
 
 import {
-	SettlementReportMeta,
+	type InventorySummaries,
+	inventorySummaries,
+} from '@seller-kanrikun/api-wrapper/schema/inventory';
+import {
+	type SettlementReportDocument,
 	type SettlementReportMetas,
+	settlementReportDocument,
 	settlementReportMetas,
 } from '@seller-kanrikun/api-wrapper/schema/settlement-reports';
 import { jsonGzipArrayToJsonObj } from '@seller-kanrikun/data-operation/json-gzip';
@@ -75,7 +85,7 @@ import {
 
 export const app = new Hono()
 	.use(dbMiddleware)
-	.use(cronAuthMiddleware)
+	//.use(cronAuthMiddleware)
 	.get('/settlement-report', async c => {
 		const db = c.var.db;
 		const accounts = await getAccountsByProviderId(db, 'seller-central');
@@ -99,10 +109,8 @@ export const app = new Hono()
 				console.error('exist meta data was not found:', account.userId);
 				return c.text('exist meta data was not found', 500);
 			}
-			const reportMetas: SettlementReportMetas = jsonGzipArrayToJsonObj(
-				reportMetaArray,
-				settlementReportMetas,
-			);
+			const existReportMetas: SettlementReportMetas =
+				jsonGzipArrayToJsonObj(reportMetaArray, settlementReportMetas);
 
 			// レポートAPI
 			const api = createApiClient<reportsPaths>({
@@ -128,35 +136,59 @@ export const app = new Hono()
 
 			const reports = await getAllSettlementReportsRetryRateLimit(
 				api,
-				reportMetas,
+				existReportMetas,
 			);
 
 			if (reports.isErr()) {
 				return c.text('get settlemenet reports was failed', 500);
 			}
 
-			const reportResult =
+			const getReportResult =
 				await getSettlementReportsDocumentRetryRateLimit(
 					api,
 					reports.value,
 				);
 
-			if (reportResult.isErr()) {
+			if (getReportResult.isErr()) {
 				return c.text(
 					'get settlemenet report documents was failed',
 					500,
 				);
 			}
 
-			const reportDocument = await filterSettlementReportDocument(
-				reportMetas,
-				reportResult.value,
+			const reportDocumentResult = await getFile(
+				R2_BUCKET_NAME,
+				account.userId,
+				FILE_NAMES.SETTLEMENT_REPORT_DOCUMENT,
+			);
+			if (reportDocumentResult.isErr()) {
+				console.error(reportDocumentResult.error, account.userId);
+				return c.text('get exist report document was failed', 500);
+			}
+			const reportDocumentArray =
+				await reportDocumentResult.value.Body?.transformToByteArray();
+			if (!reportDocumentArray) {
+				console.error(
+					'exist document data was not found:',
+					account.userId,
+				);
+				return c.text('exist document data was not found', 500);
+			}
+			const existReportDocument: SettlementReportDocument =
+				jsonGzipArrayToJsonObj(
+					reportDocumentArray,
+					settlementReportDocument,
+				);
+
+			const saveReportDocument = await filterSettlementReportDocument(
+				existReportMetas,
+				getReportResult.value,
 			);
 
 			const documentPutResult = await gzipAndPutFile(
 				account.userId,
 				FILE_NAMES.SETTLEMENT_REPORT_DOCUMENT,
-				reportDocument,
+				[...saveReportDocument, ...existReportDocument],
 			);
 			if (!documentPutResult) {
 				console.error(
@@ -169,7 +201,10 @@ export const app = new Hono()
 			const metaPutResult = await gzipAndPutFile(
 				account.userId,
 				FILE_NAMES.SETTLEMENT_REPORT_META,
-				reportResult.value.map(row => row.report),
+				[
+					...existReportMetas,
+					...getReportResult.value.map(row => row.report),
+				],
 			);
 			if (!metaPutResult) {
 				console.error(
@@ -192,12 +227,54 @@ export const app = new Hono()
 		const db = c.var.db;
 		const accounts = await getAccountsByProviderId(db, 'seller-central');
 
-		const now = new Date();
-		const sunDay = startOfWeek(now, { weekStartsOn: 1 });
+		const now = startOfDay(new Date());
 		// 昨日
-		const current = subDays(sunDay, 1);
+		const current = subDays(now, 1);
+		console.log(current);
 
 		const promises = accounts.map(async account => {
+			const existReportResult = await getFile(
+				R2_BUCKET_NAME,
+				account.userId,
+				FILE_NAMES.SALES_TRAFFIC_REPORT,
+			);
+			if (existReportResult.isErr()) {
+				console.error(existReportResult.error, account.userId);
+				return c.text('get exist report document was failed', 500);
+			}
+			const reportDocumentArray =
+				await existReportResult.value.Body?.transformToByteArray();
+			if (!reportDocumentArray) {
+				console.error(
+					'exist document data was not found:',
+					account.userId,
+				);
+				return c.text('exist document data was not found', 500);
+			}
+
+			const existReportDocument: SalesAndTrafficReportDocument =
+				jsonGzipArrayToJsonObj(
+					reportDocumentArray,
+					salesAndTrafficReportDocument,
+				);
+
+			// 一日前
+			const lastDay = subDays(current, 1);
+
+			for (const reportDocument of existReportDocument) {
+				console.log(
+					reportDocument.dataStartTime,
+					reportDocument.dataEndTime,
+				);
+				if (
+					reportDocument.dataStartTime === lastDay &&
+					reportDocument.dataEndTime === current
+				) {
+					console.error('report range was exist');
+					return c.text('report range was exist', 500);
+				}
+			}
+
 			let [accessToken, expiresAt] =
 				await getSpApiAccessTokenAndExpiresAt(account.userId, db);
 
@@ -222,10 +299,7 @@ export const app = new Hono()
 				},
 			};
 			reportsApi.use(tokenMiddleware);
-
 			const result: SalesAndTrafficReportDocument = [];
-			// 一日前
-			const lastDay = subDays(current, 1);
 
 			const reportId = await createSalesTrafficReportRetryRateLimit(
 				reportsApi,
@@ -284,12 +358,14 @@ export const app = new Hono()
 					});
 				}
 				result.push(...documentResult.value);
+				console.log(documentResult);
 			}
+			console.log(result);
 
 			const putResult = await gzipAndPutFile(
 				account.userId,
 				FILE_NAMES.SALES_TRAFFIC_REPORT,
-				result,
+				[...existReportDocument, ...result],
 			);
 			if (!putResult) {
 				console.error('put file was failed:', account.userId);
@@ -306,8 +382,28 @@ export const app = new Hono()
 	.get('/inventory-summaries', async c => {
 		const db = c.var.db;
 		const accounts = await getAccountsByProviderId(db, 'seller-central');
-
 		const promises = accounts.map(async account => {
+			const existInventoryResult = await getFile(
+				R2_BUCKET_NAME,
+				account.userId,
+				FILE_NAMES.INVENTORY_SUMMARIES,
+			);
+			if (existInventoryResult.isErr()) {
+				console.error(existInventoryResult.error, account.userId);
+				return c.text('get exist inventory summaries was failed', 500);
+			}
+			const inventoryArray =
+				await existInventoryResult.value.Body?.transformToByteArray();
+			if (!inventoryArray) {
+				console.error(
+					'exist inventory data was not found:',
+					account.userId,
+				);
+				return c.text('exist inventory data was not found', 500);
+			}
+			const existInventorySummaries: InventorySummaries =
+				jsonGzipArrayToJsonObj(inventoryArray, inventorySummaries);
+
 			let [accessToken, expiresAt] =
 				await getSpApiAccessTokenAndExpiresAt(account.userId, db);
 
@@ -330,17 +426,16 @@ export const app = new Hono()
 				baseUrl: SP_SELLER_KANRIKUN_BASE_URL,
 			});
 			api.use(tokenMiddleware);
-			const inventorySummaries =
+			const newInventorySummaries =
 				await getAllInventorySummariesRetryRateLimit(api);
-
-			if (inventorySummaries.isErr()) {
+			if (newInventorySummaries.isErr()) {
 				return c.text('get inventory-summaries was failed', 500);
 			}
 
 			const putResult = await gzipAndPutFile(
 				account.userId,
 				FILE_NAMES.SALES_TRAFFIC_REPORT,
-				inventorySummaries.value,
+				[...existInventorySummaries, ...newInventorySummaries.value],
 			);
 			if (!putResult) {
 				console.error('put file was failed:', account.userId);

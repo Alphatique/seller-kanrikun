@@ -3,19 +3,5 @@
 		"pages/api/**/*.ts": {
 			"maxDuration": 300
 		}
-	},
-	"crons": [
-		{
-			"path": "/api/cron/settlement-report",
-			"schedule": "* 0 * * *"
-		},
-		{
-			"path": "/api/cron/inventory-summaries",
-			"schedule": "* 0 * * *"
-		},
-		{
-			"path": "/api/cron/sales-traffic-report",
-			"schedule": "* 1 * * *"
-		}
-	]
+	}
 }
