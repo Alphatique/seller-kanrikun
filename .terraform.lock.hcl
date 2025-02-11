@@ -5,7 +5,6 @@ provider "registry.terraform.io/vercel/vercel" {
   version     = "0.16.0"
   constraints = "~> 0.3"
   hashes = [
-    "h1:2WB7IP/Hp/yjDgc+8n0vrn0sS92oCnMhO442KNRefxs=",
     "h1:TjuGEpntItpDafnsmb1cFH6qiOvyj77LJkecOjqmSGw=",
     "zh:0064beaf811c534871e5d15dc6e84fdd94be3723e00905ec6d992aefc3075289",
     "zh:023f300f8e6bbd804d445d51529acb9459ec5d110d97c716bec5542773a04efd",

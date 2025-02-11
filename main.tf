@@ -19,9 +19,16 @@ variable "CRON_SECRET" {
   type = string
 }
 
+variable "VERCEL_API_TOKEN" {
+  type = string
+}
+
+provider "vercel" {
+  api_token = var.VERCEL_API_TOKEN
+}
+
 resource "vercel_project" "seller-kanrikun" {
   name      = "seller-kanrikun"
-  team_id   = "alphatique"
   framework = "nextjs"
   git_repository = {
     type              = "github"
@@ -39,6 +46,10 @@ resource "vercel_project" "seller-kanrikun" {
     key    = "SELLER_KANRIKUN_BASE_URL"
     target = ["production"]
     value  = "https://seller-kanrikun.alphatique.co.jp"
+    },{
+    key    = "R2_BUCKET_NAME"
+    target = ["production"]
+    value  = "seller-kanrikun"
     }, {
     key    = "BASELIME_KEY"
     target = ["production"]
@@ -50,7 +61,7 @@ resource "vercel_project" "seller-kanrikun" {
   }]
 }
 
-resource "vercel_project_domain" "seller-kanrikun" {
+resource "vercel_project_domain" "seller_kanrikun_domain" {
   project_id = vercel_project.seller-kanrikun.id
   domain     = "seller-kanrikun.alphatique.co.jp"
 }
