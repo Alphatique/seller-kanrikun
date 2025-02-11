@@ -1,0 +1,4 @@
+DOTENV_PRIVATE_KEY = ""
+BASELIME_KEY       = ""
+CRON_SECRET        = ""
+VERCEL_API_TOKEN   = ""
