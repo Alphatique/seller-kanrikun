@@ -139,7 +139,7 @@ export const app = new Hono()
 			});
 
 			await fetch(`${process.env.SELLER_KANRIKUN_BASE_URL}/api/init`, {
-				headers: c.req.header(),
+				headers: c.req.raw.headers,
 			});
 
 			return c.redirect('/link-account');
