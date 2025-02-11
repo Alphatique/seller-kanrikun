@@ -84,33 +84,24 @@ export function InputPriceUpload() {
 
 	console.log(loadedData);
 	// 更新後のデータを保持するためにrefで保持
-	const existData = useRef<CostPriceArray | undefined>(loadedData);
+	const existData = useRef<CostPriceArray>(loadedData);
 
 	const [date, setDate] = useState<DateRange | undefined>({
 		from: new Date(),
 		to: new Date(),
 	});
-	const [xlsxData, setXlsxData] = useState<CostPriceInput[] | undefined>();
+	const [xlsxData, setXlsxData] = useState<CostPriceInput[] | undefined>(
+		undefined,
+	);
 
 	const handleUpload = async () => {
-		// 既存データ、アップロードデータ、日付があるか確認
-		if (
-			!(
-				(loadedData || existData.current) &&
-				xlsxData &&
-				date &&
-				date.from &&
-				date.to
-			)
-		)
-			return;
-
-		if (existData.current === undefined && loadedData !== undefined) {
+		if (existData.current === undefined && loadedData) {
 			existData.current = loadedData;
 		}
-		if (existData.current === undefined) {
+
+		// 既存データ、アップロードデータ、日付があるか確認
+		if (!(existData.current && xlsxData && date && date.from && date.to))
 			return;
-		}
 
 		// 日付をUTCに変換
 		const utcFrom = new Date(date.from.toISOString());
