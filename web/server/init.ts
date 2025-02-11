@@ -78,6 +78,24 @@ export const app = new Hono()
 	.use(dbMiddleware)
 	.use(authMiddleware)
 	.use(accessTokenMiddleware)
+	.get('/', async c => {
+		// TODO: postにすべき説
+		const urls = [
+			'/api/init/settlement-report',
+			'/api/init/sales-traffic-report',
+			'/api/init/inventory-summaries',
+			'/api/init/cost-price',
+		];
+
+		console.log('initializing...');
+		const promises = urls.map(async url => {
+			await fetch(`${process.env.SELLER_KANRIKUN_BASE_URL}${url}`, {
+				headers: c.req.raw.headers,
+			});
+		});
+		await Promise.all(promises);
+		return c.text('finish');
+	})
 	.get('/cost-price', async c => {
 		const userId = c.var.user.id;
 		const exist = await existFile(userId, FILE_NAMES.COST_PRICE);
@@ -99,9 +117,7 @@ export const app = new Hono()
 			});
 		}
 
-		return new Response('ok', {
-			status: 200,
-		});
+		return c.text('ok');
 	})
 	.get('/settlement-report', async c => {
 		const userId = c.var.user.id;
