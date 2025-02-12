@@ -16,6 +16,7 @@ import type {
 	PlBsWithTax,
 	PlBsWithoutTax,
 } from '@seller-kanrikun/data-operation/types/pl-bs';
+import { Button } from '@seller-kanrikun/ui/components/button';
 import { Label } from '@seller-kanrikun/ui/components/label';
 import {
 	Select,
@@ -141,6 +142,11 @@ export function PlbsTableFilter() {
 
 	console.log(plbsWithTax);
 
+	function handleDownload() {
+		// 書こうと思ったけどデータのフォーマットいるなぁとかして撤退
+		// あんま今のデータフォーマット→table気に入ってないから書き直したいではある
+	}
+
 	const groupedDataIndexes: Record<string, number[]> = useMemo(
 		() => {
 			// フィルターしたデータがない場合はからデータを返す
@@ -211,6 +217,7 @@ export function PlbsTableFilter() {
 					value={dateRange}
 					onMonthRangeSelect={setDateRange}
 				/>
+				<Button onClick={handleDownload}>ダウンロード</Button>
 			</div>
 			<PlbsTable
 				title={'PL'}
