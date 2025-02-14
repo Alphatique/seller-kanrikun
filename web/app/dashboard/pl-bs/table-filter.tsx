@@ -7,12 +7,13 @@ import useSWR from 'swr';
 
 import { useSession } from '@seller-kanrikun/auth/client';
 import {
+	addFormatedReports,
 	calcPlbsWithTax,
 	calcPlbsWithoutTax,
 } from '@seller-kanrikun/data-operation/calc-pl-bs';
 import { calcPlbsSql } from '@seller-kanrikun/data-operation/sql';
 import type {
-	FilteredSettlementReport,
+	FormatedSettlementReport,
 	PlBsWithTax,
 	PlBsWithoutTax,
 } from '@seller-kanrikun/data-operation/types/pl-bs';
@@ -60,8 +61,8 @@ export function PlbsTableFilter() {
 	const { data: myDuckDB } = useSWR('/initDuckDB', initDuckDB);
 
 	// フィルターしたデータ
-	const [filteredData, setFilteredData] = useState<
-		FilteredSettlementReport[] | undefined
+	const [formatedData, setFormatedData] = useState<
+		Record<number, FormatedSettlementReport> | undefined
 	>(undefined);
 
 	const [period, setPeriod] = useState<Period>('monthly');
@@ -76,7 +77,7 @@ export function PlbsTableFilter() {
 	// データ/dbが更新されたら
 	// TODO: jotai等を使ってreactから切り離す
 	useEffect(() => {
-		console.log(reportData, inventoryData, costPriceData);
+		// console.log(reportData, inventoryData, costPriceData);
 		if (myDuckDB && reportData && inventoryData && costPriceData) {
 			const promises = [];
 			promises.push(createSettlementReportTable(myDuckDB, reportData));
@@ -93,18 +94,15 @@ export function PlbsTableFilter() {
 
 				// フィルターしたデータを取得
 				const filteredResponse = await myDuckDB.c.query(calcPlbsSql);
-				console.log(filteredResponse.toString());
 
 				// データのjs array化
-				const formatData: FilteredSettlementReport[] = [];
+				const formatData: Record<number, FormatedSettlementReport> = {};
 				for (let i = 0; i < filteredResponse.numRows; i++) {
 					const record = filteredResponse.get(i);
-					console.log(record?.toString());
 					const json = record?.toJSON();
 
 					// TODO: zodでやりたい
-					const data: FilteredSettlementReport = {
-						date: json?.date,
+					const data: FormatedSettlementReport = {
 						costPrice: Number(json?.costPrice),
 						principal: Number(json?.principal),
 						principalTax: Number(json?.principalTax),
@@ -122,43 +120,24 @@ export function PlbsTableFilter() {
 						),
 						accountsReceivable: Number(json?.accountsReceivable),
 					};
-					formatData.push(data);
+
+					formatData[json?.date] = data;
 				}
 
-				console.log(formatData);
-				setFilteredData(formatData);
+				setFormatedData(formatData);
 			});
 		}
 	}, [myDuckDB, reportData, inventoryData, costPriceData]);
 
-	const { withTax: plbsWithTax, withoutTax: plbsWithoutTax } = useMemo(() => {
-		if (!filteredData) return { withTax: undefined, withoutTax: undefined };
-		// PLBS計算
-		return {
-			withTax: calcPlbsWithTax(filteredData),
-			withoutTax: calcPlbsWithoutTax(filteredData),
-		};
-	}, [filteredData]);
-
-	console.log(plbsWithTax);
-
-	function handleDownload() {
-		// 書こうと思ったけどデータのフォーマットいるなぁとかして撤退
-		// あんま今のデータフォーマット→table気に入ってないから書き直したいではある
-	}
-
-	const groupedDataIndexes: Record<string, number[]> = useMemo(
-		() => {
-			// フィルターしたデータがない場合はからデータを返す
-			if (!filteredData) return {};
-			// 仮データ
-			const dateIndexes: Record<string, number[]> = {};
-			// データの行数分繰り返す
-			for (let i = 0; i < filteredData.length; i++) {
+	const filteredReport: Record<string, FormatedSettlementReport> =
+		useMemo(() => {
+			if (formatedData === undefined) return {};
+			const filteredData: Record<string, FormatedSettlementReport> = {};
+			for (const [dateTime, data] of Object.entries(formatedData)) {
 				// その行の日付を取得
-				const date = new Date(filteredData[i].date);
-				// 日付が範囲内かどうかを判定
+				const date = new Date(Number(dateTime));
 				if (dateRange.start <= date && dateRange.end >= date) {
+					// 日付が範囲内かどうかを判定
 					// 日付からグループ化する文字列を作成
 					// TODO: 三項演算子的な
 					let dateStr = '';
@@ -173,20 +152,50 @@ export function PlbsTableFilter() {
 							dateStr = format(date, 'yyyy');
 							break;
 					}
-					// グループ化したデータを登録
-					if (!dateIndexes[dateStr]) {
-						// まだグループがない場合は配列初期化
-						dateIndexes[dateStr] = [];
+					// 既存のデータがある場合
+					if (filteredData[dateStr]) {
+						// 既存のデータと足し算
+						filteredData[dateStr] = addFormatedReports(
+							filteredData[dateStr],
+							data,
+						);
+					} else {
+						// まだグループがない場合はそのまま入れる
+						filteredData[dateStr] = data;
 					}
-					// インデックスを登録
-					dateIndexes[dateStr].push(i);
 				}
 			}
-			// グループ化したデータを登録
-			return dateIndexes;
-		},
-		[dateRange, filteredData, period], // dateRange, filteredData, periodが更新された場合に反応する
-	);
+			return filteredData;
+		}, [formatedData, dateRange, period]);
+	console.log(filteredReport);
+
+	const filteredAndPlbsData: Record<
+		string,
+		Record<string, number>
+	> = useMemo(() => {
+		// PLBS計算
+		const plbsData = withTax
+			? calcPlbsWithTax(filteredReport)
+			: calcPlbsWithoutTax(filteredReport);
+
+		return Object.keys(filteredReport).reduce(
+			(acc, key, idx) => {
+				acc[key] = {
+					...filteredReport[key],
+					...plbsData[idx],
+				};
+				return acc;
+			},
+			{} as Record<string, Record<string, number>>,
+		);
+	}, [filteredReport, withTax]);
+	console.log(filteredAndPlbsData);
+
+	function handleDownload() {
+		// 書こうと思ったけどデータのフォーマットいるなぁとかして撤退
+		// あんま今のデータフォーマット→table気に入ってないから書き直したいではある
+	}
+
 	return (
 		<div className='grid gap-3'>
 			<div className='flex justify-start gap-3 align-center'>
@@ -222,19 +231,13 @@ export function PlbsTableFilter() {
 			<PlbsTable
 				title={'PL'}
 				tableInfo={withTax ? plTableWithTaxInfo : plTableWithoutTaxInfo}
-				groupedDataIndexes={groupedDataIndexes}
-				filteredReport={filteredData}
-				plbsDataWithTax={plbsWithTax}
-				plbsDataWithoutTax={plbsWithoutTax}
+				tableData={filteredAndPlbsData}
 			/>
 
 			<PlbsTable
 				title={'BS'}
 				tableInfo={withTax ? bsTableWithTaxInfo : bsTableWithoutTax}
-				groupedDataIndexes={groupedDataIndexes}
-				filteredReport={filteredData}
-				plbsDataWithTax={plbsWithTax}
-				plbsDataWithoutTax={plbsWithoutTax}
+				tableData={filteredAndPlbsData}
 			/>
 		</div>
 	);

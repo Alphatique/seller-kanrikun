@@ -1,5 +1,5 @@
 import type {
-	FilteredSettlementReport,
+	FormatedSettlementReport,
 	PlBsWithTax,
 	PlBsWithoutTax,
 } from '@seller-kanrikun/data-operation/types/pl-bs';
@@ -15,34 +15,12 @@ import type { PlbsTableMetaData } from './table-meta';
 interface Props {
 	title: string;
 	tableInfo: PlbsTableMetaData[];
-	groupedDataIndexes: Record<string, number[]>;
-	filteredReport: FilteredSettlementReport[] | undefined;
-	plbsDataWithTax: PlBsWithTax[] | undefined;
-	plbsDataWithoutTax: PlBsWithoutTax[] | undefined;
+	tableData: Record<string, Record<string, number>>;
 }
 
-function getNumericValue<T extends object>(
-	data: T[] | undefined,
-	index: number,
-	key: keyof T,
-): number {
-	if (!data) return 0;
-	const row = data[index];
-	if (!row) return 0;
-	const val = row[key];
-	return typeof val === 'number' ? val : 0;
-}
-
-export function PlbsTable({
-	title,
-	tableInfo,
-	groupedDataIndexes,
-	filteredReport,
-	plbsDataWithTax,
-	plbsDataWithoutTax,
-}: Props) {
+export function PlbsTable({ title, tableInfo, tableData }: Props) {
 	// フラグに沿ってplbsDataを選択
-	return (
+	return tableData ? (
 		<>
 			<Table>
 				<TableBody>
@@ -51,7 +29,12 @@ export function PlbsTable({
 					</HeadTableRow>
 					<PlbsTableRow key='pl_date' underLine={true}>
 						<TableCell />
-						{Object.entries(groupedDataIndexes).map(([key]) => {
+						{Object.keys(tableData).map(key => {
+							console.log(
+								key,
+								`pl_date_${key}`,
+								Object.keys(tableData),
+							);
 							return (
 								<TableCell key={`pl_date_${key}`}>
 									{key}
@@ -69,47 +52,24 @@ export function PlbsTable({
 								{item.head}
 							</IndentTableCell>
 							{/* 日付ごとのセル */}
-							{Object.entries(groupedDataIndexes).map(
-								([date, indexes]) => {
-									// sumValueを算出
-									// 各インデックスについて、3つのデータソースから値を合計
-									const sumValue = indexes.reduce(
-										(acc, idx) => {
-											return (
-												acc +
-												getNumericValue(
-													filteredReport,
-													idx,
-													item.key as keyof FilteredSettlementReport,
-												) +
-												getNumericValue(
-													plbsDataWithTax,
-													idx,
-													item.key as keyof PlBsWithTax,
-												) +
-												getNumericValue(
-													plbsDataWithoutTax,
-													idx,
-													item.key as keyof PlBsWithoutTax,
-												)
-											);
-										},
-										0,
-									);
-
-									return (
-										<TableCell
-											key={`pl_${item.key}_${date}`}
-										>
-											{sumValue.toLocaleString()}
-										</TableCell>
-									);
-								},
-							)}
+							{Object.entries(tableData).map(([date, data]) => {
+								console.log(
+									date,
+									data,
+									`pl_${item.key}_${date}`,
+								);
+								return (
+									<TableCell key={`pl_${item.key}_${date}`}>
+										{data[item.key].toLocaleString()}
+									</TableCell>
+								);
+							})}
 						</PlbsTableRow>
 					))}
 				</TableBody>
 			</Table>
 		</>
+	) : (
+		<></>
 	);
 }

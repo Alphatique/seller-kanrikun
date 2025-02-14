@@ -1,56 +1,83 @@
 import type { Table } from 'apache-arrow';
 import type {
 	AmazonAdsAmount,
-	FilteredSettlementReport,
+	FormatedSettlementReport,
 	Inventory,
 	PlBsWithTax,
 	PlBsWithoutTax,
 	PlData,
 } from '../types/pl-bs';
 
+export function addFormatedReports(
+	a: FormatedSettlementReport,
+	b: FormatedSettlementReport,
+): FormatedSettlementReport {
+	return {
+		costPrice: a.costPrice + b.costPrice,
+		principal: a.principal + b.principal,
+		principalTax: a.principalTax + b.principalTax,
+		shipping: a.shipping + b.shipping,
+		shippingTax: a.shippingTax + b.shippingTax,
+		refund: a.refund + b.refund,
+		promotion: a.promotion + b.promotion,
+		commissionFee: a.commissionFee + b.commissionFee,
+		fbaShippingFee: a.fbaShippingFee + b.fbaShippingFee,
+		inventoryStorageFee: a.inventoryStorageFee + b.inventoryStorageFee,
+		inventoryUpdateFee: a.inventoryUpdateFee + b.inventoryUpdateFee,
+		shippingReturnFee: a.shippingReturnFee + b.shippingReturnFee,
+		accountSubscriptionFee:
+			a.accountSubscriptionFee + b.accountSubscriptionFee,
+		accountsReceivable: a.accountsReceivable + b.accountsReceivable,
+	};
+}
+
 // 損益計算書データ
 export function calcPlbsWithTax(
-	reportData: FilteredSettlementReport[],
+	reportData: Record<string, FormatedSettlementReport>,
 	amazonAdsData: AmazonAdsAmount = { amazonAds: 0 }, // todo: ちゃんと実装
 	inventoryData: Inventory = { inventoryAssets: 0 },
 ): PlBsWithTax[] {
-	const result: PlBsWithTax[] = reportData.map((rowData, i) => {
-		const sales: number =
-			rowData.principal +
-			rowData.shipping +
-			rowData.principalTax +
-			rowData.shippingTax;
-		const plData = calcPlData(sales, rowData, amazonAdsData);
+	const result: PlBsWithTax[] = Object.values(reportData).map(
+		(rowData, i) => {
+			const sales: number =
+				rowData.principal +
+				rowData.shipping +
+				rowData.principalTax +
+				rowData.shippingTax;
+			const plData = calcPlData(sales, rowData, amazonAdsData);
 
-		return {
-			...rowData,
-			...plData,
-			...inventoryData,
-			...amazonAdsData,
-		};
-	});
+			return {
+				...rowData,
+				...plData,
+				...inventoryData,
+				...amazonAdsData,
+			};
+		},
+	);
 
 	return result;
 }
 
 export function calcPlbsWithoutTax(
-	reportData: FilteredSettlementReport[],
+	reportData: Record<string, FormatedSettlementReport>,
 	amazonAdsData: AmazonAdsAmount = { amazonAds: 0 },
 	inventoryData: Inventory = { inventoryAssets: 0 },
 ): PlBsWithoutTax[] {
-	const result: PlBsWithoutTax[] = reportData.map((rowData, i) => {
-		const sales: number = rowData.principal + rowData.shipping;
-		const plData = calcPlData(sales, rowData, amazonAdsData);
-		const taxes = rowData.principalTax + rowData.shippingTax;
+	const result: PlBsWithoutTax[] = Object.values(reportData).map(
+		(rowData, i) => {
+			const sales: number = rowData.principal + rowData.shipping;
+			const plData = calcPlData(sales, rowData, amazonAdsData);
+			const taxes = rowData.principalTax + rowData.shippingTax;
 
-		return {
-			...plData,
-			...inventoryData,
-			...amazonAdsData,
-			accruedConsumptionTax: taxes,
-			outputConsumptionTax: taxes,
-		};
-	});
+			return {
+				...plData,
+				...inventoryData,
+				...amazonAdsData,
+				accruedConsumptionTax: taxes,
+				outputConsumptionTax: taxes,
+			};
+		},
+	);
 
 	return result;
 }
@@ -58,7 +85,7 @@ export function calcPlbsWithoutTax(
 // 損益計算書データ
 export function calcPlData(
 	sales: number,
-	reportData: FilteredSettlementReport,
+	reportData: FormatedSettlementReport,
 	amazonAdsData: AmazonAdsAmount,
 ): PlData {
 	// 純売上 = 売上 - 返品額
@@ -89,7 +116,7 @@ export function calcPlData(
 
 // 販売費および一般管理費
 function calcSellingGeneralAndAdministrativeExpenses(
-	reportData: FilteredSettlementReport,
+	reportData: FormatedSettlementReport,
 	amazonAdsData: AmazonAdsAmount,
 ) {
 	// 販売費および一般管理費 =

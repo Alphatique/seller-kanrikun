@@ -15,8 +15,7 @@
  * @property accountSubscriptionFee アカウント月額料金
  * @property accountsReceivable 売掛金
  */
-export interface FilteredSettlementReport {
-	date: string;
+export interface FormatedSettlementReport extends Record<string, number> {
 	/** 商品原価 */
 	costPrice: number;
 	/** 商品代金 */
@@ -51,7 +50,7 @@ export interface FilteredSettlementReport {
  * アマゾン広告のデータ
  * @property amazonAds 広告費用(Amazon広告)
  */
-export interface AmazonAdsAmount {
+export interface AmazonAdsAmount extends Record<string, number> {
 	/** 広告費用(Amazon広告) */
 	amazonAds: number;
 }
@@ -60,7 +59,7 @@ export interface AmazonAdsAmount {
  * 棚卸資産
  * @property inventory 棚卸資産
  */
-export interface Inventory {
+export interface Inventory extends Record<string, number> {
 	/** 棚卸資産 */
 	inventoryAssets: number;
 }
@@ -75,7 +74,7 @@ export interface Inventory {
  * @property operatingIncome 営業利益
  * @property tax 税金合計
  */
-export interface PlData {
+export interface PlData extends Record<string, number> {
 	/** 売上 */
 	sales: number;
 	/** 純売上 */
@@ -88,8 +87,6 @@ export interface PlData {
 	amazonOther: number;
 	/** 営業利益 */
 	operatingProfit: number;
-	/** 税金合計 */
-	tax?: number;
 }
 
 /**
@@ -97,7 +94,7 @@ export interface PlData {
  * @property AccruedConsumptionTax 未収消費税
  * @property outputConsumptionTax 仮受消費税
  */
-export interface BsWithoutTax {
+export interface BsWithoutTax extends Record<string, number> {
 	/** 未収消費税 */
 	accruedConsumptionTax: number;
 	/** 仮受消費税 */
