@@ -38,6 +38,7 @@ import {
 } from '~/lib/duckdb';
 import { fetchGunzipStrApi } from '~/lib/fetch-gzip';
 
+import { downloadCsv } from '~/lib/file-downloads';
 import { PlbsTable } from './table';
 import {
 	bsTableWithTaxInfo,
@@ -167,7 +168,6 @@ export function PlbsTableFilter() {
 			}
 			return filteredData;
 		}, [formatedData, dateRange, period]);
-	console.log(filteredReport);
 
 	const filteredAndPlbsData: Record<
 		string,
@@ -189,11 +189,19 @@ export function PlbsTableFilter() {
 			{} as Record<string, Record<string, number>>,
 		);
 	}, [filteredReport, withTax]);
-	console.log(filteredAndPlbsData);
 
 	function handleDownload() {
-		// 書こうと思ったけどデータのフォーマットいるなぁとかして撤退
-		// あんま今のデータフォーマット→table気に入ってないから書き直したいではある
+		if (!(dateRange?.start && dateRange?.end)) return;
+		const downloadData = Object.entries(filteredAndPlbsData).map(
+			([date, values]) => ({
+				date,
+				...values,
+			}),
+		);
+		if (downloadData.length === 0) return;
+
+		const filename = `plbs_${withTax ? 'withTax' : 'withoutTax'}_${format(dateRange.start, 'yyyy-MM-dd')}_${format(dateRange.end, 'yyyy-MM-dd')}.csv`;
+		downloadCsv(downloadData, Object.keys(downloadData[0]), filename);
 	}
 
 	return (
