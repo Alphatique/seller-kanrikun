@@ -49,8 +49,9 @@ SELECT
 FROM settlementReport
 -- posted-dateがNULLの行はスキップ
 WHERE postedDate IS NOT NULL
--- 月ごとにグループ化
+    AND postedDate >= '2024-12-01'
 GROUP BY date_trunc('month', postedDate)
+-- 月ごとにグループ化
 ) AS p
 FULL OUTER JOIN (
     SELECT
@@ -63,6 +64,7 @@ FULL OUTER JOIN (
         AND r.postedDate >= cp.startDate
         AND r.postedDate <= cp.endDate
     WHERE postedDate IS NOT NULL
+      AND postedDate >= '2024-12-01'
     GROUP BY date_trunc('month', r.postedDate)
 ) AS c
 ON p.date = c.date
