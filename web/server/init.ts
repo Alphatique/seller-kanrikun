@@ -137,13 +137,20 @@ export const app = new Hono()
 
 		console.log('get settlement report...');
 		const reports = await getAllSettlementReportsUntilRateLimit(api, []);
+
 		if (reports.isErr()) {
 			return new Response('get settlement reports was failed', {
 				status: 500,
 			});
 		}
 
-		let limitedReports = reports.value;
+		// 新しいデータ順
+		const sortedReports = reports.value.sort(
+			(a, b) =>
+				new Date(b.dataEndTime).getTime() -
+				new Date(a.dataEndTime).getTime(),
+		);
+		let limitedReports = sortedReports;
 
 		// sales-traffic分余裕を持たせる
 		const reportsLimit = settlementReportLimit;
@@ -154,7 +161,7 @@ export const app = new Hono()
 		console.log('get settlement report document...');
 		const reportResult = await getSettlementReportsDocumentUntilRateLimit(
 			api,
-			reports.value,
+			limitedReports,
 		);
 		if (reportResult.isErr()) {
 			return new Response('get settlement report documents was failed', {
