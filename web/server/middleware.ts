@@ -1,11 +1,8 @@
-import { eq } from 'drizzle-orm/expressions';
-import type { MiddlewareHandler } from 'hono';
 import { createMiddleware } from 'hono/factory';
 
 import { auth } from '@seller-kanrikun/auth/server';
 import { type ClientType, createClient } from '@seller-kanrikun/db/index';
 // ※ 不要な import がないか確認してください
-import type { User } from '@seller-kanrikun/db/schema';
 
 import { getSpApiAccessToken } from '~/lib/token';
 

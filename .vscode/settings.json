@@ -3,6 +3,9 @@
 	"editor.formatOnSave": true,
 	"editor.formatOnPaste": true,
 	"editor.tabSize": 4,
+	"editor.codeActionsOnSave": {
+		"source.organizeImports.biome": "explicit"
+	},
 	"[yaml]": {
 		"editor.defaultFormatter": "esbenp.prettier-vscode"
 	},
