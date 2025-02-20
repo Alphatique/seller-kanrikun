@@ -99,7 +99,7 @@ export const app = new Hono()
 			);
 
 			if (reports.isErr()) {
-				return c.text('get settlemenet reports was failed', 500);
+				return c.text('get settlement reports was failed', 500);
 			}
 
 			const getReportResult =
@@ -110,7 +110,7 @@ export const app = new Hono()
 
 			if (getReportResult.isErr()) {
 				return c.text(
-					'get settlemenet report documents was failed',
+					'get settlement report documents was failed',
 					500,
 				);
 			}
