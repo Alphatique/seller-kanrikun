@@ -11,12 +11,12 @@
 		"typecheck": "tsc"
 	},
 	"dependencies": {
-		"openapi-fetch": "^0.13.1"
+		"openapi-fetch": "^0.13.4"
 	},
 	"devDependencies": {
 		"fflate": "^0.8.2",
-		"openapi-typescript": "^7.4.4",
-		"tsx": "^4.19.2",
-		"typescript": "^5.7.2"
+		"openapi-typescript": "^7.6.1",
+		"tsx": "^4.19.3",
+		"typescript": "^5.7.3"
 	}
 }

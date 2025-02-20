@@ -10,9 +10,9 @@
 		"typecheck": "tsc"
 	},
 	"dependencies": {
-		"apache-arrow": "^18.1.0",
-		"csv-parser": "^3.0.0",
+		"apache-arrow": "^19.0.1",
+		"csv-parser": "^3.2.0",
 		"fflate": "^0.8.2",
-		"zod": "^3.23.8"
+		"zod": "^3.24.2"
 	}
 }
