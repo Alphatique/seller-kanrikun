@@ -1,3 +1,13 @@
 {
-	"recommendations": ["jtladeiras.vscode-inline-sql"]
+	"recommendations": [
+		"jtladeiras.vscode-inline-sql",
+		"vivaxy.vscode-conventional-commits",
+		"biomejs.biome",
+		"streetsidesoftware.code-spell-checker",
+		"hashicorp.terraform",
+		"yzhang.markdown-all-in-one",
+		"bierner.markdown-mermaid",
+		"bpruitt-goddard.mermaid-markdown-syntax-highlighting",
+		"redhat.vscode-yaml"
+	]
 }
