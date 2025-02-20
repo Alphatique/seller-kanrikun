@@ -1,7 +1,6 @@
 import { isAfter, isBefore } from 'date-fns';
 
 import type {
-	CostPrice,
 	CostPriceArray,
 	UpdateCostPriceRequest,
 } from '../types/cost-price';

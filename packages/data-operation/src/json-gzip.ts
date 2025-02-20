@@ -1,6 +1,5 @@
 import { gunzipSync, gzipSync } from 'fflate';
-import Papa from 'papaparse';
-import type { Schema, infer, z } from 'zod';
+import type { Schema } from 'zod';
 
 export function jsonGzipArrayToJsonObj<TSchema extends Schema>(
 	jsonGzipArray: Uint8Array,

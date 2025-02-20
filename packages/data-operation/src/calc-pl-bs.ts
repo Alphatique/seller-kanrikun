@@ -1,4 +1,3 @@
-import type { Table } from 'apache-arrow';
 import type {
 	AmazonAdsAmount,
 	FormattedSettlementReport,
