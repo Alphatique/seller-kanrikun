@@ -185,10 +185,13 @@ export const app = new Hono()
 			[],
 		);
 		if (!firstPutResult) {
-			console.error('failed to first put');
-			return new Response('put file was failed', {
-				status: 500,
-			});
+			console.error('An error occurred while putting report document');
+			return new Response(
+				'An error occurred while putting report document',
+				{
+					status: 500,
+				},
+			);
 		}
 
 		waitUntil(
@@ -200,7 +203,7 @@ export const app = new Hono()
 					);
 				if (reportDocumentIds.isErr()) {
 					console.error(
-						'erro get report document ids:',
+						'An error occurred while getting report document IDs:',
 						reportDocumentIds.error,
 					);
 					return;
@@ -214,7 +217,7 @@ export const app = new Hono()
 
 				if (reportDocument.isErr()) {
 					console.error(
-						'erro get report document:',
+						'An error occurred while getting report document:',
 						reportDocument.error,
 					);
 					return;
@@ -226,11 +229,13 @@ export const app = new Hono()
 					reportDocument.value,
 				);
 				if (!firstPutResult) {
-					console.error('failed to first put');
+					console.error(
+						'An error occurred while putting report document',
+					);
 					return;
 				}
 
-				console.log('success to put report document');
+				console.log('Successfully put sales traffic report document');
 				return;
 			})(),
 		);
@@ -244,7 +249,7 @@ export const app = new Hono()
 
 		const exist = await existFile(userId, FILE_NAMES.INVENTORY_SUMMARIES);
 		if (exist) {
-			return new Response('already exists', {
+			return new Response('Inventory summaries already exists', {
 				status: 409,
 			});
 		}
@@ -256,7 +261,7 @@ export const app = new Hono()
 		const inventorySummaries =
 			await getAllInventorySummariesUntilRateLimit(api);
 		if (inventorySummaries.isErr()) {
-			return new Response('get settlement reports was failed', {
+			return new Response('Failed to get inventory summaries', {
 				status: 500,
 			});
 		}
@@ -269,7 +274,7 @@ export const app = new Hono()
 		);
 
 		if (!putResult) {
-			return new Response('put file was failed', {
+			return new Response('Failed to put inventory summaries', {
 				status: 500,
 			});
 		}
