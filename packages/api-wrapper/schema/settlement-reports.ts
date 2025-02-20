@@ -11,10 +11,12 @@ export const settlementReportMeta = z.object({
 	createdTime: z.coerce.date(),
 	sellerKanrikunSaveTime: z.coerce.date(),
 });
-export const settlementReportMetas = z.array(settlementReportMeta);
+export const settlementReportMetaArray = z.array(settlementReportMeta);
 
 export type SettlementReportMeta = z.infer<typeof settlementReportMeta>;
-export type SettlementReportMetas = z.infer<typeof settlementReportMetas>;
+export type SettlementReportMetaArray = z.infer<
+	typeof settlementReportMetaArray
+>;
 
 // パース関数
 export function parseSettlementRow(

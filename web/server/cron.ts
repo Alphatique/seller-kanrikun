@@ -31,9 +31,9 @@ import {
 } from '@seller-kanrikun/api-wrapper/schema/inventory';
 import {
 	type SettlementReportDocument,
-	type SettlementReportMetas,
+	type SettlementReportMetaArray,
 	settlementReportDocument,
-	settlementReportMetas,
+	settlementReportMetaArray,
 } from '@seller-kanrikun/api-wrapper/schema/settlement-reports';
 import { jsonGzipArrayToJsonObj } from '@seller-kanrikun/data-operation/json-gzip';
 import { gzipAndPutFile } from '~/lib/fetch-gzip';
@@ -65,8 +65,11 @@ export const app = new Hono()
 				console.error('exist meta data was not found:', account.userId);
 				return c.text('exist meta data was not found', 500);
 			}
-			const existReportMetas: SettlementReportMetas =
-				jsonGzipArrayToJsonObj(reportMetaArray, settlementReportMetas);
+			const existReportMetaArray: SettlementReportMetaArray =
+				jsonGzipArrayToJsonObj(
+					reportMetaArray,
+					settlementReportMetaArray,
+				);
 
 			// レポートAPI
 			const api = createApiClient<reportsPaths>({
@@ -92,7 +95,7 @@ export const app = new Hono()
 
 			const reports = await getAllSettlementReportsRetryRateLimit(
 				api,
-				existReportMetas,
+				existReportMetaArray,
 			);
 
 			if (reports.isErr()) {
@@ -136,7 +139,7 @@ export const app = new Hono()
 				);
 
 			const saveReportDocument = await filterSettlementReportDocument(
-				existReportMetas,
+				existReportMetaArray,
 				getReportResult.value,
 			);
 
@@ -157,7 +160,7 @@ export const app = new Hono()
 				account.userId,
 				FILE_NAMES.SETTLEMENT_REPORT_META,
 				[
-					...existReportMetas,
+					...existReportMetaArray,
 					...getReportResult.value.flatMap(row => row.report),
 				],
 			);

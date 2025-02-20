@@ -9,16 +9,16 @@ import {
 	type SettlementReportDocument,
 	type SettlementReportDocumentRow,
 	type SettlementReportMeta,
-	type SettlementReportMetas,
+	type SettlementReportMetaArray,
 	parseSettlementRow,
 	settlementReportDocument,
 	settlementReportMeta,
-	settlementReportMetas,
+	settlementReportMetaArray,
 } from '../schema/settlement-reports';
 import { type ValueOf, waitRateLimitTime } from './utils';
 
 export function filterSettlementReportDocument(
-	existReports: SettlementReportMetas,
+	existReports: SettlementReportMetaArray,
 	newData: SettlementReportsResult[],
 ): SettlementReportDocument {
 	const result: SettlementReportDocument = [];
@@ -60,7 +60,7 @@ export function filterSettlementReportDocument(
 }
 
 function isExistSettlementReport(
-	existReports: SettlementReportMetas,
+	existReports: SettlementReportMetaArray,
 	newReport: SettlementReportMeta,
 ) {
 	for (const existReport of existReports) {
@@ -73,15 +73,15 @@ function isExistSettlementReport(
 
 export async function getAllSettlementReportsRetryRateLimit(
 	api: Client<paths>,
-	existReports: SettlementReportMetas,
+	existReports: SettlementReportMetaArray,
 ): Promise<
 	Result<
-		SettlementReportMetas,
+		SettlementReportMetaArray,
 		components['schemas']['ErrorList'] | undefined | 'loop limit exceeded'
 	>
 > {
 	let nextToken: string | undefined = undefined;
-	const result: SettlementReportMetas = [];
+	const result: SettlementReportMetaArray = [];
 
 	const maxLoopCount = 500;
 	let loopCount = 0;
@@ -137,15 +137,15 @@ export async function getAllSettlementReportsRetryRateLimit(
 
 export async function getAllSettlementReportsUntilRateLimit(
 	api: Client<paths>,
-	existReports: SettlementReportMetas,
+	existReports: SettlementReportMetaArray,
 ): Promise<
 	Result<
-		SettlementReportMetas,
+		SettlementReportMetaArray,
 		components['schemas']['ErrorList'] | undefined | 'loop limit exceeded'
 	>
 > {
 	let nextToken: string | undefined = undefined;
-	const result: SettlementReportMetas = [];
+	const result: SettlementReportMetaArray = [];
 
 	const maxLoopCount = 500;
 	let loopCount = 0;
@@ -205,7 +205,7 @@ interface SettlementReportsResult {
 }
 export async function getSettlementReportsDocumentRetryRateLimit(
 	api: Client<paths>,
-	reports: SettlementReportMetas,
+	reports: SettlementReportMetaArray,
 ): Promise<
 	Result<
 		SettlementReportsResult[],
@@ -253,7 +253,7 @@ export async function getSettlementReportsDocumentRetryRateLimit(
 
 export async function getSettlementReportsDocumentUntilRateLimit(
 	api: Client<paths>,
-	reports: SettlementReportMetas,
+	reports: SettlementReportMetaArray,
 ): Promise<
 	Result<
 		SettlementReportsResult[],
