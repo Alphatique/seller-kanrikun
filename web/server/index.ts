@@ -61,7 +61,7 @@ const route = app
 				catalog: FILE_NAMES.CATALOG_ITEMS,
 			}[slug];
 			if (!fileName) {
-				return new Response('file name was not found', {
+				return new Response('Invalid file path requested', {
 					status: 404,
 				});
 			}
