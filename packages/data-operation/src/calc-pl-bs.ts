@@ -1,17 +1,17 @@
 import type { Table } from 'apache-arrow';
 import type {
 	AmazonAdsAmount,
-	FormatedSettlementReport,
+	FormattedSettlementReport,
 	Inventory,
 	PlBsWithTax,
 	PlBsWithoutTax,
 	PlData,
 } from '../types/pl-bs';
 
-export function addFormatedReports(
-	a: FormatedSettlementReport,
-	b: FormatedSettlementReport,
-): FormatedSettlementReport {
+export function addFormattedReports(
+	a: FormattedSettlementReport,
+	b: FormattedSettlementReport,
+): FormattedSettlementReport {
 	return {
 		costPrice: a.costPrice + b.costPrice,
 		principal: a.principal + b.principal,
@@ -33,7 +33,7 @@ export function addFormatedReports(
 
 // 損益計算書データ
 export function calcPlbsWithTax(
-	reportData: Record<string, FormatedSettlementReport>,
+	reportData: Record<string, FormattedSettlementReport>,
 	amazonAdsData: AmazonAdsAmount = { amazonAds: 0 }, // todo: ちゃんと実装
 	inventoryData: Inventory = { inventoryAssets: 0 },
 ): PlBsWithTax[] {
@@ -59,7 +59,7 @@ export function calcPlbsWithTax(
 }
 
 export function calcPlbsWithoutTax(
-	reportData: Record<string, FormatedSettlementReport>,
+	reportData: Record<string, FormattedSettlementReport>,
 	amazonAdsData: AmazonAdsAmount = { amazonAds: 0 },
 	inventoryData: Inventory = { inventoryAssets: 0 },
 ): PlBsWithoutTax[] {
@@ -85,7 +85,7 @@ export function calcPlbsWithoutTax(
 // 損益計算書データ
 export function calcPlData(
 	sales: number,
-	reportData: FormatedSettlementReport,
+	reportData: FormattedSettlementReport,
 	amazonAdsData: AmazonAdsAmount,
 ): PlData {
 	// 純売上 = 売上 - 返品額
@@ -116,7 +116,7 @@ export function calcPlData(
 
 // 販売費および一般管理費
 function calcSellingGeneralAndAdministrativeExpenses(
-	reportData: FormatedSettlementReport,
+	reportData: FormattedSettlementReport,
 	amazonAdsData: AmazonAdsAmount,
 ) {
 	// 販売費および一般管理費 =

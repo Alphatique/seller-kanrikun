@@ -1,12 +1,12 @@
 import type {
-	FormatedSettlementReport,
+	FormattedSettlementReport,
 	PlBsWithTax,
 	PlBsWithoutTax,
 } from '@seller-kanrikun/data-operation/types/pl-bs';
 
 export type PlbsTableMetaData = {
 	key:
-		| keyof FormatedSettlementReport
+		| keyof FormattedSettlementReport
 		| keyof PlBsWithTax
 		| keyof PlBsWithoutTax;
 	head: string;

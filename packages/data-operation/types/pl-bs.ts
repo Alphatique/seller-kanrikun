@@ -15,7 +15,7 @@
  * @property accountSubscriptionFee アカウント月額料金
  * @property accountsReceivable 売掛金
  */
-export interface FormatedSettlementReport extends Record<string, number> {
+export interface FormattedSettlementReport extends Record<string, number> {
 	/** 商品原価 */
 	costPrice: number;
 	/** 商品代金 */

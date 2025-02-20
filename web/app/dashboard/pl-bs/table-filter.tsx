@@ -5,12 +5,12 @@ import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 
 import {
-	addFormatedReports,
+	addFormattedReports,
 	calcPlbsWithTax,
 	calcPlbsWithoutTax,
 } from '@seller-kanrikun/data-operation/calc-pl-bs';
 import { calcPlbsSql } from '@seller-kanrikun/data-operation/sql';
-import type { FormatedSettlementReport } from '@seller-kanrikun/data-operation/types/pl-bs';
+import type { FormattedSettlementReport } from '@seller-kanrikun/data-operation/types/pl-bs';
 import { Button } from '@seller-kanrikun/ui/components/button';
 import { Label } from '@seller-kanrikun/ui/components/label';
 import {
@@ -56,8 +56,8 @@ export function PlbsTableFilter() {
 	const { data: myDuckDB } = useSWR('/initDuckDB', initDuckDB);
 
 	// フィルターしたデータ
-	const [formatedData, setFormatedData] = useState<
-		Record<number, FormatedSettlementReport> | undefined
+	const [formattedData, setFormattedData] = useState<
+		Record<number, FormattedSettlementReport> | undefined
 	>(undefined);
 
 	const [period, setPeriod] = useState<Period>('monthly');
@@ -91,13 +91,14 @@ export function PlbsTableFilter() {
 				const filteredResponse = await myDuckDB.c.query(calcPlbsSql);
 
 				// データのjs array化
-				const formatData: Record<number, FormatedSettlementReport> = {};
+				const formattedData: Record<number, FormattedSettlementReport> =
+					{};
 				for (let i = 0; i < filteredResponse.numRows; i++) {
 					const record = filteredResponse.get(i);
 					const json = record?.toJSON();
 
 					// TODO: zodでやりたい
-					const data: FormatedSettlementReport = {
+					const data: FormattedSettlementReport = {
 						costPrice: Number(json?.costPrice),
 						principal: Number(json?.principal),
 						principalTax: Number(json?.principalTax),
@@ -116,19 +117,19 @@ export function PlbsTableFilter() {
 						accountsReceivable: Number(json?.accountsReceivable),
 					};
 
-					formatData[json?.date] = data;
+					formattedData[json?.date] = data;
 				}
 
-				setFormatedData(formatData);
+				setFormattedData(formattedData);
 			});
 		}
 	}, [myDuckDB, reportData, inventoryData, costPriceData]);
 
-	const filteredReport: Record<string, FormatedSettlementReport> =
+	const filteredReport: Record<string, FormattedSettlementReport> =
 		useMemo(() => {
-			if (formatedData === undefined) return {};
-			const filteredData: Record<string, FormatedSettlementReport> = {};
-			for (const [dateTime, data] of Object.entries(formatedData)) {
+			if (formattedData === undefined) return {};
+			const filteredData: Record<string, FormattedSettlementReport> = {};
+			for (const [dateTime, data] of Object.entries(formattedData)) {
 				// その行の日付を取得
 				const date = new Date(Number(dateTime));
 				if (dateRange.start <= date && dateRange.end >= date) {
@@ -150,7 +151,7 @@ export function PlbsTableFilter() {
 					// 既存のデータがある場合
 					if (filteredData[dateStr]) {
 						// 既存のデータと足し算
-						filteredData[dateStr] = addFormatedReports(
+						filteredData[dateStr] = addFormattedReports(
 							filteredData[dateStr],
 							data,
 						);
@@ -161,7 +162,7 @@ export function PlbsTableFilter() {
 				}
 			}
 			return filteredData;
-		}, [formatedData, dateRange, period]);
+		}, [formattedData, dateRange, period]);
 
 	const filteredAndPlbsData: Record<
 		string,
