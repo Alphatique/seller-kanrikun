@@ -1,15 +1,8 @@
-import type { Schema } from 'zod';
-
 import {
-	jsonGzipArrayToJsonObj,
 	jsonGzipArrayToJsonStr,
 	jsonObjToJsonGzipArray,
 } from '@seller-kanrikun/data-operation/json-gzip';
 import { putFile } from '@seller-kanrikun/data-operation/r2';
-import {
-	tsvGzipToTsvObj,
-	tsvGzipToTsvStr,
-} from '@seller-kanrikun/data-operation/tsv-gzip';
 
 export async function fetchGunzipStrApi(url: string) {
 	// データ取得
