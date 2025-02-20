@@ -1,8 +1,3 @@
-import type {
-	FormatedSettlementReport,
-	PlBsWithTax,
-	PlBsWithoutTax,
-} from '@seller-kanrikun/data-operation/types/pl-bs';
 import {
 	Table,
 	TableBody,

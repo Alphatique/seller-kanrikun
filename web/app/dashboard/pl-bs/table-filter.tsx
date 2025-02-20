@@ -1,22 +1,16 @@
 'use client';
-import type * as arrow from 'apache-arrow';
-import { subMonths } from 'date-fns';
-import { format } from 'date-fns';
-import { useEffect, useMemo, useRef, useState } from 'react';
+
+import { format, subMonths } from 'date-fns';
+import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
 
-import { useSession } from '@seller-kanrikun/auth/client';
 import {
 	addFormatedReports,
 	calcPlbsWithTax,
 	calcPlbsWithoutTax,
 } from '@seller-kanrikun/data-operation/calc-pl-bs';
 import { calcPlbsSql } from '@seller-kanrikun/data-operation/sql';
-import type {
-	FormatedSettlementReport,
-	PlBsWithTax,
-	PlBsWithoutTax,
-} from '@seller-kanrikun/data-operation/types/pl-bs';
+import type { FormatedSettlementReport } from '@seller-kanrikun/data-operation/types/pl-bs';
 import { Button } from '@seller-kanrikun/ui/components/button';
 import { Label } from '@seller-kanrikun/ui/components/label';
 import {

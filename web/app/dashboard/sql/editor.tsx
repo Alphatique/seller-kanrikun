@@ -1,11 +1,11 @@
 'use client';
-import { useEffect, useMemo, useRef, useState } from 'react';
+
+import { useEffect, useState } from 'react';
 import useSWR from 'swr';
 
 import { Textarea } from '@seller-kanrikun/ui/components/textarea';
 
 import {
-	checkTables,
 	createCostPriceTable,
 	createInventoryTable,
 	createSalesTrafficReportTable,

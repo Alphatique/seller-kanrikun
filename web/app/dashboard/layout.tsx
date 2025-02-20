@@ -1,4 +1,3 @@
-import type { User } from 'better-auth';
 import { RedirectType, redirect } from 'next/navigation';
 
 import { ScrollArea } from '@seller-kanrikun/ui/components/scroll-area';

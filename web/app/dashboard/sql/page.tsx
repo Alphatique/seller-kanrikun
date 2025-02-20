@@ -1,7 +1,5 @@
-import useSWR from 'swr';
-
-import { tsvGzipToTsvStr } from '@seller-kanrikun/data-operation/tsv-gzip';
 import { Separator } from '@seller-kanrikun/ui/components/separator';
+
 import { SqlEditor } from './editor';
 
 export const metadata: Metadata = {

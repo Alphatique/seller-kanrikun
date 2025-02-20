@@ -1,5 +1,6 @@
 import { Button } from '@seller-kanrikun/ui/components/button';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
+
 import type { MyDuckDB } from '~/lib/duckdb';
 import { downloadStr } from '~/lib/file-downloads';
 

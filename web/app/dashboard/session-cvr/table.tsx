@@ -1,8 +1,5 @@
 import {
 	format,
-	isAfter,
-	isBefore,
-	previousDay,
 	startOfDay,
 	startOfMonth,
 	startOfQuarter,
@@ -14,7 +11,7 @@ import {
 	subWeeks,
 	subYears,
 } from 'date-fns';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import type { DateRange } from 'react-day-picker';
 
 import {
