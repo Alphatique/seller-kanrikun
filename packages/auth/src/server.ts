@@ -28,6 +28,24 @@ export const auth = betterAuth({
 					scopes: ['profile', 'advertising::campaign_management'],
 					tokenUrl: 'https://api.amazon.co.jp/auth/o2/token',
 					userInfoUrl: 'https://api.amazon.co.jp/user/profile',
+					// @ts-expect-error
+					getUserInfo: async ({ accessToken }) => {
+						const response = await fetch(
+							'https://api.amazon.co.jp/user/profile',
+							{
+								headers: {
+									Authorization: `Bearer ${accessToken}`,
+								},
+							},
+						);
+						// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+						const data = (await response.json()) as any;
+						return {
+							id: data.user_id,
+							email: data.email,
+							name: data.name,
+						};
+					},
 					pkce: true,
 				},
 			],
